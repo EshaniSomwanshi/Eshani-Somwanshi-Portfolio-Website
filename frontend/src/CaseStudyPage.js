@@ -238,8 +238,9 @@ export default function CaseStudyPage() {
 
       <footer className="site-footer">
         <div className="container footer-row">
-          <span>© {new Date().getFullYear()} Eshani Somwanshi</span>
-          <Link to="/" data-testid="case-footer-home">Back to all work ↑</Link>
+          <span className="footer-location"><span className="footer-emoji">🌁</span> San Francisco, CA</span>
+          <span className="footer-copyright">© {new Date().getFullYear()} Eshani Somwanshi</span>
+          <Link to="/" className="footer-top-link" data-testid="case-footer-home">Back to all work ↑</Link>
         </div>
       </footer>
     </div>
