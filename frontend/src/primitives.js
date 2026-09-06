@@ -234,7 +234,7 @@ export function Magnetic({ children, strength = 0.28, className = "" }) {
    expands inline into all three options (active first) on click, Apple-style
    expanding/collapsible capsule. Picking an option or clicking outside
    collapses it back down. ------------------------------------------------- */
-export function ThemeSwitch({ theme, setTheme, mobile = false }) {
+export function ThemeSwitch({ theme, setTheme, mobile = false, tabIndex }) {
   const [expanded, setExpanded] = useState(false);
   const reduced = useReducedMotion();
   const ref = useRef(null);
@@ -284,6 +284,7 @@ export function ThemeSwitch({ theme, setTheme, mobile = false }) {
             data-theme-value={t.id}
             aria-pressed={theme === t.id}
             aria-expanded={i === 0 ? expanded : undefined}
+            tabIndex={tabIndex}
             onClick={() => {
               if (!expanded) setExpanded(true);
               else if (t.id === theme) setExpanded(false);

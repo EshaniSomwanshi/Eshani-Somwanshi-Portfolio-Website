@@ -518,7 +518,12 @@ export default function App() {
         data-testid="mobile-menu"
         aria-hidden={!menu}
       >
-        <button className="mobile-menu-close" onClick={() => setMenu(false)} data-testid="mobile-menu-close">
+        <button
+          className="mobile-menu-close"
+          onClick={() => setMenu(false)}
+          tabIndex={menu ? 0 : -1}
+          data-testid="mobile-menu-close"
+        >
           Close
         </button>
         <ul>
@@ -549,7 +554,7 @@ export default function App() {
             </a>
           </li>
         </ul>
-        <ThemeSwitch theme={theme} setTheme={setTheme} mobile />
+        <ThemeSwitch theme={theme} setTheme={setTheme} mobile tabIndex={menu ? 0 : -1} />
       </div>
 
       <main id="main">
