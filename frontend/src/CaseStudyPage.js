@@ -65,6 +65,8 @@ export default function CaseStudyPage() {
 
   return (
     <div data-testid={`case-page-${study.slug}`}>
+      <a className="skip-link" href="#main">Skip to content</a>
+
       <header className="cs-header">
         <div className="container cs-header-inner">
           <Link to="/" className="cs-back" data-testid="case-back-link">
@@ -80,7 +82,7 @@ export default function CaseStudyPage() {
         />
       </header>
 
-      <main>
+      <main id="main">
         <section className="cs-hero container">
           <motion.p
             className="eyebrow"
