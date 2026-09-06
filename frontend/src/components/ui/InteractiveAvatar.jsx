@@ -330,6 +330,17 @@ export default function InteractiveAvatar({
           onClick={handleClick}
           onMouseEnter={() => setIsHappy(true)}
           onMouseLeave={() => setIsHappy(false)}
+          onFocus={() => setIsHappy(true)}
+          onBlur={() => setIsHappy(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleClick();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Say hello"
           data-cursor="Click me"
           style={
             reduced
