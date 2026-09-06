@@ -319,14 +319,36 @@ function CaseStudy({ go }) {
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/+$/, "");
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [state, setState] = useState("idle");
+  const [errors, setErrors] = useState({});
+  const fieldRefs = { name: useRef(null), email: useRef(null), message: useRef(null) };
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const validate = () => {
+    const next = {};
+    if (!form.name.trim()) next.name = "Enter your name.";
+    if (!form.email.trim()) next.email = "Enter your email address.";
+    else if (!EMAIL_RE.test(form.email)) next.email = "Enter an email address like name@example.com.";
+    if (!form.message.trim()) next.message = "Enter a message.";
+    return next;
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     if (state === "sending") return;
+
+    const nextErrors = validate();
+    setErrors(nextErrors);
+    const firstInvalid = ["name", "email", "message"].find((k) => nextErrors[k]);
+    if (firstInvalid) {
+      fieldRefs[firstInvalid].current?.focus();
+      return;
+    }
+
     setState("sending");
     try {
       const res = await fetch(`${API_BASE}/api/messages`, {
@@ -354,18 +376,51 @@ function ContactForm() {
   }
 
   return (
-    <form className="contact-form" onSubmit={submit} data-testid="contact-form" noValidate={false}>
+    <form className="contact-form" onSubmit={submit} data-testid="contact-form" noValidate>
       <div className="form-field">
         <label htmlFor="cf-name">Your name</label>
-        <input id="cf-name" name="name" required value={form.name} onChange={set("name")} data-testid="contact-form-name" autoComplete="name" />
+        <input
+          id="cf-name"
+          name="name"
+          ref={fieldRefs.name}
+          value={form.name}
+          onChange={set("name")}
+          data-testid="contact-form-name"
+          autoComplete="name"
+          aria-invalid={errors.name ? "true" : undefined}
+          aria-describedby={errors.name ? "cf-name-error" : undefined}
+        />
+        {errors.name && <p className="form-error" id="cf-name-error" role="alert">{errors.name}</p>}
       </div>
       <div className="form-field">
         <label htmlFor="cf-email">Your email</label>
-        <input id="cf-email" name="email" type="email" required value={form.email} onChange={set("email")} data-testid="contact-form-email" autoComplete="email" />
+        <input
+          id="cf-email"
+          name="email"
+          type="email"
+          ref={fieldRefs.email}
+          value={form.email}
+          onChange={set("email")}
+          data-testid="contact-form-email"
+          autoComplete="email"
+          aria-invalid={errors.email ? "true" : undefined}
+          aria-describedby={errors.email ? "cf-email-error" : undefined}
+        />
+        {errors.email && <p className="form-error" id="cf-email-error" role="alert">{errors.email}</p>}
       </div>
       <div className="form-field">
         <label htmlFor="cf-message">What&rsquo;s on your mind?</label>
-        <textarea id="cf-message" name="message" required value={form.message} onChange={set("message")} data-testid="contact-form-message" />
+        <textarea
+          id="cf-message"
+          name="message"
+          ref={fieldRefs.message}
+          value={form.message}
+          onChange={set("message")}
+          data-testid="contact-form-message"
+          aria-invalid={errors.message ? "true" : undefined}
+          aria-describedby={errors.message ? "cf-message-error" : undefined}
+        />
+        {errors.message && <p className="form-error" id="cf-message-error" role="alert">{errors.message}</p>}
       </div>
       <button
         type="submit"
@@ -392,6 +447,9 @@ export default function App() {
   const [showTop, setShowTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const headerRef = useRef(null);
+  const navToggleRef = useRef(null);
+  const menuCloseRef = useRef(null);
+  const wasMenuOpen = useRef(false);
   const { scrollY, scrollYProgress } = useScroll();
 
   /* Header compression */
@@ -430,12 +488,20 @@ export default function App() {
     else window.scrollTo({ top, behavior: "smooth" });
   }, [lenis]);
 
-  /* Menu: lock the page, close on Escape */
+  /* Menu: lock the page, close on Escape, manage focus in/out of the panel */
   useEffect(() => {
     if (menu) document.body.classList.add("menu-open");
     else document.body.classList.remove("menu-open");
     const onKey = (e) => { if (e.key === "Escape") setMenu(false); };
     window.addEventListener("keydown", onKey);
+
+    if (menu) {
+      menuCloseRef.current?.focus();
+    } else if (wasMenuOpen.current) {
+      navToggleRef.current?.focus();
+    }
+    wasMenuOpen.current = menu;
+
     return () => window.removeEventListener("keydown", onKey);
   }, [menu]);
 
@@ -491,13 +557,14 @@ export default function App() {
               rel="noopener noreferrer"
               data-testid="nav-resume"
             >
-              Resume
+              Resume<span className="sr-only"> (opens in new tab)</span>
             </a>
           </nav>
 
           <div className="header-right">
             <ThemeSwitch theme={theme} setTheme={setTheme} />
             <button
+              ref={navToggleRef}
               className="nav-toggle"
               onClick={() => setMenu(true)}
               aria-expanded={menu}
@@ -519,6 +586,7 @@ export default function App() {
         aria-hidden={!menu}
       >
         <button
+          ref={menuCloseRef}
           className="mobile-menu-close"
           onClick={() => setMenu(false)}
           tabIndex={menu ? 0 : -1}
@@ -549,7 +617,7 @@ export default function App() {
               tabIndex={menu ? 0 : -1}
               onClick={() => setMenu(false)}
             >
-              Resume
+              Resume<span className="sr-only"> (opens in new tab)</span>
               <ArrowUpRight size={20} />
             </a>
           </li>
@@ -851,7 +919,7 @@ export default function App() {
                       <span className="tag">Research-led</span>
                     </div>
                     <Link to="/work/travelogue" className="read-case" data-testid="read-case-travelogue">
-                      Read case study <ArrowUpRight size={14} />
+                      Read case study<span className="sr-only"> — Travelogue</span> <ArrowUpRight size={14} />
                     </Link>
                   </div>
                 </article>
@@ -883,7 +951,7 @@ export default function App() {
                         data-testid="read-case-dab"
                         style={{ marginTop: "1.4rem" }}
                       >
-                        Read case study <ArrowUpRight size={14} />
+                        Read case study<span className="sr-only"> — DAB of India</span> <ArrowUpRight size={14} />
                       </Link>
                     </div>
                     <div className="proj-metrics">
@@ -1046,7 +1114,7 @@ export default function App() {
                     className="btn btn-secondary"
                     data-testid="contact-linkedin-link"
                   >
-                    View LinkedIn <ArrowUpRight size={15} />
+                    View LinkedIn<span className="sr-only"> (opens in new tab)</span> <ArrowUpRight size={15} />
                   </a>
                 </Magnetic>
               </div>

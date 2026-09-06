@@ -195,6 +195,21 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 }
 .skip-link:focus { left: 1rem; top: 1rem; }
 
+/* Visually hides content while keeping it in the accessibility tree —
+   standard clip-based technique (not display:none/visibility:hidden,
+   which would remove it for screen readers too). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------- shared type ---------- */
 .eyebrow {
   font-family: var(--font-mono);
@@ -1160,6 +1175,13 @@ figcaption {
   transition: border-color var(--dur-fast) var(--ease-state);
 }
 .form-field input:focus, .form-field textarea:focus { border-bottom-color: var(--accent); }
+.form-field input[aria-invalid="true"], .form-field textarea[aria-invalid="true"] { border-bottom-color: var(--accent-on-inv); }
+.form-error {
+  margin: .4rem 0 0;
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  color: var(--accent-on-inv);
+}
 /* The global :focus-visible ring uses --accent, which fails 3:1 contrast
    against this section's --inv-bg in the Carbon/Petrol themes (see
    A11Y_AUDIT.md #2) — scoped here to --inv-ink instead, which is the
