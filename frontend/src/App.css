@@ -31,6 +31,11 @@
   --inv-line: #2E2C26;
   --inv-line-strong: #64635E;
   --inv-faint: #46433B;
+  /* --secondary/--accent as TEXT on --inv-bg fail contrast in Carbon/Petrol
+     (A11Y_AUDIT.md #6-8) — these are the same colors elsewhere, adjusted
+     only for that specific usage so nothing else changes. */
+  --secondary-on-inv: #72817A;
+  --accent-on-inv: #D9512C;
 
   --header-rgb: 242, 238, 231;
   --shadow-rgb: 20, 19, 15;
@@ -79,6 +84,8 @@
   --inv-line: #D6D3CC;
   --inv-line-strong: #8D8B87;
   --inv-faint: #C2BEB6;
+  --secondary-on-inv: #647269;
+  --accent-on-inv: #A05B42;
 
   --header-rgb: 11, 11, 11;
   --shadow-rgb: 0, 0, 0;
@@ -106,6 +113,8 @@
   --inv-line: #C2D4D6;
   --inv-line-strong: #808C8D;
   --inv-faint: #AEC5C7;
+  --secondary-on-inv: #4C736B;
+  --accent-on-inv: #5F7225;
 
   --header-rgb: 5, 42, 49;
   --shadow-rgb: 0, 0, 0;
@@ -1109,8 +1118,8 @@ figcaption {
   line-height: 1.03;
   margin-top: 1rem;
 }
-.contact h2 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent); }
-.contact-eyebrow { color: var(--secondary); }
+.contact h2 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent-on-inv); }
+.contact-eyebrow { color: var(--secondary-on-inv); }
 .contact p.lede { margin-top: 1.3rem; max-width: 50ch; color: var(--inv-muted); font-size: 1.02rem; }
 .contact-actions { margin-top: 2.4rem; display: flex; gap: .9rem; flex-wrap: wrap; }
 .contact .btn-primary {
@@ -1165,7 +1174,7 @@ figcaption {
   color: var(--inv-muted);
   line-height: 1.7;
 }
-.form-sent b { color: var(--accent); display: block; margin-bottom: .6rem; font-weight: 500; }
+.form-sent b { color: var(--accent-on-inv); display: block; margin-bottom: .6rem; font-weight: 500; }
 
 
 /* ---------- footer ---------- */
