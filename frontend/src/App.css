@@ -1138,11 +1138,15 @@ figcaption {
   font-family: var(--font-body);
   font-size: .95rem;
   padding: .55rem 0;
-  outline: none;
   resize: vertical;
   transition: border-color var(--dur-fast) var(--ease-state);
 }
 .form-field input:focus, .form-field textarea:focus { border-bottom-color: var(--accent); }
+/* The global :focus-visible ring uses --accent, which fails 3:1 contrast
+   against this section's --inv-bg in the Carbon/Petrol themes (see
+   A11Y_AUDIT.md #2) — scoped here to --inv-ink instead, which is the
+   section's own high-contrast foreground color (13–18:1 in all themes). */
+.form-field input:focus-visible, .form-field textarea:focus-visible { outline-color: var(--inv-ink); }
 .form-field textarea { min-height: 96px; }
 .form-sent {
   border: 1px solid var(--inv-line);
