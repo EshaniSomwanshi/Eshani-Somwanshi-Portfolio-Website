@@ -78,3 +78,14 @@ Never push to `production` on a bare "push" — wait for the explicit go-ahead.
 ### Testing protocol (`test_result.md`)
 
 The repo root has a `test_result.md` file with a structured YAML-in-Markdown protocol for coordinating between a "main" agent and a "testing" agent (used by the emergent.sh workflow this project was scaffolded from). If asked to record or update test status, follow the format already documented inside that file rather than inventing a new one.
+
+### Accessibility
+
+Build and edit everything on this site with accessibility in mind — this isn't a one-time cleanup, it's a standing bar for all future work here. Concretely, for any new or changed UI:
+
+- Follow `frontend/ACCESSIBILITY_CHECKLIST.md` (WCAG 2.2 AA, adapted for this site) — check new interactive elements, images, headings, and color choices against it as you build, not just when explicitly asked for an audit.
+- Prefer native HTML semantics over ARIA (a `<button>` beats `<div role="button">`); only reach for ARIA when HTML can't do the job.
+- Keyboard: anything a mouse/pointer can do, Tab + Enter/Space must also be able to do. Never remove the focus-visible outline without an equally visible, equally high-contrast replacement.
+- Contrast: check new color pairs against the existing design tokens (`App.css` `:root` blocks, one per theme — paper/carbon/petrol) before introducing a new one. Compute the ratio (4.5:1 text, 3:1 large text/UI components/borders) rather than eyeballing it — text and UI elements have failed this in exactly this codebase before from eyeballing.
+- Motion: gate new animation behind `useReducedMotion()` (Framer Motion) or an equivalent `prefers-reduced-motion` check, including for any JS-driven scroll/animation library that doesn't automatically respect it (Lenis didn't, until it was fixed to check this — same discipline applies to anything else added later).
+- `A11Y_AUDIT.md` at the repo root is the living record of known issues and their fix/verification status — check it before starting new work in an area it covers, and update it (status + live-test-needed note) if you touch something it tracks. Never mark a finding PASS without an actual live check (Lighthouse/axe/keyboard/VoiceOver) backing it — "the code looks right" is not the same as verified.
