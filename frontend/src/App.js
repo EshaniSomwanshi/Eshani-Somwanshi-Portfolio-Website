@@ -1094,7 +1094,7 @@ export default function App() {
             <Reveal>
               <p className="eyebrow contact-eyebrow">Get in touch</p>
               <h2 data-testid="contact-heading">
-                Hiring for a <em>product design</em> role?
+                Hiring for a <em>Product/UX design</em> role?
               </h2>
               <p className="lede">
                 I&rsquo;m open to product design roles across healthcare, AI, and enterprise
