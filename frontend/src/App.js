@@ -695,7 +695,7 @@ export default function App() {
                   <span className="lead-index">01 · OptraHealth</span>
                   <span className="status-pill">Full case study</span>
                 </div>
-                <p className="lead-role" style={{ marginTop: "1rem" }}>
+                <p className="lead-role" style={{ marginTop: "1.6rem" }}>
                   Product Designer · Dec 2024 – Mar 2025 · San Jose, CA
                 </p>
                 <h3
@@ -753,7 +753,7 @@ export default function App() {
                   to="/work/optrahealth"
                   className="read-case"
                   data-testid="read-case-optra"
-                  style={{ marginTop: "1.1rem" }}
+                  style={{ marginTop: "1.8rem" }}
                 >
                   Read the case study <ArrowUpRight size={14} />
                 </Link>
