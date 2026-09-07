@@ -234,7 +234,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   font-size: clamp(1.8rem, 3.6vw, 3.1rem);
   font-weight: 600;
   letter-spacing: -.01em;
-  color: var(--muted);
+  color: var(--ink);
 }
 
 /* serif italic accent — the editorial voice inside the grotesque */
@@ -699,6 +699,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   font-size: clamp(1rem, 1.6vw, 1.25rem);
   font-weight: 600;
   letter-spacing: -.028em;
+  color: var(--muted);
   margin-top: .6rem;
   max-width: 20ch;
   line-height: 1.05;
