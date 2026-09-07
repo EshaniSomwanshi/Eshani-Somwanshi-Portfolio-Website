@@ -701,7 +701,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   letter-spacing: -.028em;
   color: var(--muted);
   margin-top: .6rem;
-  max-width: 20ch;
+  max-width: 40ch;
   line-height: 1.05;
 }
 .section-head h2 em {
