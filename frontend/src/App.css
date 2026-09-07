@@ -787,14 +787,17 @@ figcaption {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* Depth-of-stack: scale/dim/shadow are driven per-card from JS (see
-     useCardDepth in App.js) as a card gets covered by the next one in
-     the sticky stack. transform-origin: top matches how it actually
-     disappears on scroll — its top edge stays pinned (sticky) while the
-     next card rises to cover it, so shrinking should read as receding
-     away from that fixed top edge, not from the card's center. */
+  /* Depth-of-stack: scale only, driven per-card from JS (see useCardDepth
+     in App.js) as a card gets covered by the next one in the sticky
+     stack — no opacity/blur/shadow, the narrowing width against the next
+     (undimmed, flush) card is what reads as receding. transform-origin:
+     top matches how it actually disappears on scroll — its top edge
+     stays pinned (sticky) while the next card rises to cover it, so
+     shrinking should read as receding away from that fixed top edge, not
+     from the card's center. border-radius is untouched by the scale
+     transform, so it stays visually consistent throughout. */
   transform-origin: top center;
-  will-change: transform, filter, box-shadow;
+  will-change: transform;
 }
 .lead-panel::after {
   content: "";
