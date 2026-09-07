@@ -848,7 +848,6 @@ figcaption {
   letter-spacing: -.03em;
   line-height: 1.1;
   margin: 0.4rem 0 0;
-  max-width: 44ch;
 }
 .lead-panel h3 .quiet { color: var(--muted); }
 .lead-role {
@@ -876,7 +875,7 @@ figcaption {
    no aspect-ratio guessing needed. */
 .lead-columns {
   display: grid;
-  grid-template-columns: 1.15fr .85fr;
+  grid-template-columns: 35fr 65fr;
   gap: clamp(2rem, 4vw, 3.3333rem);
   margin-top: 1.2rem;
   align-items: start;
@@ -1122,7 +1121,7 @@ figcaption {
 .lead-subtitle { color: var(--muted); font-size: 1.36rem; max-width: 46ch; margin-top: 0.6667rem; }
 /* Scoped override — .lead-subtitle is shared with the EYE AI case-study
    rail, which should keep its original size. h3 step (19.22px). */
-.lead-panel .lead-subtitle { font-size: 1.602rem; }
+.lead-panel .lead-subtitle { font-size: 1.602rem; max-width: none; }
 .case-highlights { display: flex; flex-direction: column; gap: 0.9333rem; margin-top: 2.1333rem; }
 .case-highlights li { display: flex; align-items: flex-start; gap: 0.8rem; font-size: 1.1733rem; line-height: 1.5; color: var(--muted); }
 .case-highlights svg { flex: none; margin-top: 0.2667rem; color: var(--accent-strong); }
