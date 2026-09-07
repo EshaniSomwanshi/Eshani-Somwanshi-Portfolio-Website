@@ -695,68 +695,67 @@ export default function App() {
                   <span className="lead-index">01 · OptraHealth</span>
                   <span className="status-pill">Full case study</span>
                 </div>
-                <p className="lead-role" style={{ marginTop: ".75rem" }}>
-                  Product Designer · Dec 2024 – Mar 2025 · San Jose, CA
-                </p>
-                <h3
-                  data-cursor="MyoCircle"
-                  data-cursor-img={IMG("myocircle-cover.png")}
-                >
-                  Pediatric Therapy App <span className="quiet">(Zoe, an AI companion inside a health-tech platform)</span>
-                </h3>
-                <p className="lead-subtitle">
-                  Companion-guided app connecting patients, parents, and providers.
-                </p>
-                {/* TODO(Eshani): the 3 checklist bullets you sent for OptraHealth were
-                    identical to Onward's — looked like a copy/paste. Swap the paragraph
-                    below for real OptraHealth-specific highlights once you have them. */}
-                <div className="lead-media" data-cursor="MyoCircle">
-                  <Wipe
-                    src={IMG("myocircle-cover.png")}
-                    alt="MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow."
-                    testId="project-image-myocircle"
-                  />
-                </div>
-                <div className="lead-body">
-                  <div>
-                    <p>
+                <div className="lead-columns">
+                  <div className="lead-col-text">
+                    <p className="lead-role" style={{ marginTop: ".75rem" }}>
+                      Product Designer · Dec 2024 – Mar 2025 · San Jose, CA
+                    </p>
+                    <h3
+                      data-cursor="MyoCircle"
+                      data-cursor-img={IMG("myocircle-cover.png")}
+                    >
+                      Pediatric Therapy App <span className="quiet">(Zoe, an AI companion inside a health-tech platform)</span>
+                    </h3>
+                    <p className="lead-subtitle">
+                      Companion-guided app connecting patients, parents, and providers.
+                    </p>
+                    {/* TODO(Eshani): the 3 checklist bullets you sent for OptraHealth were
+                        identical to Onward's — looked like a copy/paste. Swap the paragraph
+                        below for real OptraHealth-specific highlights once you have them. */}
+                    <p className="lead-desc">
                       Primary designer for Zoe, building the interaction layer from the
                       ground up alongside mobile onboarding, a patient management dashboard,
                       and provider monitoring. Validated across 20+ usability and heuristic
                       evaluation sessions with patients, parents, and providers.
                     </p>
+                    <div className="lead-metrics">
+                      <div>
+                        <div className="m-value"><CountUp value={30} suffix="%" /></div>
+                        <div className="m-label">Weekly engagement ↑</div>
+                        <div className="m-method">Post-launch vs. prior release</div>
+                      </div>
+                      <div>
+                        <div className="m-value"><CountUp value={28} suffix="%" /></div>
+                        <div className="m-label">Tutorial completion ↑</div>
+                        <div className="m-method">Across 20+ sessions</div>
+                      </div>
+                      <div>
+                        <div className="m-value"><CountUp value={100} suffix="+" /></div>
+                        <div className="m-label">Component library</div>
+                        <div className="m-method">Adopted by PMs and engineers</div>
+                      </div>
+                    </div>
+                    <div className="lead-tags tag-row">
+                      <span className="tag">AI companion</span>
+                      <span className="tag">Healthcare SaaS</span>
+                      <span className="tag">Design system</span>
+                    </div>
+                    <Link
+                      to="/work/optrahealth"
+                      className="read-case"
+                      data-testid="read-case-optra"
+                    >
+                      Read the case study <ArrowUpRight size={14} />
+                    </Link>
                   </div>
-                  <div className="lead-metrics">
-                    <div>
-                      <div className="m-value"><CountUp value={30} suffix="%" /></div>
-                      <div className="m-label">Weekly engagement ↑</div>
-                      <div className="m-method">Post-launch vs. prior release</div>
-                    </div>
-                    <div>
-                      <div className="m-value"><CountUp value={28} suffix="%" /></div>
-                      <div className="m-label">Tutorial completion ↑</div>
-                      <div className="m-method">Across 20+ sessions</div>
-                    </div>
-                    <div>
-                      <div className="m-value"><CountUp value={100} suffix="+" /></div>
-                      <div className="m-label">Component library</div>
-                      <div className="m-method">Adopted by PMs and engineers</div>
-                    </div>
+                  <div className="lead-media" data-cursor="MyoCircle">
+                    <Wipe
+                      src={IMG("myocircle-cover.png")}
+                      alt="MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow."
+                      testId="project-image-myocircle"
+                    />
                   </div>
                 </div>
-                <div className="lead-tags tag-row">
-                  <span className="tag">AI companion</span>
-                  <span className="tag">Healthcare SaaS</span>
-                  <span className="tag">Design system</span>
-                </div>
-                <Link
-                  to="/work/optrahealth"
-                  className="read-case"
-                  data-testid="read-case-optra"
-                  style={{ marginTop: ".8rem" }}
-                >
-                  Read the case study <ArrowUpRight size={14} />
-                </Link>
               </article>
             </Reveal>
           </div>
