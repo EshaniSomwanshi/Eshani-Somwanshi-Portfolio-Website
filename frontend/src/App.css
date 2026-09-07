@@ -779,6 +779,14 @@ figcaption {
   padding: clamp(1.3333rem, 1.8vw, 1.6rem);
   position: relative;
   overflow: hidden;
+  /* Near-viewport-height, full-width cards for the sticky stack —
+     min-height so shorter cards (no image, fewer metrics) still fill the
+     same footprint as the fullest one, content centered rather than
+     pinned to the top with dead space below. */
+  min-height: min(86vh, 900px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .lead-panel::after {
   content: "";
@@ -880,10 +888,15 @@ figcaption {
   margin-top: 1.2rem;
   align-items: start;
 }
+/* Cards with no image (Rebecca, DAB) — text takes the full width instead
+   of being stuck in the narrow 35% column. */
+.lead-panel.no-image .lead-columns { grid-template-columns: 1fr; }
 .lead-col-text { display: flex; flex-direction: column; }
 /* "p" step = 1rem (12px) — the body-copy tier of the scale. */
-.lead-desc { color: var(--muted); margin-top: 1.2rem; font-size: 1rem; }
-.lead-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.0667rem; margin-top: 1.3333rem; }
+.lead-desc { color: var(--muted); margin-top: 1.2rem; font-size: 1rem; max-width: 70ch; }
+/* auto-fit so 2, 3, or 4 metrics (varies per project) all lay out
+   cleanly instead of a fixed 3-column grid leaving gaps or overflowing. */
+.lead-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 1.0667rem; margin-top: 1.3333rem; max-width: 56rem; }
 .lead-metrics .m-value { font-size: 1.802rem; } /* h2 step — 21.62px */
 .lead-metrics .m-label { font-size: 1rem; } /* p step — 12px */
 .lead-metrics .m-method { font-size: .79rem; } /* smaller step — 9.48px */
@@ -1875,6 +1888,49 @@ figcaption {
 }
 .lead-media .wipe { aspect-ratio: 1100 / 535; }
 .lead-media .wipe img { object-fit: contain; }
+
+/* ---------- gallery card — the 6th stack item ---------- */
+/* Overrides .lead-panel's centered content: a grid of unpredictable
+   height should start from the top and scroll internally if it ever
+   runs taller than the card, not float centered. */
+.gallery-card { justify-content: flex-start; }
+.gallery-card-head { margin-top: .4rem; }
+.gallery-card-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.802rem; /* h2 step — matches other cards' second-tier size */
+  font-weight: 600;
+  letter-spacing: -.03em;
+}
+.gallery-card-head .lead-desc { margin-top: .5333rem; }
+.gallery-card-grid {
+  margin-top: 1.3333rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  flex: 1;
+  overflow-y: auto;
+}
+.gallery-card-item {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+}
+.gallery-card-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-card-item figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: .5333rem .8rem;
+  background: linear-gradient(transparent, rgba(0,0,0,.68));
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: .667rem;
+  line-height: 1.4;
+}
+.gallery-card-item figcaption b { display: block; font-weight: 600; }
 
 /* ---------- gallery: a wall of real screens, masonry-style ---------- */
 .shot-grid {

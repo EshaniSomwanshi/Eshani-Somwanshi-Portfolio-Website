@@ -9,7 +9,7 @@ import {
   useScroll,
   useSpring,
 } from "framer-motion";
-import { ArrowDown, ArrowUp, ArrowUpRight, Check, Menu, Minus, Plus, Send } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpRight, Menu, Minus, Plus, Send } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
 import {
@@ -26,8 +26,6 @@ import {
 import "./App.css";
 import Preloader from "./components/site/Preloader";
 import AvatarHero from "./components/ui/AvatarHero";
-import MacBookScroll from "./components/devices/MacBookScroll";
-import Assemble from "./components/devices/Assemble";
 
 /* ========================================================================
    Content
@@ -177,139 +175,167 @@ function ToolMarquee({ theme }) {
 }
 
 /* ========================================================================
-   02 — chaptered case study (EYE AI)
+   Selected work — one shared card template, driven by data, so all six
+   entries (five projects + the screens gallery) render identically and
+   the sticky-stack below just repeats one component. Content here is the
+   same information already live elsewhere (the EYE AI/Rebecca/Travelogue/
+   DAB fields mirror caseStudies.js and the case-study rail this replaces
+   on the homepage teaser) — nothing is new copy, just reshaped to fit.
    ======================================================================== */
 
-function CaseStudy({ go }) {
-  const [active, setActive] = useState("ch-1");
-  const flowRef = useRef(null);
+const workCards = [
+  {
+    key: "optra",
+    testId: "project-card-optra",
+    index: "01",
+    company: "OptraHealth",
+    statusLabel: "Full case study",
+    role: "Product Designer · Dec 2024 – Mar 2025 · San Jose, CA",
+    title: "Pediatric Therapy App",
+    quiet: "(Zoe, an AI companion inside a health-tech platform)",
+    subtitle: "Companion-guided app connecting patients, parents, and providers.",
+    desc: "Primary designer for Zoe, building the interaction layer from the ground up alongside mobile onboarding, a patient management dashboard, and provider monitoring. Validated across 20+ usability and heuristic evaluation sessions with patients, parents, and providers.",
+    metrics: [
+      { value: <CountUp value={30} suffix="%" />, label: "Weekly engagement ↑", method: "Post-launch vs. prior release" },
+      { value: <CountUp value={28} suffix="%" />, label: "Tutorial completion ↑", method: "Across 20+ sessions" },
+      { value: <CountUp value={100} suffix="+" />, label: "Component library", method: "Adopted by PMs and engineers" },
+    ],
+    tags: ["AI companion", "Healthcare SaaS", "Design system"],
+    image: { src: "myocircle-cover.png", alt: "MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow." },
+    cursorLabel: "MyoCircle",
+    link: "/work/optrahealth",
+    linkLabel: "Read the case study",
+    linkTestId: "read-case-optra",
+  },
+  {
+    key: "eyeai",
+    testId: "project-card-eyeai",
+    index: "02",
+    company: "Onward Technologies · EYE AI",
+    statusLabel: "Full case study",
+    role: "UX Designer · Jul 2024 – Aug 2024 · Chicago, IL",
+    title: "Retinal Diagnostic Platform",
+    subtitle: "Streamlining complex diagnostics into a unified, actionable experience.",
+    desc: "Streamlining complex diagnostics into one unified, actionable experience for clinicians: a regulated B2B health-tech MVP followed end to end, from heuristic evaluation and stakeholder research through journey mapping, iterative prototyping, and high-fidelity delivery of a diagnostic tool clinicians could trust.",
+    metrics: [
+      { value: <CountUp value={20} suffix="%" />, label: "Faster diagnostic tasks", method: "Timed task testing, pre/post" },
+      { value: "10→7", label: "Week MVP timeline", method: "Against the original delivery plan" },
+    ],
+    tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
+    image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
+    link: "/work/eye-ai",
+    linkLabel: "Open full case study",
+    linkTestId: "read-case-eye-ai",
+  },
+  {
+    key: "rebecca",
+    testId: "project-card-rebecca",
+    index: "03",
+    company: "Rebecca Everlene Trust Company",
+    statusLabel: "Under NDA",
+    role: "UX/UI Designer · Oct 2025 – Present · Chicago, IL",
+    title: "Rebecca Everlene Trust Company",
+    desc: "Leading design from discovery through high-fidelity execution for a B2C web platform, restructuring dense financial content into gamified learning modules, and partnering with product and engineering to keep AI-driven features shippable.",
+    confidentialNote: "Screens aren’t public. The process is shareable and I’m happy to walk through the work live, just ask.",
+    metrics: [
+      { value: <CountUp value={25} suffix="%" />, label: "Task completion ↑", method: "Pre/post restructure" },
+      { value: <CountUp value={40} suffix="%" />, label: "Early drop-off ↓", method: "First-session funnel" },
+    ],
+    tags: ["0→1 product", "Gamified learning", "AI workflows"],
+    link: "/work/rebecca-everlene",
+    linkLabel: "Read the process",
+    linkTestId: "read-case-rebecca",
+  },
+  {
+    key: "travelogue",
+    testId: "project-card-travelogue",
+    index: "04",
+    company: "Travelogue",
+    statusLabel: "Full case study",
+    role: "Product Designer · Personal case study · 2025",
+    title: "Travelogue",
+    desc: "A self-initiated, research-led concept that consolidates trip planning into one home: upcoming trips, itineraries, documents, and the people coming along, shaped directly by traveler interviews about offline access, group coordination, and expense tracking.",
+    metrics: [
+      { value: "08", label: "Traveler interviews" },
+      { value: "05", label: "Unmet needs mapped" },
+    ],
+    tags: ["Personal project", "Mobile UX", "Research-led"],
+    image: { src: "travelogue-cover.png", alt: "Travelogue home feed and a group trip hub shown side by side on two phones." },
+    cursorLabel: "Travelogue",
+    link: "/work/travelogue",
+    linkLabel: "Read case study",
+    linkSrOnly: "Travelogue",
+    linkTestId: "read-case-travelogue",
+  },
+  {
+    key: "dab",
+    testId: "project-card-dab",
+    index: "05",
+    company: "DAB of India",
+    statusLabel: "Full case study",
+    role: "Visual Designer · Jan 2023 – Aug 2023 · Pune, India",
+    title: "DAB of India",
+    desc: "Built an AI-assisted design workflow spanning copy, mockups, and social and print assets across 25+ clients, maintaining brand standards over 1,000+ assets, and designing brand pitch decks used directly in client acquisition.",
+    metrics: [
+      { value: <CountUp value={25} suffix="+" />, label: "Clients served" },
+      { value: <CountUp value={1000} suffix="+" comma />, label: "Assets maintained" },
+    ],
+    tags: ["Brand design", "AI-assisted workflow", "Client work"],
+    link: "/work/dab-of-india",
+    linkLabel: "Read case study",
+    linkSrOnly: "DAB of India",
+    linkTestId: "read-case-dab",
+  },
+];
 
-  useEffect(() => {
-    const root = flowRef.current;
-    if (!root) return;
-    const chapters = root.querySelectorAll(".chapter");
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => { if (en.isIntersecting) setActive(en.target.id); });
-      },
-      { rootMargin: "-30% 0px -55% 0px" },
-    );
-    chapters.forEach((c) => obs.observe(c));
-    return () => obs.disconnect();
-  }, []);
-
-  const chapters = [["ch-1", "01", "Research"], ["ch-2", "02", "Method"], ["ch-3", "03", "Interface"]];
+function StackCard({ i, card }) {
+  const {
+    testId, index, company, statusLabel, role, title, quiet, subtitle, desc,
+    confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
+  } = card;
 
   return (
-    <div className="case">
-      <div className="case-rail">
-        <Reveal>
-          <p className="lead-index">Onward Technologies · EYE AI</p>
-          <h3 data-testid="case-study-heading">
-            Retinal Diagnostic Platform
-          </h3>
-          <p className="lead-subtitle">
-            Streamlining complex diagnostics into a unified, actionable experience.
-          </p>
-          <p className="lead-role">UX Designer · Jul 2024 – Aug 2024 · Chicago, IL</p>
-          <div className="case-metrics">
-            <div>
-              <div className="m-value"><CountUp value={20} suffix="%" /></div>
-              <div className="m-label">Faster diagnostic tasks</div>
-              <div className="m-method">Timed task testing, pre/post</div>
+    <Reveal className="stack-item" style={{ "--i": i }}>
+      <article className={`lead-panel${image ? "" : " no-image"}`} data-testid={testId}>
+        <div className="lead-top">
+          <span className="lead-index">{index} · {company}</span>
+          <span className="status-pill">{statusLabel}</span>
+        </div>
+        <div className="lead-columns">
+          <div className="lead-col-text">
+            <p className="lead-role" style={{ marginTop: ".75rem" }}>{role}</p>
+            <h3 {...(cursorLabel && image ? { "data-cursor": cursorLabel, "data-cursor-img": IMG(image.src) } : {})}>
+              {title} {quiet && <span className="quiet">{quiet}</span>}
+            </h3>
+            {subtitle && <p className="lead-subtitle">{subtitle}</p>}
+            <p className="lead-desc">{desc}</p>
+            {confidentialNote && <p className="nda-note">{confidentialNote}</p>}
+            {metrics?.length > 0 && (
+              <div className="lead-metrics">
+                {metrics.map((m, mi) => (
+                  <div key={mi}>
+                    <div className="m-value">{m.value}</div>
+                    <div className="m-label">{m.label}</div>
+                    {m.method && <div className="m-method">{m.method}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="lead-tags tag-row">
+              {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
             </div>
-            <div>
-              <div className="m-value">10→7</div>
-              <div className="m-label">Week MVP timeline</div>
-              <div className="m-method">Against the original delivery plan</div>
+            <Link to={link} className="read-case" data-testid={card.linkTestId}>
+              {linkLabel}{linkSrOnly && <span className="sr-only"> — {linkSrOnly}</span>} <ArrowUpRight size={14} />
+            </Link>
+          </div>
+          {image && (
+            <div className="lead-media" data-cursor={cursorLabel}>
+              <Wipe src={IMG(image.src)} alt={image.alt} testId={`project-image-${card.key}`} />
             </div>
-          </div>
-          <ul className="case-highlights" data-testid="case-highlights-eye-ai">
-            <li><Check size={15} /> Unified patient data, AI image analysis, and reporting into one clinical interface.</li>
-            <li><Check size={15} /> Compressed MVP delivery timeline by 3 weeks through rapid prototyping and usability validation.</li>
-            <li><Check size={15} /> Enabled clinicians to streamline diagnostic tasks 20% quicker while maintaining regulatory compliance.</li>
-          </ul>
-          <figure className="case-cover-preview">
-            <Wipe
-              src={IMG("onward-1.png")}
-              alt="Eye AI product site: onboarding clinicians to the diagnostic platform"
-              testId="case-onward-cover"
-            />
-          </figure>
-          <nav className="chapter-nav" aria-label="Case study chapters">
-            <ul>
-              {chapters.map(([id, n, label]) => (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    aria-current={active === id}
-                    data-testid={`chapter-nav-${id}`}
-                    onClick={(e) => { e.preventDefault(); go(id); }}
-                  >
-                    <span className="n">{n}</span> {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <Link
-            to="/work/eye-ai"
-            className="read-case"
-            data-testid="read-case-eye-ai"
-            style={{ marginTop: "1.6rem" }}
-          >
-            Open full case study <ArrowUpRight size={14} />
-          </Link>
-        </Reveal>
-      </div>
-
-      <div className="chapter-flow" ref={flowRef}>
-        <article className="chapter" id="ch-1">
-          <Reveal>
-            <p className="section-label">01 · Research</p>
-            <h4>Where clinicians lose time.</h4>
-            <p>
-              Applied heuristic evaluation and competitive analysis across 15+ stakeholder
-              workshops to set design direction through 3 product pivots, directly reshaping
-              sprint priorities and roadmap sequencing.
-            </p>
-          </Reveal>
-        </article>
-
-        <article className="chapter" id="ch-2">
-          <Reveal>
-            <p className="section-label">02 · Method</p>
-            <h4>A defined path from research to handoff.</h4>
-            <p>
-              Journey mapping through wireframing, iterative prototyping, and high-fidelity
-              delivery. Compressed the MVP timeline from 10 to 7 weeks through user-centered
-              prototyping and early usability validation, eliminating 5 high-severity
-              interaction issues before engineering commitment.
-            </p>
-          </Reveal>
-        </article>
-
-        <article className="chapter" id="ch-3">
-          <Reveal>
-            <p className="section-label">03 · Interface</p>
-            <h4>The clinician&rsquo;s four minutes.</h4>
-            <p>
-              Diagnostic workflows and automated reporting for a B2B health-tech platform MVP,
-              enabling clinicians to complete diagnostic tasks 20% faster while maintaining
-              compliance in a regulated environment.
-            </p>
-          </Reveal>
-          <div className="chapter-art">
-            <MacBookScroll
-              src={IMG("eyeai-cover.png")}
-              alt="Eye AI clinician dashboard listing patients with diagnostic status and images analyzed."
-              caption="Patient dashboard: status and diagnostic queue at a glance"
-              testId="case-image-cover"
-            />
-          </div>
-        </article>
-      </div>
-    </div>
+          )}
+        </div>
+      </article>
+    </Reveal>
   );
 }
 
@@ -673,7 +699,12 @@ export default function App() {
           </div>
         </section>
 
-        {/* ---------- 01 lead project — OptraHealth (has shippable screens) ---------- */}
+        {/* ---------- selected work — one unified sticky-stack ----------
+             All six entries (five projects + the gallery) share one card
+             template (StackCard) and one .stack, so scrolling through this
+             section is a single continuous stacking sequence instead of
+             three separate sections with their own headings. Experimental
+             — see PR/commit message for the easy revert path. ---------- */}
         <section className="section" id="work">
           <div className="container">
             <div className="section-head">
@@ -689,280 +720,36 @@ export default function App() {
               </Reveal>
             </div>
 
-            <Reveal>
-              <article className="lead-panel" data-testid="project-card-optra">
-                <div className="lead-top">
-                  <span className="lead-index">01 · OptraHealth</span>
-                  <span className="status-pill">Full case study</span>
-                </div>
-                <div className="lead-columns">
-                  <div className="lead-col-text">
-                    <p className="lead-role" style={{ marginTop: ".75rem" }}>
-                      Product Designer · Dec 2024 – Mar 2025 · San Jose, CA
-                    </p>
-                    <h3
-                      data-cursor="MyoCircle"
-                      data-cursor-img={IMG("myocircle-cover.png")}
-                    >
-                      Pediatric Therapy App <span className="quiet">(Zoe, an AI companion inside a health-tech platform)</span>
-                    </h3>
-                    <p className="lead-subtitle">
-                      Companion-guided app connecting patients, parents, and providers.
-                    </p>
-                    {/* TODO(Eshani): the 3 checklist bullets you sent for OptraHealth were
-                        identical to Onward's — looked like a copy/paste. Swap the paragraph
-                        below for real OptraHealth-specific highlights once you have them. */}
-                    <p className="lead-desc">
-                      Primary designer for Zoe, building the interaction layer from the
-                      ground up alongside mobile onboarding, a patient management dashboard,
-                      and provider monitoring. Validated across 20+ usability and heuristic
-                      evaluation sessions with patients, parents, and providers.
-                    </p>
-                    <div className="lead-metrics">
-                      <div>
-                        <div className="m-value"><CountUp value={30} suffix="%" /></div>
-                        <div className="m-label">Weekly engagement ↑</div>
-                        <div className="m-method">Post-launch vs. prior release</div>
-                      </div>
-                      <div>
-                        <div className="m-value"><CountUp value={28} suffix="%" /></div>
-                        <div className="m-label">Tutorial completion ↑</div>
-                        <div className="m-method">Across 20+ sessions</div>
-                      </div>
-                      <div>
-                        <div className="m-value"><CountUp value={100} suffix="+" /></div>
-                        <div className="m-label">Component library</div>
-                        <div className="m-method">Adopted by PMs and engineers</div>
-                      </div>
-                    </div>
-                    <div className="lead-tags tag-row">
-                      <span className="tag">AI companion</span>
-                      <span className="tag">Healthcare SaaS</span>
-                      <span className="tag">Design system</span>
-                    </div>
-                    <Link
-                      to="/work/optrahealth"
-                      className="read-case"
-                      data-testid="read-case-optra"
-                    >
-                      Read the case study <ArrowUpRight size={14} />
-                    </Link>
-                  </div>
-                  <div className="lead-media" data-cursor="MyoCircle">
-                    <Wipe
-                      src={IMG("myocircle-cover.png")}
-                      alt="MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow."
-                      testId="project-image-myocircle"
-                    />
-                  </div>
-                </div>
-              </article>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ---------- 02 chaptered case study ---------- */}
-        <section className="section section-bright" id="case-onward">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">Case study 02</p></Reveal>
-                <SplitText as="h2" text="From clinician pain points to a shippable diagnostic tool." delay={0.05} />
-              </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A regulated B2B health-tech MVP, followed end to end: research, method,
-                  and the interface they produced.
-                </p>
-              </Reveal>
-            </div>
-            <CaseStudy go={go} />
-          </div>
-        </section>
-
-        {/* ---------- a closer look: real screens, no click-through ---------- */}
-        <section className="section" id="gallery" aria-label="Selected screens">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">A closer look</p></Reveal>
-                <SplitText as="h2" text="Real screens, not just covers." testId="gallery-heading" delay={0.05} />
-              </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A handful of the actual interfaces behind the work above.
-                </p>
-              </Reveal>
-            </div>
-            {/* Plain <img>, not Wipe — Assemble already supplies the entrance
-                motion, so a second clip-path reveal on top of it would just
-                fight the fly-in. */}
-            <Assemble className="shot-grid" spread={220} swirl={10} stagger={0.3}>
-              {shots.map(([src, alt, tag, cap, tall, w, h], i) => (
-                <figure className={`shot${tall ? " shot--tall" : ""}`} data-testid={`gallery-shot-${i}`} key={src}>
-                  <div className="wipe">
-                    <img
-                      src={IMG(src)}
-                      alt={alt}
-                      width={w}
-                      height={h}
-                      loading="lazy"
-                      decoding="async"
-                      data-testid={`gallery-shot-img-${i}`}
-                    />
-                  </div>
-                  <figcaption><b>{tag}</b>{cap}</figcaption>
-                </figure>
-              ))}
-            </Assemble>
-          </div>
-        </section>
-
-        {/* ---------- 03-05 supporting projects ---------- */}
-        <section className="section">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">Selected work 03, 04 &amp; 05</p></Reveal>
-                <SplitText as="h2" text="Current 0→1 work, a travel concept, and brand at scale." delay={0.05} />
-              </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A gamified B2C platform under NDA, a research-led travel concept, and
-                  production design across a client roster.
-                </p>
-              </Reveal>
-            </div>
-
             <div className="stack">
-              {/* 03 — current role, under NDA. Third by design: the strongest work
-                  a recruiter can actually see goes first. */}
-              <Reveal className="stack-item" style={{ "--i": "0" }}>
-                <article className="proj proj-compact" data-testid="project-card-rebecca">
-                  <div className="proj-body">
-                    <div>
-                      <div className="lead-top">
-                        <h3>Rebecca Everlene Trust Company</h3>
-                        <span className="status-pill">Under NDA</span>
-                      </div>
-                      <p className="lead-role">UX/UI Designer · Oct 2025 – Present · Chicago, IL</p>
-                    </div>
-                    <div>
-                      <p className="summary">
-                        Leading design from discovery through high-fidelity execution for a
-                        B2C web platform, restructuring dense financial content into gamified
-                        learning modules, and partnering with product and engineering to keep
-                        AI-driven features shippable.
-                      </p>
-                      <p className="nda-note">
-                        Screens aren&rsquo;t public. The process is shareable and I&rsquo;m happy
-                        to walk through the work live, just ask.
-                      </p>
-                      <div className="tag-row">
-                        <span className="tag">0→1 product</span>
-                        <span className="tag">Gamified learning</span>
-                        <span className="tag">AI workflows</span>
-                      </div>
-                      <Link
-                        to="/work/rebecca-everlene"
-                        className="read-case"
-                        data-testid="read-case-rebecca"
-                        style={{ marginTop: "1.4rem" }}
-                      >
-                        Read the process <ArrowUpRight size={14} />
-                      </Link>
-                    </div>
-                    <div className="proj-metrics">
-                      <div>
-                        <div className="m-value"><CountUp value={25} suffix="%" /></div>
-                        <div className="m-label">Task completion ↑</div>
-                        <div className="m-method">Pre/post restructure</div>
-                      </div>
-                      <div>
-                        <div className="m-value"><CountUp value={40} suffix="%" /></div>
-                        <div className="m-label">Early drop-off ↓</div>
-                        <div className="m-method">First-session funnel</div>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </Reveal>
+              {workCards.map((card, i) => (
+                <StackCard key={card.key} i={i} card={card} />
+              ))}
 
-              {/* 04 — Travelogue.
-                  TODO(Eshani): your notes marked this card's title, subtitle, and 3
-                  checklist bullets as "I will input info here" — swap the summary
-                  paragraph below for that copy once you've written it. */}
-              <Reveal className="stack-item" style={{ "--i": "1" }}>
-                <article className="proj proj-wide" data-testid="project-card-travelogue">
-                  <div className="proj-media" data-cursor="Travelogue">
-                    <Wipe
-                      src={IMG("travelogue-cover.png")}
-                      alt="Travelogue home feed and a group trip hub shown side by side on two phones."
-                      testId="project-image-travelogue"
-                    />
+              <Reveal className="stack-item" style={{ "--i": workCards.length }}>
+                <article className="lead-panel gallery-card" data-testid="project-card-gallery">
+                  <div className="lead-top">
+                    <span className="lead-index">06 · A closer look</span>
+                    <span className="status-pill">{shots.length} screens</span>
                   </div>
-                  <div className="proj-body">
-                    <div>
-                      <h3 data-cursor="Travelogue" data-cursor-img={IMG("travelogue-login-thumb.png")}>Travelogue</h3>
-                      <p className="lead-role">Product Designer · Personal case study · 2025</p>
-                    </div>
-                    <p className="summary">
-                      A self-initiated, research-led concept that consolidates trip planning into
-                      one home: upcoming trips, itineraries, documents, and the people coming
-                      along, shaped directly by traveler interviews about offline access, group
-                      coordination, and expense tracking.
-                    </p>
-                    <div className="tag-row">
-                      <span className="tag">Personal project</span>
-                      <span className="tag">Mobile UX</span>
-                      <span className="tag">Research-led</span>
-                    </div>
-                    <Link to="/work/travelogue" className="read-case" data-testid="read-case-travelogue">
-                      Read case study<span className="sr-only"> — Travelogue</span> <ArrowUpRight size={14} />
-                    </Link>
+                  <div className="gallery-card-head">
+                    <h3>Real screens, not just covers.</h3>
+                    <p className="lead-desc">A handful of the actual interfaces behind the work above.</p>
                   </div>
-                </article>
-              </Reveal>
-
-              {/* 05 — DAB of India */}
-              <Reveal className="stack-item" style={{ "--i": "2" }}>
-                <article className="proj proj-compact" data-testid="project-card-dab">
-                  <div className="proj-body">
-                    <div>
-                      <h3>DAB of India</h3>
-                      <p className="lead-role">Visual Designer · Jan 2023 – Aug 2023 · Pune, India</p>
-                    </div>
-                    <div>
-                      <p className="summary">
-                        Built an AI-assisted design workflow spanning copy, mockups, and social
-                        and print assets across 25+ clients, maintaining brand standards over
-                        1,000+ assets, and designing brand pitch decks used directly in client
-                        acquisition.
-                      </p>
-                      <div className="tag-row">
-                        <span className="tag">Brand design</span>
-                        <span className="tag">AI-assisted workflow</span>
-                        <span className="tag">Client work</span>
-                      </div>
-                      <Link
-                        to="/work/dab-of-india"
-                        className="read-case"
-                        data-testid="read-case-dab"
-                        style={{ marginTop: "1.4rem" }}
-                      >
-                        Read case study<span className="sr-only"> — DAB of India</span> <ArrowUpRight size={14} />
-                      </Link>
-                    </div>
-                    <div className="proj-metrics">
-                      <div>
-                        <div className="m-value"><CountUp value={25} suffix="+" /></div>
-                        <div className="m-label">Clients served</div>
-                      </div>
-                      <div>
-                        <div className="m-value"><CountUp value={1000} suffix="+" comma /></div>
-                        <div className="m-label">Assets maintained</div>
-                      </div>
-                    </div>
+                  <div className="gallery-card-grid">
+                    {shots.map(([src, alt, tag, cap, tall, w, h], i2) => (
+                      <figure className="gallery-card-item" data-testid={`gallery-shot-${i2}`} key={src}>
+                        <img
+                          src={IMG(src)}
+                          alt={alt}
+                          width={w}
+                          height={h}
+                          loading="lazy"
+                          decoding="async"
+                          data-testid={`gallery-shot-img-${i2}`}
+                        />
+                        <figcaption><b>{tag}</b>{cap}</figcaption>
+                      </figure>
+                    ))}
                   </div>
                 </article>
               </Reveal>
