@@ -302,14 +302,35 @@ const workCards = [
 function useCardDepth(progress, i, total) {
   const reduced = useReducedMotion();
   const isLast = i >= total - 1;
-  const start = i / total;
-  const end = (i + 1) / total;
-  const scale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.95], { clamp: true });
-  const brightness = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.92], { clamp: true });
-  const shadowAlpha = useTransform(progress, [start, end], [0.16, reduced || isLast ? 0.16 : 0.34], { clamp: true });
-  const filter = useTransform(brightness, (b) => `brightness(${b})`);
-  const boxShadow = useTransform(shadowAlpha, (a) => `0 2rem 3.5rem -1.6rem rgba(var(--shadow-rgb), ${a})`);
-  return { scale, filter, boxShadow };
+
+  /* "Depth" = how many cards behind the current one this card has fallen,
+     as a continuous number (0 = the active card, growing as later cards
+     take over) — not a single 0/1 swap between two fixed states. RATE > 1
+     makes it reach the next depth tier a bit before a full scroll-slice
+     has passed, so this card is already scaled/dimmed/shadowed by the
+     time the next card's content is actually overlapping it, instead of
+     the two crossing mid-transition. Capped at MAX_DEPTH (3) so 2-3
+     receded cards read as a real deck rather than one that vanishes after
+     a single card takes over — cards further back than that are already
+     fully covered anyway, so holding depth there changes nothing visible.
+     None of this touches the stack's own scroll length, trigger points,
+     or top-offset stagger — it only reads the existing progress value. */
+  const MAX_DEPTH = 3;
+  const RATE = 1.4;
+  const depth = useTransform(progress, (p) => {
+    if (reduced || isLast) return 0;
+    return Math.min(MAX_DEPTH, Math.max(0, (p * total - i) * RATE));
+  });
+
+  const scale = useTransform(depth, [0, 1, 2, 3], [1, 0.88, 0.8, 0.72]);
+  const opacity = useTransform(depth, [0, 1, 2, 3], [1, 0.86, 0.6, 0.38]);
+  const brightness = useTransform(depth, [0, 1, 2, 3], [1, 0.94, 0.85, 0.76]);
+  const blur = useTransform(depth, [0, 1, 2, 3], [0, 0.6, 1.6, 3]);
+  const shadowAlpha = useTransform(depth, [0, 1, 2, 3], [0.18, 0.34, 0.42, 0.48]);
+
+  const filter = useTransform([brightness, blur], ([b, bl]) => `brightness(${b}) blur(${bl}px)`);
+  const boxShadow = useTransform(shadowAlpha, (a) => `0 2.6rem 4.6rem -1.8rem rgba(var(--shadow-rgb), ${a})`);
+  return { scale, opacity, filter, boxShadow };
 }
 
 function StackCard({ i, total, progress, card }) {
@@ -317,14 +338,14 @@ function StackCard({ i, total, progress, card }) {
     testId, index, company, statusLabel, role, title, quiet, subtitle, desc,
     confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
   } = card;
-  const { scale, filter, boxShadow } = useCardDepth(progress, i, total);
+  const { scale, opacity, filter, boxShadow } = useCardDepth(progress, i, total);
 
   return (
     <Reveal className="stack-item" style={{ "--i": i }}>
       <motion.article
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
-        style={{ scale, filter, boxShadow }}
+        style={{ scale, opacity, filter, boxShadow }}
       >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
@@ -371,13 +392,13 @@ function StackCard({ i, total, progress, card }) {
 /* The 6th stack item — same depth treatment as StackCard, but its own
    markup since it's a grid of screenshots rather than a text/image split. */
 function GalleryCard({ i, total, progress }) {
-  const { scale, filter, boxShadow } = useCardDepth(progress, i, total);
+  const { scale, opacity, filter, boxShadow } = useCardDepth(progress, i, total);
 
   return (
     <motion.article
       className="lead-panel gallery-card"
       data-testid="project-card-gallery"
-      style={{ scale, filter, boxShadow }}
+      style={{ scale, opacity, filter, boxShadow }}
     >
       <div className="lead-top">
         <span className="lead-index">06 · A closer look</span>
