@@ -342,8 +342,21 @@ function useCardDepth(progress, i, total) {
     yVals.push(RECEDE_Y);
   }
 
-  const scale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : RECEDE_SCALE], { clamp: true });
-  const y = useTransform(progress, yPoints, reduced ? yPoints.map(() => 0) : yVals, { clamp: true });
+  const rawScale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : RECEDE_SCALE], { clamp: true });
+  const rawY = useTransform(progress, yPoints, reduced ? yPoints.map(() => 0) : yVals, { clamp: true });
+  /* Step 2 — scroll inertia: the target values/breakpoints above are
+     untouched (same trigger points, same home position, same scroll
+     distance); this just smooths the *rendered* number trailing behind
+     them each frame, instead of snapping 1:1 to scroll. Critically
+     damped (damping just above 2·√(stiffness·mass)) so it eases toward
+     the target without ever overshooting past it — a lag, not a bounce.
+     Always called (Rules of Hooks — reduced can change at runtime), but
+     it's a no-op under reduced-motion: rawScale/rawY are already flat
+     constants there, and a spring only produces motion when its input
+     changes, so nothing animates either way. */
+  const springConfig = { stiffness: 300, damping: 40, mass: 1 };
+  const scale = useSpring(rawScale, springConfig);
+  const y = useSpring(rawY, springConfig);
   /* Same threshold as the scale-down's own end point — unchanged — but a
      hard step instead of an eased fade: full opacity for the entire time
      the card is shrinking, then it disappears outright the instant it's
