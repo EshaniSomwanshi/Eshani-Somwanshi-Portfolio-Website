@@ -313,7 +313,13 @@ function useCardDepth(progress, i, total) {
   const start = i / total;
   const end = (i + 1) / total;
   const scale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.8], { clamp: true });
-  return { scale };
+  /* Same window as the scale-down, so the card is fully gone right as its
+     shrink finishes — exactly when the next card's own window begins —
+     instead of sitting there at min-scale forever. Only the active card
+     and whichever one is currently transitioning in are ever visible;
+     nothing accumulates above them. */
+  const opacity = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0], { clamp: true });
+  return { scale, opacity };
 }
 
 function StackCard({ i, total, progress, card }) {
@@ -321,14 +327,14 @@ function StackCard({ i, total, progress, card }) {
     testId, index, company, statusLabel, role, title, quiet, subtitle, desc,
     confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
   } = card;
-  const { scale } = useCardDepth(progress, i, total);
+  const { scale, opacity } = useCardDepth(progress, i, total);
 
   return (
     <Reveal className="stack-item" style={{ "--i": i }}>
       <motion.article
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
-        style={{ scale }}
+        style={{ scale, opacity }}
       >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
@@ -375,13 +381,13 @@ function StackCard({ i, total, progress, card }) {
 /* The 6th stack item — same depth treatment as StackCard, but its own
    markup since it's a grid of screenshots rather than a text/image split. */
 function GalleryCard({ i, total, progress }) {
-  const { scale } = useCardDepth(progress, i, total);
+  const { scale, opacity } = useCardDepth(progress, i, total);
 
   return (
     <motion.article
       className="lead-panel gallery-card"
       data-testid="project-card-gallery"
-      style={{ scale }}
+      style={{ scale, opacity }}
     >
       <div className="lead-top">
         <span className="lead-index">06 · A closer look</span>
