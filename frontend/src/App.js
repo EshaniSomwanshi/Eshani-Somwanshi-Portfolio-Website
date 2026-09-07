@@ -313,12 +313,11 @@ function useCardDepth(progress, i, total) {
   const start = i / total;
   const end = (i + 1) / total;
   const scale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.8], { clamp: true });
-  /* Same window as the scale-down, so the card is fully gone right as its
-     shrink finishes — exactly when the next card's own window begins —
-     instead of sitting there at min-scale forever. Only the active card
-     and whichever one is currently transitioning in are ever visible;
-     nothing accumulates above them. */
-  const opacity = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0], { clamp: true });
+  /* Same threshold as the scale-down's own end point — unchanged — but a
+     hard step instead of an eased fade: full opacity for the entire time
+     the card is shrinking, then it disappears outright the instant it's
+     fully covered, rather than gradually dimming into that state. */
+  const opacity = useTransform(progress, (p) => (reduced || isLast || p < end ? 1 : 0));
   return { scale, opacity };
 }
 
@@ -334,7 +333,7 @@ function StackCard({ i, total, progress, card }) {
       <motion.article
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
-        style={{ scale, opacity }}
+        style={{ scale, opacity, originX: 0.5, originY: 0 }}
       >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
@@ -387,7 +386,7 @@ function GalleryCard({ i, total, progress }) {
     <motion.article
       className="lead-panel gallery-card"
       data-testid="project-card-gallery"
-      style={{ scale, opacity }}
+      style={{ scale, opacity, originX: 0.5, originY: 0 }}
     >
       <div className="lead-top">
         <span className="lead-index">06 · A closer look</span>
