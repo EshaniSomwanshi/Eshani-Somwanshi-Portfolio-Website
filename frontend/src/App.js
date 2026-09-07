@@ -312,11 +312,37 @@ function useCardDepth(progress, i, total) {
   const isLast = i >= total - 1;
   const start = i / total;
   const end = (i + 1) / total;
-  const scale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.8], { clamp: true });
-  /* Paired with scale, same [start, end] input, so the card shrinks and
-     sinks together rather than just narrowing in place — reads as
-     physically sliding back and down into the stack. */
-  const y = useTransform(progress, [start, end], [0, reduced || isLast ? 0 : 48], { clamp: true });
+
+  /* One shared "back" position (scale 0.8, +48px down) that both halves of
+     a card's life pass through — unchanged values from before, just now
+     used on both sides instead of only the outgoing one. A card arrives
+     FROM that spot (mirroring the previous card's own recede, over that
+     same [i-1, i] window) and recedes TO it (its own [i, i+1] window,
+     exactly as before). One piecewise transform through progress, so both
+     halves read as a single continuous motion rather than the incoming
+     card starting from an unrelated flat (scale 1, y 0) state. */
+  const RECEDE_SCALE = 0.8;
+  const RECEDE_Y = 48;
+
+  const points = [];
+  const scaleVals = [];
+  const yVals = [];
+  if (i > 0) {
+    points.push((i - 1) / total);
+    scaleVals.push(RECEDE_SCALE);
+    yVals.push(RECEDE_Y);
+  }
+  points.push(start);
+  scaleVals.push(1);
+  yVals.push(0);
+  if (!isLast) {
+    points.push(end);
+    scaleVals.push(RECEDE_SCALE);
+    yVals.push(RECEDE_Y);
+  }
+
+  const scale = useTransform(progress, points, reduced ? points.map(() => 1) : scaleVals, { clamp: true });
+  const y = useTransform(progress, points, reduced ? points.map(() => 0) : yVals, { clamp: true });
   /* Same threshold as the scale-down's own end point — unchanged — but a
      hard step instead of an eased fade: full opacity for the entire time
      the card is shrinking, then it disappears outright the instant it's
