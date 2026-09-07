@@ -695,7 +695,7 @@ export default function App() {
                   <span className="lead-index">01 · OptraHealth</span>
                   <span className="status-pill">Full case study</span>
                 </div>
-                <p className="lead-role" style={{ marginTop: "1.6rem" }}>
+                <p className="lead-role" style={{ marginTop: "1rem" }}>
                   Product Designer · Dec 2024 – Mar 2025 · San Jose, CA
                 </p>
                 <h3
@@ -753,7 +753,7 @@ export default function App() {
                   to="/work/optrahealth"
                   className="read-case"
                   data-testid="read-case-optra"
-                  style={{ marginTop: "1.8rem" }}
+                  style={{ marginTop: "1.1rem" }}
                 >
                   Read the case study <ArrowUpRight size={14} />
                 </Link>
@@ -1097,7 +1097,7 @@ export default function App() {
                 Hiring for a <em>Product/UX design</em> role?
               </h2>
               <p className="lede">
-                I&rsquo;m open to product design roles across healthcare, AI, and enterprise
+                I&rsquo;m open to Product/UX design roles across healthcare, AI, and enterprise
                 systems. Send a message here, or reach out directly. I reply to every one.
               </p>
               <div className="contact-actions">
