@@ -8,6 +8,7 @@ import {
   useReducedMotion,
   useScroll,
   useSpring,
+  useTransform,
 } from "framer-motion";
 import { ArrowDown, ArrowUp, ArrowUpRight, Menu, Minus, Plus, Send } from "lucide-react";
 import { Toaster, toast } from "sonner";
@@ -288,15 +289,43 @@ const workCards = [
   },
 ];
 
-function StackCard({ i, card }) {
+/* Depth-of-stack values for one card, i of total, driven by the whole
+   stack's own scroll progress (see the `stackProgress` MotionValue set up
+   in App() and passed down here — computed once for the whole section,
+   not per-card scroll tracking). Card i owns the [i/total, (i+1)/total]
+   slice of that progress: it sits at rest (scale 1, full brightness) until
+   the next card's turn begins, then recedes — scaling down, dimming, and
+   gaining a deeper shadow — as it gets covered. The last card never has
+   anything covering it, so its range is left neutral. Purely a visual
+   read of the *existing* sticky-stack scroll; it doesn't change the
+   trigger points, the top-offset stagger, or the stack's scroll length. */
+function useCardDepth(progress, i, total) {
+  const reduced = useReducedMotion();
+  const isLast = i >= total - 1;
+  const start = i / total;
+  const end = (i + 1) / total;
+  const scale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.95], { clamp: true });
+  const brightness = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.92], { clamp: true });
+  const shadowAlpha = useTransform(progress, [start, end], [0.16, reduced || isLast ? 0.16 : 0.34], { clamp: true });
+  const filter = useTransform(brightness, (b) => `brightness(${b})`);
+  const boxShadow = useTransform(shadowAlpha, (a) => `0 2rem 3.5rem -1.6rem rgba(var(--shadow-rgb), ${a})`);
+  return { scale, filter, boxShadow };
+}
+
+function StackCard({ i, total, progress, card }) {
   const {
     testId, index, company, statusLabel, role, title, quiet, subtitle, desc,
     confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
   } = card;
+  const { scale, filter, boxShadow } = useCardDepth(progress, i, total);
 
   return (
     <Reveal className="stack-item" style={{ "--i": i }}>
-      <article className={`lead-panel${image ? "" : " no-image"}`} data-testid={testId}>
+      <motion.article
+        className={`lead-panel${image ? "" : " no-image"}`}
+        data-testid={testId}
+        style={{ scale, filter, boxShadow }}
+      >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
           <span className="status-pill">{statusLabel}</span>
@@ -334,8 +363,47 @@ function StackCard({ i, card }) {
             </div>
           )}
         </div>
-      </article>
+      </motion.article>
     </Reveal>
+  );
+}
+
+/* The 6th stack item — same depth treatment as StackCard, but its own
+   markup since it's a grid of screenshots rather than a text/image split. */
+function GalleryCard({ i, total, progress }) {
+  const { scale, filter, boxShadow } = useCardDepth(progress, i, total);
+
+  return (
+    <motion.article
+      className="lead-panel gallery-card"
+      data-testid="project-card-gallery"
+      style={{ scale, filter, boxShadow }}
+    >
+      <div className="lead-top">
+        <span className="lead-index">06 · A closer look</span>
+        <span className="status-pill">{shots.length} screens</span>
+      </div>
+      <div className="gallery-card-head">
+        <h3>Real screens, not just covers.</h3>
+        <p className="lead-desc">A handful of the actual interfaces behind the work above.</p>
+      </div>
+      <div className="gallery-card-grid">
+        {shots.map(([src, alt, tag, cap, tall, w, h], i2) => (
+          <figure className="gallery-card-item" data-testid={`gallery-shot-${i2}`} key={src}>
+            <img
+              src={IMG(src)}
+              alt={alt}
+              width={w}
+              height={h}
+              loading="lazy"
+              decoding="async"
+              data-testid={`gallery-shot-img-${i2}`}
+            />
+            <figcaption><b>{tag}</b>{cap}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </motion.article>
   );
 }
 
@@ -477,6 +545,17 @@ export default function App() {
   const menuCloseRef = useRef(null);
   const wasMenuOpen = useRef(false);
   const { scrollY, scrollYProgress } = useScroll();
+
+  /* Scroll progress across the whole "Selected work" sticky stack (not
+     the whole-page one above) — feeds StackCard/GalleryCard's depth
+     effect. See useCardDepth for how each card reads its own slice
+     of it. Doesn't touch the stack's own sticky top-offsets/CSS. */
+  const stackRef = useRef(null);
+  const { scrollYProgress: stackProgress } = useScroll({
+    target: stackRef,
+    offset: ["start start", "end start"],
+  });
+  const STACK_TOTAL = workCards.length + 1;
 
   /* Header compression */
   useMotionValueEvent(scrollY, "change", (y) => {
@@ -720,38 +799,13 @@ export default function App() {
               </Reveal>
             </div>
 
-            <div className="stack">
+            <div className="stack" ref={stackRef}>
               {workCards.map((card, i) => (
-                <StackCard key={card.key} i={i} card={card} />
+                <StackCard key={card.key} i={i} total={STACK_TOTAL} progress={stackProgress} card={card} />
               ))}
 
               <Reveal className="stack-item" style={{ "--i": workCards.length }}>
-                <article className="lead-panel gallery-card" data-testid="project-card-gallery">
-                  <div className="lead-top">
-                    <span className="lead-index">06 · A closer look</span>
-                    <span className="status-pill">{shots.length} screens</span>
-                  </div>
-                  <div className="gallery-card-head">
-                    <h3>Real screens, not just covers.</h3>
-                    <p className="lead-desc">A handful of the actual interfaces behind the work above.</p>
-                  </div>
-                  <div className="gallery-card-grid">
-                    {shots.map(([src, alt, tag, cap, tall, w, h], i2) => (
-                      <figure className="gallery-card-item" data-testid={`gallery-shot-${i2}`} key={src}>
-                        <img
-                          src={IMG(src)}
-                          alt={alt}
-                          width={w}
-                          height={h}
-                          loading="lazy"
-                          decoding="async"
-                          data-testid={`gallery-shot-img-${i2}`}
-                        />
-                        <figcaption><b>{tag}</b>{cap}</figcaption>
-                      </figure>
-                    ))}
-                  </div>
-                </article>
+                <GalleryCard i={workCards.length} total={STACK_TOTAL} progress={stackProgress} />
               </Reveal>
             </div>
           </div>
