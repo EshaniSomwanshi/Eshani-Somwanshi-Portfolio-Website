@@ -22,12 +22,25 @@ export default function AvatarHero({ theme = "paper", go }) {
   const smoothX = useSpring(mouseX, springConfig);
   const smoothY = useSpring(mouseY, springConfig);
 
-  // Parallax offsets for different depth layers
-  const cloudBackX = useTransform(smoothX, [-1, 1], [30, -30]);
-  const cloudBackY = useTransform(smoothY, [-1, 1], [15, -15]);
+  /* Parallax offsets for different depth layers.
+     These clouds are decorative SVG shapes drawn to bleed off the edges of
+     .avatar-hero-stage (the enclosing rectangle) — their bezier paths dip
+     past the SVG's own viewBox at each edge, but only by a small, fixed
+     margin. The whole layer (SVG included) gets this x/y translate as one
+     rigid transform, so any offset larger than that built-in margin drags
+     the shape's edge away from the stage boundary and exposes bare
+     background in the gap — confirmed visually: the previous range (up to
+     ±30/±40px) revealed a ~22px seam at the back layer's left edge, and
+     the back layer's top / front layer's bottom edges have essentially
+     zero built-in bleed at all, so any offset there showed a gap almost
+     1:1. Ranges below are reduced to stay inside that margin so the
+     clouds read as attached — same spring, same trigger, just a smaller
+     max displacement. */
+  const cloudBackX = useTransform(smoothX, [-1, 1], [8, -8]);
+  const cloudBackY = useTransform(smoothY, [-1, 1], [4, -4]);
 
-  const cloudFrontX = useTransform(smoothX, [-1, 1], [-40, 40]);
-  const cloudFrontY = useTransform(smoothY, [-1, 1], [-20, 20]);
+  const cloudFrontX = useTransform(smoothX, [-1, 1], [-12, 12]);
+  const cloudFrontY = useTransform(smoothY, [-1, 1], [-6, 6]);
 
   const handleMouseMove = (e) => {
     if (reduced) return;
