@@ -313,12 +313,16 @@ function useCardDepth(progress, i, total) {
   const start = i / total;
   const end = (i + 1) / total;
   const scale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : 0.8], { clamp: true });
+  /* Paired with scale, same [start, end] input, so the card shrinks and
+     sinks together rather than just narrowing in place — reads as
+     physically sliding back and down into the stack. */
+  const y = useTransform(progress, [start, end], [0, reduced || isLast ? 0 : 48], { clamp: true });
   /* Same threshold as the scale-down's own end point — unchanged — but a
      hard step instead of an eased fade: full opacity for the entire time
      the card is shrinking, then it disappears outright the instant it's
      fully covered, rather than gradually dimming into that state. */
   const opacity = useTransform(progress, (p) => (reduced || isLast || p < end ? 1 : 0));
-  return { scale, opacity };
+  return { scale, y, opacity };
 }
 
 function StackCard({ i, total, progress, card }) {
@@ -326,14 +330,14 @@ function StackCard({ i, total, progress, card }) {
     testId, index, company, statusLabel, role, title, quiet, subtitle, desc,
     confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
   } = card;
-  const { scale, opacity } = useCardDepth(progress, i, total);
+  const { scale, y, opacity } = useCardDepth(progress, i, total);
 
   return (
     <Reveal className="stack-item" style={{ "--i": i }}>
       <motion.article
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
-        style={{ scale, opacity, originX: 0.5, originY: 0 }}
+        style={{ scale, y, opacity, originX: 0.5, originY: 0 }}
       >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
@@ -380,13 +384,13 @@ function StackCard({ i, total, progress, card }) {
 /* The 6th stack item — same depth treatment as StackCard, but its own
    markup since it's a grid of screenshots rather than a text/image split. */
 function GalleryCard({ i, total, progress }) {
-  const { scale, opacity } = useCardDepth(progress, i, total);
+  const { scale, y, opacity } = useCardDepth(progress, i, total);
 
   return (
     <motion.article
       className="lead-panel gallery-card"
       data-testid="project-card-gallery"
-      style={{ scale, opacity, originX: 0.5, originY: 0 }}
+      style={{ scale, y, opacity, originX: 0.5, originY: 0 }}
     >
       <div className="lead-top">
         <span className="lead-index">06 · A closer look</span>
