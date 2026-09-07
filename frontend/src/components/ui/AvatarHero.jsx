@@ -18,7 +18,15 @@ export default function AvatarHero({ theme = "paper", go }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const springConfig = { stiffness: 45, damping: 20 };
+  /* Was { stiffness: 45, damping: 20 } — damping above critical (2·√45 ≈
+     13.4, ratio ≈1.49) meant zero overshoot/bounce, so even though it's a
+     spring it settled in a flat, mechanical ease rather than feeling
+     alive. Lower damping ratio (~0.7, mildly underdamped) brings back a
+     soft trailing wobble as it settles — livelier and more "springy"
+     without wild oscillation. This governs raw cursor-position feel only;
+     it does not touch the output ranges below that keep the clouds
+     attached. */
+  const springConfig = { stiffness: 120, damping: 16, mass: 1 };
   const smoothX = useSpring(mouseX, springConfig);
   const smoothY = useSpring(mouseY, springConfig);
 
@@ -33,14 +41,16 @@ export default function AvatarHero({ theme = "paper", go }) {
      ±30/±40px) revealed a ~22px seam at the back layer's left edge, and
      the back layer's top / front layer's bottom edges have essentially
      zero built-in bleed at all, so any offset there showed a gap almost
-     1:1. Ranges below are reduced to stay inside that margin so the
-     clouds read as attached — same spring, same trigger, just a smaller
-     max displacement. */
-  const cloudBackX = useTransform(smoothX, [-1, 1], [8, -8]);
-  const cloudBackY = useTransform(smoothY, [-1, 1], [4, -4]);
+     1:1. Ranges below are unchanged from that fix — same verified-safe
+     max displacement — and `clamp: true` is explicit (rather than relying
+     on the library default) so that even if the now-livelier spring above
+     overshoots past ±1, the cloud offset it produces can never exceed
+     this boundary. */
+  const cloudBackX = useTransform(smoothX, [-1, 1], [8, -8], { clamp: true });
+  const cloudBackY = useTransform(smoothY, [-1, 1], [4, -4], { clamp: true });
 
-  const cloudFrontX = useTransform(smoothX, [-1, 1], [-12, 12]);
-  const cloudFrontY = useTransform(smoothY, [-1, 1], [-6, 6]);
+  const cloudFrontX = useTransform(smoothX, [-1, 1], [-12, 12], { clamp: true });
+  const cloudFrontY = useTransform(smoothY, [-1, 1], [-6, 6], { clamp: true });
 
   const handleMouseMove = (e) => {
     if (reduced) return;
