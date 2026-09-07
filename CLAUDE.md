@@ -58,6 +58,26 @@ Frontend reads `REACT_APP_BACKEND_URL` to know where the API lives (`frontend/sr
 
 Tailwind (`tailwind.config.js`) + hand-written CSS alongside components (`App.css`, `index.css`, `devices.css`, `beforeafter.css`, `preloader.css`, `readmode.css`). `design_guidelines.json` at the repo root documents the design system: typography scale (Outfit/Manrope/JetBrains Mono), the three color themes (paper/carbon/petrol) with hex values, and visual enhancers (noise overlay, scroll progress hairline, etc.) — consult it before changing global visual style rather than reverse-engineering values from CSS.
 
+#### Type scale — root is 12px, not the browser default 16px
+
+`App.css` sets `html { font-size: 75%; }`, making **`1rem` equal 12px everywhere on this site** (75% of the user's own browser default, so it still respects a changed default font-size setting rather than hard-coding 12px). This means [typescale.com](https://typescale.com)'s own rem output — base 12, 1.125 (major second) ratio — can be pasted in **verbatim**, with no recalculation:
+
+| step | rem | px |
+|---|---|---|
+| h1 | 2.027rem | 24.33px |
+| h2 | 1.802rem | 21.62px |
+| h3 | 1.602rem | 19.22px |
+| h4 | 1.424rem | 17.09px |
+| h5 | 1.266rem | 15.19px |
+| h6 | 1.125rem | 13.5px |
+| p | 1rem | 12px |
+| small | .889rem | 10.67px |
+| smaller | .79rem | 9.48px |
+
+When touching typography on this site, map elements to the nearest step above rather than picking an arbitrary size — not every step needs to appear in a given component; skip levels that don't correspond to a real distinct role.
+
+Every rem value that existed anywhere in the codebase *before* this root change (2026-09-06) was mechanically rescaled by 16/12 at the same time, specifically to keep every existing size/spacing pixel-identical — so this was not a visual regression, just a base-unit change. Don't rescale things again; only *new* rem values you write should use the type-scale table above directly.
+
 ### Build tooling
 
 CRA is wrapped with **craco** (`craco.config.js`) rather than plain `react-scripts`, to add the `@` alias, tune webpack watch options, and optionally wire in an `@emergentbase/visual-edits` dev-mode plugin and a health-check webpack plugin (both gated by env vars — `ENABLE_HEALTH_CHECK`). No need to touch `craco.config.js` for typical feature work.

@@ -1,7 +1,7 @@
 /* BeforeAfter — draggable comparison slider.
    Both images must share the same aspect ratio. */
 
-.ba { margin: 2.4rem 0 0; }
+.ba { margin: 3.2rem 0 0; }
 
 .ba-stage {
   position: relative;
@@ -39,20 +39,20 @@
 
 .ba-tag {
   position: absolute;
-  top: 1rem;
+  top: 1.3333rem;
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: 0.8533rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  padding: 0.4rem 0.7rem;
+  padding: 0.5333rem 0.9333rem;
   border-radius: 2px;
   background: rgba(var(--shadow-rgb), 0.72);
   color: #fff;
   transition: opacity var(--dur-fast) var(--ease-state);
   pointer-events: none;
 }
-.ba-tag-before { left: 1rem; }
-.ba-tag-after { right: 1rem; }
+.ba-tag-before { left: 1.3333rem; }
+.ba-tag-after { right: 1.3333rem; }
 
 .ba-divider {
   position: absolute;
@@ -78,7 +78,7 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  font-size: 1.1rem;
+  font-size: 1.4667rem;
   line-height: 1;
   cursor: ew-resize;
   box-shadow: 0 4px 18px rgba(var(--shadow-rgb), 0.22);
@@ -90,14 +90,14 @@
 .ba-handle-arrow { pointer-events: none; }
 
 .ba figcaption {
-  margin-top: 0.9rem;
+  margin-top: 1.2rem;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.9333rem;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
 
 @media (max-width: 640px) {
   .ba-handle { width: 38px; height: 38px; margin: -19px 0 0 -19px; }
-  .ba-tag { font-size: 0.58rem; padding: 0.3rem 0.5rem; }
+  .ba-tag { font-size: 0.7733rem; padding: 0.4rem 0.6667rem; }
 }

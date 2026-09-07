@@ -5,17 +5,17 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.6rem;
-  padding: 1.1rem 0;
+  gap: 1.3333rem 2.1333rem;
+  padding: 1.4667rem 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  margin: 2.4rem 0 0;
+  margin: 3.2rem 0 0;
 }
 
 .readmode-note {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.9333rem;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
@@ -34,21 +34,21 @@
   background: transparent;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.96rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 0.62rem 1.05rem;
+  padding: 0.8267rem 1.4rem;
   cursor: pointer;
   display: inline-flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 0.6667rem;
   transition:
     background var(--dur-fast) var(--ease-state),
     color var(--dur-fast) var(--ease-state);
 }
 .readmode-btn + .readmode-btn { border-left: 1px solid var(--line); }
 .readmode-btn span {
-  font-size: 0.6rem;
+  font-size: 0.8rem;
   letter-spacing: 0.08em;
   opacity: 0.6;
   text-transform: none;
@@ -62,11 +62,11 @@
 /* Skim mode: the one-line takeaway reads as the headline's answer. */
 .cs-skim {
   font-family: var(--font-serif);
-  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-size: clamp(1.5333rem, 2vw, 2rem);
   line-height: 1.5;
   color: var(--ink);
   max-width: 46ch;
-  margin: 0.6rem 0 0;
+  margin: 0.8rem 0 0;
 }
 
 @media (max-width: 560px) {

@@ -8,7 +8,7 @@
 .showcase {
   position: relative;
   width: 100%;
-  padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem);
+  padding: clamp(2.6667rem, 6vw, 6.6667rem) clamp(1.3333rem, 4vw, 4rem);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,9 +148,9 @@
 }
 
 .mb-cap {
-  margin: 1.1rem 0 0;
+  margin: 1.4667rem 0 0;
   font-family: var(--font-mono);
-  font-size: .74rem;
+  font-size: 0.9867rem;
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--muted);
@@ -256,19 +256,19 @@
   fill: currentColor;
 }
 
-.seal-arrow { font-size: 1.2rem; line-height: 1; }
+.seal-arrow { font-size: 1.6rem; line-height: 1; }
 
 /* ---------- status chip (COMING SOON) ---------- */
 .chip-soon {
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
-  padding: .3rem .7rem;
+  gap: 0.6rem;
+  padding: 0.4rem 0.9333rem;
   border-radius: 999px;
   background: var(--accent);
   color: var(--bg);
   font-family: var(--font-mono);
-  font-size: .64rem;
+  font-size: 0.8533rem;
   letter-spacing: .14em;
   text-transform: uppercase;
 }
@@ -290,7 +290,7 @@
 
 .pager-shell {
   position: relative;
-  padding: 1.3rem 1.3rem 1.15rem;
+  padding: 1.7333rem 1.7333rem 1.5333rem;
   border-radius: 22px;
   background: linear-gradient(165deg, #3a3a3d, #232326 40%, #161618);
   box-shadow:
@@ -302,7 +302,7 @@
   display: block;
   width: 100%;
   text-align: center;
-  padding: .9rem 1rem 1rem;
+  padding: 1.2rem 1.3333rem 1.3333rem;
   border: 0;
   border-radius: 14px;
   cursor: pointer;
@@ -319,22 +319,22 @@
 .pager-lcd-top {
   display: flex;
   justify-content: space-between;
-  font-size: .68rem;
+  font-size: 0.9067rem;
   letter-spacing: .08em;
   opacity: .8;
 }
 
 .pager-lcd-line {
   display: block;
-  margin-top: .55rem;
-  font-size: .82rem;
+  margin-top: 0.7333rem;
+  font-size: 1.0933rem;
   letter-spacing: .04em;
 }
 
 .pager-lcd-mail {
   display: block;
-  margin-top: .2rem;
-  font-size: clamp(.86rem, 2.4vw, 1.2rem);
+  margin-top: 0.2667rem;
+  font-size: clamp(1.1467rem, 2.4vw, 1.6rem);
   font-weight: 600;
   letter-spacing: -.01em;
   word-break: break-all;
@@ -354,8 +354,8 @@
 
 .pager-lcd-hint {
   display: block;
-  margin-top: .5rem;
-  font-size: .6rem;
+  margin-top: 0.6667rem;
+  font-size: 0.8rem;
   letter-spacing: .18em;
   text-transform: uppercase;
   opacity: .55;
@@ -363,9 +363,9 @@
 
 .pager-brand {
   display: block;
-  margin: .85rem 0 .9rem;
+  margin: 1.1333rem 0 1.2rem;
   font-family: var(--font-mono);
-  font-size: .66rem;
+  font-size: 0.88rem;
   font-style: italic;
   letter-spacing: .1em;
   color: #8d8b86;
@@ -374,7 +374,7 @@
 .pager-keys {
   display: flex;
   align-items: center;
-  gap: .55rem;
+  gap: 0.7333rem;
   flex-wrap: wrap;
 }
 
@@ -388,12 +388,12 @@
 }
 
 .pager-key {
-  padding: .62rem 1rem;
+  padding: 0.8267rem 1.3333rem;
   border-radius: 999px;
   background: #101012;
   color: #cfccc6 !important;
   font-family: var(--font-mono);
-  font-size: .72rem;
+  font-size: 0.96rem;
   letter-spacing: .04em;
   text-decoration: none;
   box-shadow: 0 1px 0 rgba(255, 255, 255, .09) inset;
@@ -414,15 +414,15 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: clamp(.5rem, 2vw, 1.4rem);
-  padding: 2rem 0;
+  gap: clamp(0.6667rem, 2vw, 1.8667rem);
+  padding: 2.6667rem 0;
   perspective: 1400px;
 }
 .ph-trio .ph:nth-child(2) { transform: translateY(-26px); z-index: 2; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
-  .showcase { padding: 1.5rem .5rem 3.5rem; }
+  .showcase { padding: 2rem 0.6667rem 4.6667rem; }
   .showcase-phone { right: 2%; bottom: -14%; }
   .seal { width: 82px; height: 82px; }
   .seal-text { font-size: 7.6px; }
@@ -475,9 +475,9 @@
 }
 
 .rcard figcaption {
-  margin-top: .85rem;
+  margin-top: 1.1333rem;
   font-family: var(--font-mono);
-  font-size: .68rem;
+  font-size: 0.9067rem;
   letter-spacing: .09em;
   text-transform: uppercase;
   color: var(--muted);
@@ -487,7 +487,7 @@
 .rcard-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(1rem, 3vw, 2.4rem);
+  gap: clamp(1.3333rem, 3vw, 3.2rem);
   align-items: start;
 }
 @media (max-width: 760px) {
@@ -502,12 +502,12 @@
 .assemble.assemble-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: clamp(1rem, 2.5vw, 2rem);
+  gap: clamp(1.3333rem, 2.5vw, 2.6667rem);
 }
 .assemble.assemble-row {
   display: flex;
   flex-wrap: wrap;
-  gap: clamp(.8rem, 2vw, 1.6rem);
+  gap: clamp(1.0667rem, 2vw, 2.1333rem);
 }
 
 /* seal should never sit on top of body copy */
