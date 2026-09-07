@@ -347,14 +347,17 @@ function useCardDepth(progress, i, total) {
   /* Step 2 — scroll inertia: the target values/breakpoints above are
      untouched (same trigger points, same home position, same scroll
      distance); this just smooths the *rendered* number trailing behind
-     them each frame, instead of snapping 1:1 to scroll. Critically
-     damped (damping just above 2·√(stiffness·mass)) so it eases toward
-     the target without ever overshooting past it — a lag, not a bounce.
+     them each frame, instead of snapping 1:1 to scroll. Damping stays
+     just above 2·√(stiffness·mass) (~1.15x critical) so it still never
+     overshoots past the target — a lag, not a bounce — but stiffness is
+     low enough that the glide plays out over several hundred ms instead
+     of resolving in a couple of frames. (Was stiffness: 300, damping: 40
+     — settled almost instantly; this is ~2.5x slower to catch up.)
      Always called (Rules of Hooks — reduced can change at runtime), but
      it's a no-op under reduced-motion: rawScale/rawY are already flat
      constants there, and a spring only produces motion when its input
      changes, so nothing animates either way. */
-  const springConfig = { stiffness: 300, damping: 40, mass: 1 };
+  const springConfig = { stiffness: 120, damping: 26, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
   /* Same threshold as the scale-down's own end point — unchanged — but a
