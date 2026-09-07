@@ -1000,11 +1000,19 @@ figcaption {
    Sticky lives on the wrapper (a direct child of .stack), not on the card
    itself. In the old version each card sat alone inside its own reveal
    wrapper of identical height, so sticky had nothing to travel against and
-   the stacking effect never fired. */
+   the stacking effect never fired. `top` is one fixed value, the same for
+   every card — the "home" position each incoming card's translateY (see
+   useCardDepth in App.js) animates up to and each receding card's
+   translateY animates down from. It used to add `var(--i, 0) * 2rem` on
+   top of this per card, staggering each one's resting spot a little lower
+   than the last — a leftover from before the JS depth/recede transform
+   existed. Now that the recede/arrive motion is fully driven by that
+   transform, this offset must be identical across cards, not
+   index-dependent, or every card lands progressively lower than home. */
 .stack { display: block; }
 .stack-item {
   position: sticky;
-  top: calc(var(--nav-h) + 1.6rem + var(--i, 0) * 2rem);
+  top: calc(var(--nav-h) + 1.6rem);
   margin-top: 2.1333rem;
 }
 .stack-item:first-child { margin-top: 0; }
