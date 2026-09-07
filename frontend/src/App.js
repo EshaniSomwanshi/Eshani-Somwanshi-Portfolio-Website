@@ -349,15 +349,17 @@ function useCardDepth(progress, i, total) {
      distance); this just smooths the *rendered* number trailing behind
      them each frame, instead of snapping 1:1 to scroll. Damping stays
      just above 2·√(stiffness·mass) (~1.15x critical) so it still never
-     overshoots past the target — a lag, not a bounce — but stiffness is
-     low enough that the glide plays out over several hundred ms instead
-     of resolving in a couple of frames. (Was stiffness: 300, damping: 40
-     — settled almost instantly; this is ~2.5x slower to catch up.)
+     overshoots past the target — a lag, not a bounce. Settle time scales
+     with √(mass/stiffness): stiffness 300 (original) settled in ~1-2
+     frames; 120 (previous pass) landed around 300-400ms; this is a
+     further ~2.4x drop in stiffness (~6x off the original 300),
+     targeting a ~600-800ms settle (time constant √(mass/stiffness) ≈
+     141ms, ×5 to reach ~99% ≈ 707ms).
      Always called (Rules of Hooks — reduced can change at runtime), but
      it's a no-op under reduced-motion: rawScale/rawY are already flat
      constants there, and a spring only produces motion when its input
      changes, so nothing animates either way. */
-  const springConfig = { stiffness: 120, damping: 26, mass: 1 };
+  const springConfig = { stiffness: 50, damping: 16, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
   /* Same threshold as the scale-down's own end point — unchanged — but a
