@@ -161,7 +161,7 @@ function ToolMarquee() {
     <div className="tool-marquee" aria-label="Tools of the trade" data-testid="tool-marquee">
       <div className="tool-track">
         {[...tools, ...tools].map(([slug, name], i) => (
-          <ToolLogo key={`${slug}-${i}`} slug={slug} name={name} size={180} />
+          <ToolLogo key={`${slug}-${i}`} slug={slug} name={name} size={162} />
         ))}
       </div>
     </div>

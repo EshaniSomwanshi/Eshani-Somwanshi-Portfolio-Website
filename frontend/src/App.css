@@ -1147,8 +1147,8 @@ figcaption {
 .tool-track {
   display: inline-flex;
   align-items: center;
-  height: 320px;
-  gap: 4.2667rem;
+  height: 288px;
+  gap: 5.3333rem;
   animation: slide 34s linear infinite;
 }
 .tool-marquee:hover .tool-track { animation-play-state: paused; }
@@ -1183,9 +1183,12 @@ figcaption {
   max-width: none;
   transition: transform .25s var(--ease-state);
 }
-/* 180px logo + 8px gap + ~11px label = ~200px of content in the 320px
-   strip, leaving ~60px of air above and below. */
-.tool-track .tool-tile img { width: 180px; height: 180px; }
+/* 162px logo + 8px gap + ~11px label = ~181px of content in the 288px
+   strip, leaving ~53px of air above and below (the track centres it, so
+   that margin is a result of these two numbers, not set directly).
+   The label deliberately doesn't scale with the logo — it's already at the
+   small end of the type scale and shrinking it further hurts legibility. */
+.tool-track .tool-tile img { width: 162px; height: 162px; }
 .tool-tile-label { display: block; }
 .tool-tile:hover { color: var(--ink); }
 .tool-tile:hover img { transform: scale(1.08); }
