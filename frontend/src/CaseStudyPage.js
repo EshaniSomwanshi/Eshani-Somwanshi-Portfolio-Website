@@ -219,44 +219,22 @@ export default function CaseStudyPage() {
           </div>
         </section>
 
-        <section className="cs-overview container" id="overview">
-          {study.heroVideoPlaceholder && (
-            <div className="cs-video-placeholder" role="img" aria-label="Video coming soon">
-              <span className="play-glyph"><Play size={16} /></span>
-              <span className="label">Video coming soon</span>
-            </div>
-          )}
-          <Reveal><p className="lede">{study.overview}</p></Reveal>
-          {!study.sections && <ReadModeToggle minutes={Math.max(3, study.chapters.length + 1)} />}
-          {study.confidential && (
-            <Reveal delay={0.1}>
-              <p className="note-strip" data-testid="case-nda-note">
-                This engagement is under NDA: screens aren&rsquo;t public yet. The process
-                below is shareable; the pixels aren&rsquo;t. Happy to walk through the work live.
-              </p>
-            </Reveal>
-          )}
-        </section>
-
-        {study.cover && (
-          <section className="cs-cover-section container">
-            <Reveal>
-              <figure className="cs-cover" data-testid="case-cover">
-                <Wipe
-                  src={IMG(study.cover[0])}
-                  alt={study.cover[1]}
-                  testId="case-cover-image"
-                />
-              </figure>
-            </Reveal>
-          </section>
-        )}
-
         {/* Sticky TOC + content: `sections` (fixed taxonomy, e.g. eye-ai) is
             reused as the source of nav entries when present; every other
             case study still renders exactly as before via `chapters`, just
             now with an id on each chapter section so the same shared TOC
-            can link/scroll to them too. */}
+            can link/scroll to them too.
+
+            Overview (and the cover image, for studies that have one) live
+            INSIDE this grid's content column, not above it — they used to
+            sit in their own full-width .container ABOVE the two-column
+            layout, so the sticky sidebar (whose "top" pins near the top of
+            the viewport) would visually appear alongside that unrelated
+            full-width text while scrolling past it, before the actual
+            two-column section even started. Moving them into the same
+            column as everything else the sidebar links to removes that
+            overlap outright, at every breakpoint, rather than papering
+            over it with spacing. */}
         <div className="container cs-toc-layout">
           <CaseStudyTOC
             sections={[
@@ -268,6 +246,39 @@ export default function CaseStudyPage() {
           />
 
           <div className="cs-toc-content">
+            <section className="cs-overview" id="overview">
+              {study.heroVideoPlaceholder && (
+                <div className="cs-video-placeholder" role="img" aria-label="Video coming soon">
+                  <span className="play-glyph"><Play size={16} /></span>
+                  <span className="label">Video coming soon</span>
+                </div>
+              )}
+              <Reveal><p className="lede">{study.overview}</p></Reveal>
+              {!study.sections && <ReadModeToggle minutes={Math.max(3, study.chapters.length + 1)} />}
+              {study.confidential && (
+                <Reveal delay={0.1}>
+                  <p className="note-strip" data-testid="case-nda-note">
+                    This engagement is under NDA: screens aren&rsquo;t public yet. The process
+                    below is shareable; the pixels aren&rsquo;t. Happy to walk through the work live.
+                  </p>
+                </Reveal>
+              )}
+            </section>
+
+            {study.cover && (
+              <section className="cs-cover-section">
+                <Reveal>
+                  <figure className="cs-cover" data-testid="case-cover">
+                    <Wipe
+                      src={IMG(study.cover[0])}
+                      alt={study.cover[1]}
+                      testId="case-cover-image"
+                    />
+                  </figure>
+                </Reveal>
+              </section>
+            )}
+
             {study.sections
               ? study.sections.map((s, i) => (
                   <CaseStudySection key={s.id} index={i + 1} section={s} company={study.company} />
