@@ -175,7 +175,7 @@ function ToolGrid() {
   return (
     <div className="tool-grid" aria-label="Tools of the trade" data-testid="tool-grid">
       {tools.map(([slug, name]) => (
-        <ToolLogo key={slug} slug={slug} name={name} size={64} />
+        <ToolLogo key={slug} slug={slug} name={name} size={77} />
       ))}
     </div>
   );

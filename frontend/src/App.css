@@ -1147,7 +1147,7 @@ figcaption {
 .tool-track {
   display: inline-flex;
   align-items: center;
-  height: 120px;
+  height: 320px;
   gap: 4.2667rem;
   animation: slide 34s linear infinite;
 }
@@ -1187,7 +1187,7 @@ figcaption {
 .tools-switch {
   display: flex;
   border: 1px solid var(--line-strong);
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
 }
 .tools-switch-btn {
@@ -1225,6 +1225,8 @@ figcaption {
   padding: clamp(1.6rem, 3vw, 2.6667rem) 0;
 }
 .tool-grid .tool-tile { flex: 0 0 auto; width: 12.5rem; }
+/* Grid logos run 20% larger than the marquee's 64px. */
+.tool-grid .tool-tile img { width: 77px; height: 77px; }
 @media (max-width: 720px) {
   .tool-grid { max-width: 34rem; }
   .tool-grid .tool-tile { width: 10rem; }
