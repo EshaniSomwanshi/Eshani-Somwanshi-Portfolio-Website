@@ -166,7 +166,11 @@ export default function CaseStudyPage() {
 
       <header className="cs-header">
         <div className="container cs-header-inner">
-          <Link to="/" className="cs-back" data-testid="case-back-link">
+          {/* Was to="/" — landed on the very top of the homepage instead of
+              the "Selected work" section this button names. App.js has a
+              one-time mount effect that scrolls to #work when it sees this
+              hash on load. */}
+          <Link to="/#work" className="cs-back" data-testid="case-back-link">
             <ArrowLeft size={15} /> Selected work
           </Link>
           <span className="wordmark"><b>ES/</b>ESHANI SOMWANSHI</span>

@@ -556,6 +556,31 @@ export default function App() {
     else window.scrollTo({ top, behavior: "smooth" });
   }, [lenis]);
 
+  /* Landing here with #work in the URL (e.g. the case-study page's "←
+     Selected work" back button) should scroll to that section, not sit at
+     the top of the page — the browser's own hash-scroll can't be relied on
+     here since Lenis owns scroll and the hero above #work is still
+     laying out right after mount. One-time effect (empty deps, so it can't
+     double-fire once Lenis finishes initializing): a short delay lets
+     Lenis's own mount effect (in index.js, a sibling/ancestor effect that
+     hasn't necessarily run yet on this same commit) finish setting up, and
+     `lenisRef` — kept in sync every render — is read at call time so this
+     always sees the current instance rather than whatever `lenis` was
+     when the effect first ran. */
+  const lenisRef = useRef(lenis);
+  useEffect(() => { lenisRef.current = lenis; }, [lenis]);
+  useEffect(() => {
+    if (window.location.hash !== "#work") return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("work");
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 90;
+      if (lenisRef.current) lenisRef.current.scrollTo(top, { duration: 1.2 });
+      else window.scrollTo({ top, behavior: "smooth" });
+    }, 80);
+    return () => clearTimeout(t);
+  }, []);
+
   /* Menu: lock the page, close on Escape, manage focus in/out of the panel */
   useEffect(() => {
     if (menu) document.body.classList.add("menu-open");
