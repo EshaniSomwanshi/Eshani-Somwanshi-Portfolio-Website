@@ -1320,7 +1320,7 @@ figcaption {
 }
 .footer-copyright { justify-self: center; text-align: center; }
 .footer-top-link { justify-self: end; }
-.footer-signoff { white-space: nowrap; color: var(--inv-muted); }
+.footer-signoff { white-space: nowrap; font-style: italic; color: var(--inv-muted); }
 .footer-row a { transition: color var(--dur-fast) var(--ease-state); }
 .footer-row a:hover { color: var(--accent); }
 
@@ -1649,26 +1649,25 @@ figcaption {
 }
 
 /* Cloud Layers.
-   Each layer is drawn well past .avatar-hero-stage on every edge — the
-   stage's `overflow: hidden` clips the surplus — so the cursor-driven
-   parallax translate (see AvatarHero.jsx) only ever slides more of an
-   already-overflowing shape into view and can never pull a painted edge
-   off the stage border, at any viewport size. `--cloud-overscan` (sides)
-   and `--cloud-overscan-y` (top/bottom) must both stay larger than the
-   largest parallax displacement. */
+   Each layer is drawn a small fixed `--cloud-bleed` past .avatar-hero-stage
+   on every edge and the stage's `overflow: hidden` clips the surplus, so the
+   cursor-driven parallax translate (see AvatarHero.jsx) only ever slides
+   more of an already-overflowing shape into view and can't pull a painted
+   edge off the stage border — at any viewport. The bleed is deliberately
+   small so the clouds still read at their original size/position; every
+   parallax maximum stays comfortably under it. */
 .hero-cloud-layer {
-  --cloud-overscan: clamp(140px, 15vw, 280px);
-  --cloud-overscan-y: 100px;
+  --cloud-bleed: 64px;
   position: absolute;
-  left: calc(-1 * var(--cloud-overscan));
-  right: calc(-1 * var(--cloud-overscan));
+  left: calc(-1 * var(--cloud-bleed));
+  right: calc(-1 * var(--cloud-bleed));
   pointer-events: none;
   user-select: none;
 }
 
 .hero-cloud-back {
-  top: calc(-1 * var(--cloud-overscan-y));
-  height: calc(100% + var(--cloud-overscan-y) * 2);
+  top: calc(-1 * var(--cloud-bleed));
+  height: calc(100% + var(--cloud-bleed) * 2);
   z-index: 2;
 }
 
@@ -1679,10 +1678,12 @@ figcaption {
 }
 
 .hero-cloud-front {
-  bottom: calc(-1 * var(--cloud-overscan-y));
-  /* top edge stays at ~38% of stage height (bottom offset and the added
-     height cancel); only the bottom is extended past the stage. */
-  height: calc(38% + var(--cloud-overscan-y));
+  /* Top edge stays put (~38% of stage height); only the bottom is nudged
+     past the stage since that's the only vertical edge the front layer can
+     detach from. Small extension = negligible vertical stretch. */
+  top: auto;
+  bottom: -36px;
+  height: calc(38% + 34px);
   z-index: 5;
 }
 
@@ -2049,7 +2050,9 @@ figcaption {
   justify-content: center;
   background: var(--ink);
   color: var(--bg);
-  border-radius: var(--radius-btn);
+  /* Fully rounded: a circle while it's a 46px square, a stadium pill once
+     the label widens it. */
+  border-radius: 999px;
   /* Accent hairline keeps the pill legible even when it sits over the
      inverted footer, whose background is the same colour as --ink. */
   box-shadow: 0 6px 18px rgba(var(--shadow-rgb), .18), 0 0 0 1.5px var(--accent-strong);

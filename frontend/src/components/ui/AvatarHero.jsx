@@ -30,30 +30,21 @@ export default function AvatarHero({ theme = "paper", go }) {
   const smoothX = useSpring(mouseX, springConfig);
   const smoothY = useSpring(mouseY, springConfig);
 
-  /* Parallax offsets for different depth layers.
-     These clouds are decorative SVG shapes that get this x/y translate as a
-     rigid transform. Earlier fixes chased the problem of the shape's edge
-     pulling away from .avatar-hero-stage's clipped border by shrinking the
-     translate to fit inside each path's small built-in bleed — but that
-     bleed, measured in viewBox units and then stretched by
-     `preserveAspectRatio="none"`, is a *variable* number of CSS px
-     depending on viewport width/height, so a displacement that was safe at
-     one size re-exposed a seam at another.
+  /* Parallax offsets for different depth layers — a rigid x/y translate on
+     each `.hero-cloud-layer`. The layers are drawn a fixed `--cloud-bleed`
+     past `.avatar-hero-stage` on every edge (see App.css) and the stage's
+     `overflow: hidden` clips the surplus, so the translate only ever slides
+     more of an already-overflowing shape into view and can't pull a painted
+     edge off the stage border. `--cloud-bleed` is a small fixed amount, so
+     the clouds render at essentially their original size/position — keep
+     every maximum below it (with headroom). `clamp: true` is explicit so
+     the mildly underdamped spring above can't overshoot past these bounds.
+     Ranges are back to roughly the original feel. */
+  const cloudBackX = useTransform(smoothX, [-1, 1], [30, -30], { clamp: true });
+  const cloudBackY = useTransform(smoothY, [-1, 1], [15, -15], { clamp: true });
 
-     The durable fix moved to CSS: `.hero-cloud-layer` is now sized well
-     past the stage on every edge (`--cloud-overscan`, a clamp() that always
-     exceeds the max displacement below), and the stage's `overflow: hidden`
-     clips the surplus. So the painted cloud edge is always outside the clip
-     no matter the viewport, and the translate just slides more of an
-     already-overflowing shape into view. That freed the range back up for a
-     livelier drift. `clamp: true` stays explicit so the mildly underdamped
-     spring above can't push the offset past these bounds even if it
-     overshoots ±1 — keep the maxima below `--cloud-overscan`'s floor. */
-  const cloudBackX = useTransform(smoothX, [-1, 1], [42, -42], { clamp: true });
-  const cloudBackY = useTransform(smoothY, [-1, 1], [24, -24], { clamp: true });
-
-  const cloudFrontX = useTransform(smoothX, [-1, 1], [-60, 60], { clamp: true });
-  const cloudFrontY = useTransform(smoothY, [-1, 1], [-32, 32], { clamp: true });
+  const cloudFrontX = useTransform(smoothX, [-1, 1], [-36, 36], { clamp: true });
+  const cloudFrontY = useTransform(smoothY, [-1, 1], [-14, 14], { clamp: true });
 
   const handleMouseMove = (e) => {
     if (reduced) return;
