@@ -1147,7 +1147,11 @@ figcaption {
 .tool-track {
   display: inline-flex;
   align-items: center;
-  height: 288px;
+  /* The air above/below the logos is set directly rather than left to fall
+     out of a fixed bar height — so it stays exactly 60.5px whatever the
+     logo or label size does. The strip's total height is the result:
+     60.5 + content + 60.5. */
+  padding: 60.5px 0;
   gap: 5.3333rem;
   animation: slide 34s linear infinite;
 }
@@ -1183,12 +1187,11 @@ figcaption {
   max-width: none;
   transition: transform .25s var(--ease-state);
 }
-/* 162px logo + 8px gap + ~11px label = ~181px of content in the 288px
-   strip, leaving ~53px of air above and below (the track centres it, so
-   that margin is a result of these two numbers, not set directly).
+/* 157px logo + 8px gap + ~11px label = ~176px of content, which the track's
+   60.5px padding takes to a ~297px strip.
    The label deliberately doesn't scale with the logo — it's already at the
    small end of the type scale and shrinking it further hurts legibility. */
-.tool-track .tool-tile img { width: 162px; height: 162px; }
+.tool-track .tool-tile img { width: 157px; height: 157px; }
 .tool-tile-label { display: block; }
 .tool-tile:hover { color: var(--ink); }
 .tool-tile:hover img { transform: scale(1.08); }
