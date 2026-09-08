@@ -88,14 +88,20 @@ CRA is wrapped with **craco** (`craco.config.js`) rather than plain `react-scrip
 
 ### Deploy workflow (git → Vercel)
 
-The GitHub repo has two relevant branches: `main` (preview) and `production` (wired to Vercel's live deploy). Default flow for any change:
+- **GitHub repo:** `EshaniSomwanshi/Eshani-Somwanshi-Portfolio-Website`
+- **Vercel project:** `eshanisomwanshi` (team `eshanisomwanshi`) — dashboard: https://vercel.com/eshanisomwanshi/eshanisomwanshi/deployments
+- **Live site:** https://www.eshanisomwanshi.com (also `eshanisomwanshi.com`)
 
-1. Commit and push to `main`. This is what an unqualified "push" means — it deploys a Vercel preview, not the live site.
-2. Only after the user reviews and explicitly says to go live ("push to production", "ship it", etc.), fast-forward `production` to `main`: `git push origin main:production`. `production` should always be a strict ancestor of `main` (no divergent commits of its own) — if unsure, check first with `git rev-list --left-right --count origin/production...origin/main`.
+The repo has two relevant branches: `dev` (day-to-day work) and `main` (Vercel's production branch — pushing it deploys the live site). Default flow for any change:
 
-Never push to `production` on a bare "push" — wait for the explicit go-ahead.
+1. Commit and push to `dev`. This is what an unqualified "push" means — Vercel builds a **preview** deploy for the `dev` branch, not the live site.
+2. Only after the user reviews and explicitly says to go live ("push to production", "ship it", etc.), promote by merging `dev` into `main` and pushing: `git checkout main && git merge --no-ff dev && git push origin main && git checkout dev`. `main` carries only merge commits from `dev` (plus pre-workflow direct fixes) — it can be behind `dev` between promotions; that's expected. Check what's unpromoted with `git log --oneline origin/main..origin/dev`.
 
-Push step 1 (commit + preview deploy) happens after **every** change by default — don't wait to be asked "commit to git and vercel" each time; only step 2 (promoting to `production`) needs an explicit go-ahead. If the user says to wait/hold off/batch changes, respect that instead.
+Never push `main` on a bare "push" — wait for the explicit go-ahead.
+
+Push step 1 (commit + preview deploy) happens after **every** change by default — don't wait to be asked "commit to git and vercel" each time; only step 2 (promoting to `main`) needs an explicit go-ahead. If the user says to wait/hold off/batch changes, respect that instead.
+
+The user works mostly from the GitHub Desktop app, so keep the local working tree clean and commits self-contained.
 
 ### Testing protocol (`test_result.md`)
 
