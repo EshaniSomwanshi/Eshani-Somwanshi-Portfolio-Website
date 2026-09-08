@@ -13,6 +13,12 @@
   grid-template-columns: minmax(200px, 240px) 1fr;
   gap: clamp(2.6667rem, 5vw, 5.3333rem);
   align-items: start;
+  /* .cs-overview's own top padding is zeroed below (needed for column
+     alignment — see that rule), which left zero space between the metrics
+     band above and the sidebar/video below. 20px flat, not tied to the
+     type scale, per explicit request — adjust directly if it needs to
+     change. */
+  margin-top: 20px;
 }
 
 .cs-toc {
