@@ -1,0 +1,155 @@
+/* ---------------------------------------------------------------------------
+   CaseStudyTOC — sticky sidebar + scrollspy nav for case study pages.
+   Shares tokens/visual language with the rest of the site rather than the
+   old (now-removed) .case/.case-rail chaptered layout, but the pattern is
+   the same: sticky rail, left-border active indicator, mono labels.
+--------------------------------------------------------------------------- */
+
+.cs-toc-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) 1fr;
+  gap: clamp(2.6667rem, 5vw, 5.3333rem);
+  align-items: start;
+}
+
+.cs-toc {
+  position: sticky;
+  top: calc(var(--nav-h) + 2.1333rem);
+  max-height: calc(100vh - var(--nav-h) - 4rem);
+  overflow-y: auto;
+}
+
+.cs-toc-heading {
+  font-family: var(--font-mono);
+  font-size: .79rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: .8rem;
+}
+
+.cs-toc-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-toc-link {
+  display: block;
+  padding: .5333rem 0 .5333rem 1rem;
+  font-family: var(--font-mono);
+  font-size: .889rem;
+  letter-spacing: .02em;
+  line-height: 1.3;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  transition: color var(--dur-fast) var(--ease-state),
+              border-color var(--dur-fast) var(--ease-state),
+              padding-left .3s var(--ease-state);
+}
+
+.cs-toc-link:hover { color: var(--ink); padding-left: 1.2rem; }
+
+.cs-toc-link[aria-current="true"] {
+  color: var(--ink);
+  font-weight: 600;
+  border-left-color: var(--accent);
+  border-left-width: 2px;
+  padding-left: calc(1rem - 1px);
+}
+
+/* Mobile: no fixed rail, TOC sits above the content as a normal block —
+   matches how the old .case-rail handled the same tradeoff. */
+@media (max-width: 1024px) {
+  .cs-toc-layout { grid-template-columns: 1fr; }
+  .cs-toc {
+    position: static;
+    max-height: none;
+    margin-bottom: 2.1333rem;
+    padding-bottom: 1.3333rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .cs-toc-list { flex-direction: row; flex-wrap: wrap; gap: .5333rem 1.3333rem; }
+  .cs-toc-link { border-left: none; padding: .2667rem 0; }
+  .cs-toc-link[aria-current="true"] { padding-left: 0; border-bottom: 2px solid var(--accent); }
+}
+
+/* ---------- section body (fixed-taxonomy content, e.g. Eye AI) ---------- */
+.cs-section { padding-top: clamp(2.6667rem, 5vw, 4rem); }
+.cs-section:first-child { padding-top: 0; }
+
+.cs-bullets {
+  margin-top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+  max-width: 62ch;
+}
+.cs-bullets li {
+  padding-left: 1.3333rem;
+  position: relative;
+  color: var(--muted);
+  font-size: 1.0667rem;
+  line-height: 1.55;
+}
+.cs-bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: .65em;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.cs-subsection { margin-top: 2.1333rem; }
+.cs-subsection h3 {
+  font-family: var(--font-display);
+  font-size: 1.424rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin-bottom: .6667rem;
+}
+
+/* ---------- genuine empty-state placeholders (no asset exists yet) ---------- */
+.cs-art-placeholders { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.0667rem; margin-top: 1.6rem; }
+
+.cs-image-placeholder {
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: .79rem;
+  letter-spacing: .04em;
+  text-align: center;
+  padding: 1rem;
+}
+
+.cs-video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .6667rem;
+  aspect-ratio: 16 / 9;
+  max-width: 720px;
+  margin: 0 0 2.1333rem;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+}
+.cs-video-placeholder .play-glyph {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+}
+.cs-video-placeholder span.label {
+  font-family: var(--font-mono);
+  font-size: .889rem;
+  letter-spacing: .04em;
+}

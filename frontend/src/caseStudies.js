@@ -19,22 +19,112 @@ export const caseStudies = [
     slug: "eye-ai",
     company: "Onward Technologies · EYE AI",
     period: "Jul 2024 – Aug 2024 · Chicago, IL",
-    role: "UX Designer",
+    role: "UX/UI Designer",
     titleLines: ["Retinal Diagnostic Platform"],
-    tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
+    tags: ["Predictive AI", "Human-Centered Design", "Design Systems"],
     metrics: [["20%", "Faster diagnostic tasks"], ["10→7", "Week MVP timeline"], ["5", "Severity issues eliminated"], ["15+", "Stakeholder workshops"]],
-    overview: "Streamlining complex diagnostics into one unified, actionable experience for clinicians: a regulated B2B health-tech MVP followed end to end, from heuristic evaluation and stakeholder research through journey mapping, iterative prototyping, and high-fidelity delivery of a diagnostic tool clinicians could trust.",
-    chapters: [
-      { label: "Research", title: "Where clinicians lose time.", skim: "Heuristic evaluation plus 15+ stakeholder workshops set direction through three product pivots.", body: "Heuristic evaluation and competitive analysis across 15+ stakeholder workshops set the design direction through three product pivots. Findings were fed directly into sprint priorities and roadmap sequencing; research shaped what got built, not just how it looked." },
-      { label: "Method", title: "A defined path from research to handoff.", skim: "Early usability validation cut the MVP from 10 weeks to 7 and killed 5 high-severity issues before engineering.", body: "Journey mapping through wireframing, iterative prototyping, and high-fidelity delivery. User-centered prototyping and early usability validation compressed the MVP timeline from 10 to 7 weeks and eliminated 5 high-severity interaction issues before engineering commitment." },
-      /* Add a before/after once you have a screenshot of the legacy workflow:
-         beforeAfter: ["eyeai-before.png", "eyeai-dashboard.png",
-                       "Legacy workflow", "Redesigned",
-                       "Patient queue: six steps down to two"], */
-      { label: "Interface", title: "The clinician's four minutes.", skim: "Patient queue to signed diagnostic report in minutes: 20% faster, still compliant.", body: "The final workflow lets clinicians move from patient queue to diagnostic report in minutes: a clear patient table with status at a glance, guided upload and analysis, and automated reporting that holds up in a regulated environment, enabling diagnostic tasks to be completed 20% faster.", images: [
-        ["eyeai-cover.png", "Eye AI clinician dashboard listing patients with diagnostic status and images analyzed.", "Patient dashboard: status and diagnostic queue at a glance"],
-      ] },
+    overview: "This project at Onward Technologies focused on designing a comprehensive digital solution for retina specialists and technicians who faced fragmented workflows across patient data, image analysis, and diagnosis. As Product & Interaction Designer, I designed a centralized web portal integrating three core functions, patient data management, AI-assisted image analysis, and diagnostic report generation, aimed at building efficiency, accuracy, and confidence in diagnostics using a GenAI-powered platform.",
+    /* Hero media: content/eye-ai-content.md calls for a video here, but no
+       video asset exists in the codebase yet — rendered as an explicit,
+       genuinely-empty placeholder (see cs-video-placeholder in
+       CaseStudyPage.js) rather than skipped outright, per instruction. */
+    heroVideoPlaceholder: true,
+    /* Fixed-taxonomy section content (drives the CaseStudyTOC sidebar +
+       CaseStudySection rendering below), sourced from
+       "info content/eye-ai-content.md". This REPLACES the freeform
+       `chapters` rendering for this one case study only — the other case
+       studies still use `chapters` untouched, exactly as before.
+
+       "Challenges & Constraints" and "Next Steps" are omitted: the source
+       content has no material for either, and per instruction empty
+       sections shouldn't get a nav entry rather than being stubbed out. */
+    sections: [
+      {
+        id: "problem-statement",
+        navLabel: "Problem Statement",
+        paragraphs: [
+          "How can a technology-based solution enable retina specialists and technicians to efficiently manage patient data, analyze retinal imagery, and deliver accurate diagnostics, while maintaining usability, clarity, and trust in high-stakes medical environments?",
+        ],
+      },
+      {
+        id: "research-insights",
+        navLabel: "Research & Key Insights",
+        paragraphs: [
+          "To ground our solution in reality, we mapped AI's role within retinopathy diagnostics. Our domain scan revealed how AI supports image analysis, patient data review, predictive modeling, and task automation, yet also exposed key gaps in workflow efficiency, clinician trust, and the practical meaning of “usable” AI in clinical environments.",
+          "These insights informed our strategic direction, with insights into user pain points, needs, and expectations guiding feature prioritization that supports the user's workflow rather than replacing it entirely.",
+        ],
+        imagePlaceholders: [
+          "User research, key insights & journey mapping",
+          null,
+          null,
+          null,
+        ],
+      },
+      {
+        id: "my-role",
+        navLabel: "My Role",
+        bullets: [
+          "Competitive analysis on current GenAI applications in MedTech for viable integration.",
+          "Designing workflows to streamline data management and reduce task load for healthcare professionals.",
+          "Maintaining consistent documentation and brand alignment through evolving design stages.",
+        ],
+      },
+      {
+        id: "approach-process",
+        navLabel: "Approach / Process",
+        subsections: [
+          {
+            heading: "Early Designs",
+            paragraphs: [
+              "Early iterations focused on aligning the user flow and overall experience with project goals. Through multiple design cycles, integrating developer feedback and stakeholder reviews, we crafted the solution to strengthen both business objectives and the end-user experience.",
+            ],
+            imagePlaceholders: [null],
+          },
+          {
+            heading: "AI Model",
+            paragraphs: [
+              "The AI-powered retinal analysis system processes uploaded fundus images through a deep learning pipeline for real-time disease detection. Images are first preprocessed and passed into a ResNet50-based model that extracts key retinal features and performs multi-task classification for diabetic retinopathy and macular edema. The system provides immediate severity assessments, generates visual overlays to explain predictions, and allows clinicians to confirm results for final reporting. All analyses are securely stored, enabling patient history tracking and streamlined diagnostic workflows.",
+            ],
+            imagePlaceholders: [null],
+          },
+        ],
+      },
+      {
+        id: "final-design",
+        navLabel: "Final Design / Solution",
+        paragraphs: ["A look at the finished interface."],
+        images: [
+          ["onward-1.png", "Onward's EYE AI product site hero: “Enhance your practice with AI technology.”", "The site clinicians land on first"],
+          ["eyeai-cover.png", "Eye AI clinician dashboard listing patients with diagnostic status and images analyzed.", "Patient dashboard: status and diagnostic queue at a glance"],
+        ],
+        imagePlaceholders: Array(7).fill(null),
+      },
+      {
+        id: "outcomes-impact",
+        navLabel: "Outcomes / Impact",
+        bullets: [
+          "Reducing diagnostic time by 40% through real-time AI-assisted retinal image analysis, cutting manual effort and evaluation from 10 minutes to under 4 minutes.",
+          "Improving diagnostic accuracy by 15%, supporting retina specialists in early detection of diabetic retinopathy and macular edema with multi-task deep learning.",
+          "Enhancing clinical efficiency and adoption by providing secure history tracking, automated PDF reporting, and explainable visual overlays.",
+        ],
+        imagePlaceholders: Array(4).fill(null),
+      },
+      {
+        id: "takeaways",
+        navLabel: "What I Took Away",
+        bullets: [
+          "Bridging AI & UX — within tight deadlines, I learned how to integrate a multi-task deep learning model into a user-friendly, clinician-focused web interface.",
+          "Iterative problem-solving — I realized that small improvements, like visual overlays and report automation, had a huge impact on adoption and real-world efficiency.",
+          "Collaboration & scalability — learned to balance visual quality with performance, knowing when to push for better design and when to prioritize scalability.",
+        ],
+      },
     ],
+    /* Superseded by `sections` above (fixed-taxonomy content from
+       info content/eye-ai-content.md) — CaseStudyPage renders `sections`
+       instead of `chapters` whenever a study provides one. Left as an
+       empty array (rather than removed) so `study.chapters.length` stays
+       safe wherever the page still reads it generically. */
+    chapters: [],
   },
   {
     slug: "optrahealth",

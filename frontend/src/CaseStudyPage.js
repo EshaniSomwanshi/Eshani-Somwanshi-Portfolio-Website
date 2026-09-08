@@ -1,9 +1,10 @@
 import React, { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion, useReducedMotion, useScroll } from "framer-motion";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Play } from "lucide-react";
 import RotateCard from "./components/devices/RotateCard";
 import BeforeAfter from "./components/site/BeforeAfter";
+import CaseStudyTOC from "./components/site/CaseStudyTOC";
 import { ReadModeToggle, useReadMode } from "./components/site/ReadMode";
 import { useLenis } from "./lib/smoothScroll";
 import {
@@ -16,6 +17,92 @@ import {
 } from "./primitives";
 import { caseStudies } from "./caseStudies";
 import "./App.css";
+import "./components/site/casestudytoc.css";
+
+/* Renders a row of genuinely-empty placeholder tiles for content that has no
+   matching asset in the codebase yet (see caseStudies.js `imagePlaceholders`
+   on the eye-ai case study) — never a stand-in image, just an honest empty
+   state so it's obvious more art is coming rather than looking broken. Each
+   entry is either a caption string or null for a plain unlabeled slot. */
+function ImagePlaceholderRow({ items }) {
+  if (!items?.length) return null;
+  return (
+    <div className="cs-art-placeholders">
+      {items.map((caption, i) => (
+        <div className="cs-image-placeholder" key={i} role="img" aria-label={caption || "Image coming soon"}>
+          <span>{caption || "Image coming soon"}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* One section in the fixed-taxonomy content model (Overview, Problem
+   Statement, Research & Key Insights, ...) — used only by case studies that
+   provide a `sections` array (currently eye-ai). Reuses the exact same
+   RotateCard/Wipe image treatment as the legacy `chapters` rendering below,
+   so real images keep their existing animation wrapper intact; this
+   component only adds the *layout* around them. */
+function CaseStudySection({ index, section, company }) {
+  return (
+    <section
+      id={section.id}
+      className="cs-section container"
+      data-testid={`cs-section-${section.id}`}
+    >
+      <Reveal>
+        <p className="section-label">{String(index).padStart(2, "0")} · {section.navLabel}</p>
+        <h2>{section.title || section.navLabel}</h2>
+        {section.paragraphs?.map((p, i) => <p className="cs-body" key={i}>{p}</p>)}
+        {section.bullets && (
+          <ul className="cs-bullets">
+            {section.bullets.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+        )}
+      </Reveal>
+
+      {section.images && (
+        <div className="cs-art">
+          {section.images.map(([src, alt, cap], j) => (
+            <RotateCard
+              key={src}
+              src={IMG(src)}
+              alt={alt}
+              caption={cap}
+              from={j % 2 === 0 ? "left" : "right"}
+              cursor={company.split(" ")[0]}
+              testId={`case-image-${section.id}-${j}`}
+            />
+          ))}
+        </div>
+      )}
+      <ImagePlaceholderRow items={section.imagePlaceholders} />
+
+      {section.subsections?.map((sub, i) => (
+        <div className="cs-subsection" key={i}>
+          <h3>{sub.heading}</h3>
+          {sub.paragraphs?.map((p, pi) => <p className="cs-body" key={pi}>{p}</p>)}
+          {sub.images && (
+            <div className="cs-art">
+              {sub.images.map(([src, alt, cap], j) => (
+                <RotateCard
+                  key={src}
+                  src={IMG(src)}
+                  alt={alt}
+                  caption={cap}
+                  from={j % 2 === 0 ? "left" : "right"}
+                  cursor={company.split(" ")[0]}
+                  testId={`case-image-${section.id}-sub${i}-${j}`}
+                />
+              ))}
+            </div>
+          )}
+          <ImagePlaceholderRow items={sub.imagePlaceholders} />
+        </div>
+      ))}
+    </section>
+  );
+}
 
 export default function CaseStudyPage() {
   const { slug } = useParams();
@@ -132,9 +219,15 @@ export default function CaseStudyPage() {
           </div>
         </section>
 
-        <section className="cs-overview container">
+        <section className="cs-overview container" id="overview">
+          {study.heroVideoPlaceholder && (
+            <div className="cs-video-placeholder" role="img" aria-label="Video coming soon">
+              <span className="play-glyph"><Play size={16} /></span>
+              <span className="label">Video coming soon</span>
+            </div>
+          )}
           <Reveal><p className="lede">{study.overview}</p></Reveal>
-          <ReadModeToggle minutes={Math.max(3, study.chapters.length + 1)} />
+          {!study.sections && <ReadModeToggle minutes={Math.max(3, study.chapters.length + 1)} />}
           {study.confidential && (
             <Reveal delay={0.1}>
               <p className="note-strip" data-testid="case-nda-note">
@@ -159,70 +252,92 @@ export default function CaseStudyPage() {
           </section>
         )}
 
-        {study.chapters.map((ch, i) => (
-          <section className="cs-chapter container" key={ch.label} data-testid={`case-chapter-${i + 1}`}>
-            <Reveal>
-              <p className="section-label">
-                {String(i + 1).padStart(2, "0")} · {ch.label}
-              </p>
-              <h2>{ch.title}</h2>
-              {readMode === "skim" ? (
-                <p className="cs-skim">{ch.skim || ch.body}</p>
-              ) : (
-                <p className="cs-body">{ch.body}</p>
-              )}
-            </Reveal>
+        {/* Sticky TOC + content: `sections` (fixed taxonomy, e.g. eye-ai) is
+            reused as the source of nav entries when present; every other
+            case study still renders exactly as before via `chapters`, just
+            now with an id on each chapter section so the same shared TOC
+            can link/scroll to them too. */}
+        <div className="container cs-toc-layout">
+          <CaseStudyTOC
+            sections={[
+              { id: "overview", label: "Overview" },
+              ...(study.sections
+                ? study.sections.map((s) => ({ id: s.id, label: s.navLabel }))
+                : study.chapters.map((ch, i) => ({ id: `chapter-${i + 1}`, label: ch.label }))),
+            ]}
+          />
 
-            {ch.beforeAfter && (
-              <BeforeAfter
-                before={IMG(ch.beforeAfter[0])}
-                after={IMG(ch.beforeAfter[1])}
-                beforeLabel={ch.beforeAfter[2]}
-                afterLabel={ch.beforeAfter[3]}
-                beforeAlt={`${ch.beforeAfter[2]}, ${study.company}`}
-                afterAlt={`${ch.beforeAfter[3]}, ${study.company}`}
-                caption={ch.beforeAfter[4]}
-                testId={`case-beforeafter-${study.slug}`}
-              />
-            )}
+          <div className="cs-toc-content">
+            {study.sections
+              ? study.sections.map((s, i) => (
+                  <CaseStudySection key={s.id} index={i + 1} section={s} company={study.company} />
+                ))
+              : study.chapters.map((ch, i) => (
+                  <section className="cs-chapter" id={`chapter-${i + 1}`} key={ch.label} data-testid={`case-chapter-${i + 1}`}>
+                    <Reveal>
+                      <p className="section-label">
+                        {String(i + 1).padStart(2, "0")} · {ch.label}
+                      </p>
+                      <h2>{ch.title}</h2>
+                      {readMode === "skim" ? (
+                        <p className="cs-skim">{ch.skim || ch.body}</p>
+                      ) : (
+                        <p className="cs-body">{ch.body}</p>
+                      )}
+                    </Reveal>
 
-            {ch.images && (
-              <div className={ch.phone ? "phone-row" : "cs-art"}>
-                {ch.images.map(([src, alt, cap], j) => 
-                 ch.phone ? (
-                  /* figcaption now lives inside its own <figure>. Previously it
-                     sat next to the Wipe <figure> as a loose sibling in a <div>,
-                     which is invalid HTML and lost the caption association. */
-                  <figure
-                    className="phone cs-shot"
-                    key={src}
-                    data-cursor={study.company.split(" ")[0]}
-                  >
-                    <Wipe
-                      src={IMG(src)}
-                      alt={alt}
-                      delay={j * 0.1}
-                      fit="contain"
-                      zoom={false}
-                      testId={`case-image-${study.slug}-${j}`}
-                    />
-                    <figcaption>{cap}</figcaption>
-                  </figure>
-                ) : (
-                  <RotateCard
-                    key={src}
-                    src={IMG(src)}
-                    alt={alt}
-                    caption={cap}
-                    from={j % 2 === 0 ? "left" : "right"}
-                    cursor={study.company.split(" ")[0]}
-                    testId={`case-image-${study.slug}-${j}`}
-                  />
+                    {ch.beforeAfter && (
+                      <BeforeAfter
+                        before={IMG(ch.beforeAfter[0])}
+                        after={IMG(ch.beforeAfter[1])}
+                        beforeLabel={ch.beforeAfter[2]}
+                        afterLabel={ch.beforeAfter[3]}
+                        beforeAlt={`${ch.beforeAfter[2]}, ${study.company}`}
+                        afterAlt={`${ch.beforeAfter[3]}, ${study.company}`}
+                        caption={ch.beforeAfter[4]}
+                        testId={`case-beforeafter-${study.slug}`}
+                      />
+                    )}
+
+                    {ch.images && (
+                      <div className={ch.phone ? "phone-row" : "cs-art"}>
+                        {ch.images.map(([src, alt, cap], j) =>
+                         ch.phone ? (
+                          /* figcaption now lives inside its own <figure>. Previously it
+                             sat next to the Wipe <figure> as a loose sibling in a <div>,
+                             which is invalid HTML and lost the caption association. */
+                          <figure
+                            className="phone cs-shot"
+                            key={src}
+                            data-cursor={study.company.split(" ")[0]}
+                          >
+                            <Wipe
+                              src={IMG(src)}
+                              alt={alt}
+                              delay={j * 0.1}
+                              fit="contain"
+                              zoom={false}
+                              testId={`case-image-${study.slug}-${j}`}
+                            />
+                            <figcaption>{cap}</figcaption>
+                          </figure>
+                        ) : (
+                          <RotateCard
+                            key={src}
+                            src={IMG(src)}
+                            alt={alt}
+                            caption={cap}
+                            from={j % 2 === 0 ? "left" : "right"}
+                            cursor={study.company.split(" ")[0]}
+                            testId={`case-image-${study.slug}-${j}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 ))}
-              </div>
-            )}
-          </section>
-        ))}
+          </div>
+        </div>
 
         <section className="cs-next">
           <div className="container">
