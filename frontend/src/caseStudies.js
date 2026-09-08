@@ -130,58 +130,235 @@ export const caseStudies = [
     slug: "optrahealth",
     company: "OptraHealth",
     period: "Dec 2024 – Mar 2025 · San Jose, CA",
-    role: "Product Designer",
-    // TODO(Eshani): titleLines below reflect your new "Pediatric Therapy App" /
-    // "Companion-Guided App Connecting Patients, Parents & Providers" naming;
-    // the 3 checklist bullets you sent were duplicates of the Onward ones, so
-    // this overview still runs on the original Zoe-focused copy until you send
-    // OptraHealth-specific highlights.
+    role: "Product + UI/UX Designer",
     titleLines: ["Pediatric Therapy App", "for patients, parents, and providers."],
-    tags: ["AI companion", "Healthcare SaaS", "Design system"],
+    tags: ["Gamification", "Visual Engagement", "Design Psychology"],
     metrics: [["30%", "Weekly engagement increase"], ["28%", "Tutorial completion increase"], ["100+", "Component Figma library"], ["20+", "Usability sessions"]],
-    overview: "A companion-guided app connecting patients, parents, and providers. Primary designer for Zoe, an AI companion inside the MyoCircle health-tech SaaS platform, plus mobile onboarding, a patient management dashboard, and provider monitoring, validated across 20+ sessions with patients, parents, and providers.",
-    chapters: [
-      { label: "Interaction", title: "Designing an AI companion from the ground up.", skim: "Mapped Zoe's interaction model to real care touch-points so encouragement landed as timely, not noisy.", body: "Zoe's interaction layer was built from zero: mapping interaction models to user inputs and care touch-points so encouragement felt timely rather than noisy. The work lifted exercise tutorial completion by 28% and weekly engagement by 30%.", images: [
-        ["myocircle-day1.png", "MyoCircle Day 1 exercise screen with a guided video, sets and reps tracking, and a Start Exercise button.", "Where a session starts: guided video, sets, and reps"],
-        ["myocircle-interaction.png", "MyoCircle exercise screen with Zoe's congratulations card after a completed exercise, awarding points.", "Where it ends: Zoe's encouragement moment"],
-      ] },
-      { label: "System", title: "A library the whole team could build with.", skim: "A 100+ component Figma library PMs and engineers prototyped with on their own.", body: "A 100+ component Figma library became the shared language of the product team, adopted by product managers and engineers for independent prototyping, which kept design quality consistent even when design wasn't in the room. Profile, badges, and progress components are one small slice of it.", images: [
-        ["myocircle-profile.png", "MyoCircle profile screen with streak, daily score, league, XP, and a monthly badges and achievements grid.", "Componentized: profile, badges, and progress states"],
-      ] },
-      { label: "Validation", title: "Tested with patients, parents, and providers.", skim: "20+ sessions across three user groups; parent onboarding drop-off fell 20%.", body: "Twenty-plus usability testing and heuristic evaluation sessions across all three user groups surfaced where onboarding lost people, cutting drop-off among parents by 20% and grounding every major flow in observed behaviour.", images: [
-        ["myocircle-level13.png", "MyoCircle workout progress screen showing Level 13, 25% progress, and the Day 1 exercise video queue.", "What sessions validated: level progress and the exercise queue"],
-      ] },
+    overview: "MyoCircle is a youth-centric healthcare platform designed to simplify appointment scheduling, medication tracking, and physical activity management.",
+    /* Reuses the same cover-image mechanism travelogue already has (Wipe,
+       rendered right after Overview) rather than a separate hero-image
+       field — info content/myocircle-content.md's hero media marker is an
+       image, not a video, and this cover already exists in the codebase
+       (used on the homepage teaser) but wasn't yet shown on this page. */
+    cover: ["myocircle-cover.png", "MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow."],
+    /* Fixed-taxonomy section content, sourced from
+       "info content/myocircle-content.md". Supersedes the freeform
+       `chapters` below for this study, same as eye-ai. "Research & Key
+       Insights" and "Final Design / Solution" have no matching prose in
+       that file, but do have real, already-existing case-study images
+       that need a home now that `chapters` is retired — reused the
+       EXISTING chapter copy that already covered that ground (validation
+       research, and the finished-product screens) rather than writing
+       anything new. "Outcomes / Impact" is omitted: its only concrete
+       figure (60% conversion) is folded into Challenges below, and the
+       rest is already the metrics band above. */
+    sections: [
+      {
+        id: "problem-statement",
+        navLabel: "Problem Statement",
+        paragraphs: [
+          "How can a technology-based solution enable users to independently manage their healthcare routines, making it an intuitive, engaging, and age-appropriate experience for younger patients?",
+        ],
+      },
+      {
+        id: "research-insights",
+        navLabel: "Research & Key Insights",
+        paragraphs: [
+          "Twenty-plus usability testing and heuristic evaluation sessions across all three user groups (patients, parents, and providers) surfaced where onboarding lost people, cutting drop-off among parents by 20% and grounding every major flow in observed behaviour.",
+        ],
+      },
+      {
+        id: "my-role",
+        navLabel: "My Role",
+        paragraphs: [
+          "With full creative ownership of end-to-end visual design, I worked with 1 Product Manager and Software Engineers to conceptualize this product 0→1, designing intuitive user flows, gamified routines, and visual storytelling elements supporting interaction between doctors and patients, enabling children as young as 10 to independently manage their care through engaging, human-centered design.",
+        ],
+      },
+      {
+        id: "approach-process",
+        navLabel: "Approach / Process",
+        paragraphs: [
+          "With the user group defined and research insights in place, the Empathize and Define stages had set a clear foundation. We transitioned into the Ideation phase, translating user needs into initial sketches, low-fidelity wireframes, and interaction concepts that balanced simplicity, playfulness, and usability.",
+        ],
+        imagePlaceholders: [null, null],
+        subsections: [
+          {
+            heading: "Design Principles that Shaped the Experience",
+            images: [
+              ["myocircle-profile.png", "MyoCircle profile screen with streak, daily score, league, XP, and a monthly badges and achievements grid.", "Componentized: profile, badges, and progress states"],
+            ],
+          },
+          {
+            heading: "Designing for the Patient",
+            images: [
+              ["myocircle-day1.png", "MyoCircle Day 1 exercise screen with a guided video, sets and reps tracking, and a Start Exercise button.", "Where a session starts: guided video, sets, and reps"],
+              ["myocircle-interaction.png", "MyoCircle exercise screen with Zoe's congratulations card after a completed exercise, awarding points.", "Where it ends: Zoe's encouragement moment"],
+            ],
+            imagePlaceholders: [null, null],
+          },
+        ],
+      },
+      {
+        id: "challenges-constraints",
+        navLabel: "Challenges & Constraints",
+        paragraphs: [
+          "We operated under tight timelines and a multi-platform scope, making cross-functional team alignment challenging. To accelerate decisions, we ran weekly structured design reviews with a shared decision log for heuristic passes, accessibility checks, and clinician sign-offs, resulting in a 60% conversion.",
+        ],
+      },
+      {
+        id: "final-design",
+        navLabel: "Final Design / Solution",
+        paragraphs: ["A look at the finished interface."],
+        images: [
+          ["myocircle-level13.png", "MyoCircle workout progress screen showing Level 13, 25% progress, and the Day 1 exercise video queue.", "What sessions validated: level progress and the exercise queue"],
+        ],
+        imagePlaceholders: [null, null, null],
+      },
+      {
+        id: "takeaways",
+        navLabel: "What I Took Away",
+        bullets: [
+          "Designing for Dual Roles (Patient & Clinician) — modeling shared objects/states before role-specific flows clarified permissions, reduced rework, and made handoffs predictable across surfaces.",
+          "Designing for a Niche — designing for a new pediatric niche meant letting the rules lead. I treated the guideline stack as a blueprint for iterations, testing with quick feedback loops. These ‘constraints’ helped speed decisions and make the overall user experience clear, compliant and efficient/consistent.",
+          "Design System First Approach — tokens (type, color, spacing), reusable components, and usage notes (kid vs clinician context) sped up iteration and kept UX consistent.",
+        ],
+      },
+      {
+        id: "next-steps",
+        navLabel: "Next Steps",
+        paragraphs: [
+          "We observe what resonates, and keep only what sticks. It's crucial to smooth the rough edges on the Patient path while the Clinician experience comes to life, starting with the most critical jobs and handoffs. The aim is a coordinated pilotable release where progress, feedback, and guidance move seamlessly across roles, boosting adherence and shortening time-to-support, while the Clinician track (already scoped and partially explored) matures into a production-ready module.",
+        ],
+      },
     ],
+    /* Superseded by `sections` above — see that field's comment. */
+    chapters: [],
   },
   {
     slug: "travelogue",
     company: "Travelogue · personal case study",
     period: "Personal project · 2025",
     role: "Product Designer",
-    // TODO(Eshani): your notes marked this project's title, subtitle, and 3
-    // checklist bullets as "I will input info here" — replace titleLines and
-    // overview below once you've written that copy.
     titleLines: ["One home", "for every trip."],
-    tags: ["Personal project", "Mobile UX", "Research-led"],
+    tags: ["Social Experience Design", "Information Architecture", "Visual Storytelling"],
+    /* NOTE: info content/travelogue-content.md's Research section says "11
+       participants (aged 18-35)"; this metric (below) and the existing
+       research image's caption both say eight. Left the existing "08" here
+       since it's an already-published number (this page's own metrics
+       band, and the homepage teaser card), but the new Research section
+       text below is transcribed faithfully from the source file as given —
+       flagging the mismatch rather than silently picking one. */
     metrics: [["08", "Traveler interviews"], ["05", "Unmet needs mapped"]],
-    overview: "Trip planning lives scattered across notes, maps, documents, and group chats. Travelogue is a self-initiated concept that consolidates it all, upcoming trips, itineraries, documents, and the people coming along, into one calm mobile home.",
+    overview: "Travelogue is a mobile-first travel app designed to simplify trip planning and enhance the travel experience. The platform enables real-time collaborative planning, social storytelling, and gamification to keep users engaged. With features like curated experiences and offline access, the app makes both solo and group travel more seamless, social, and rewarding.",
     cover: ["travelogue-cover.png", "Travelogue home feed and a group trip hub shown side by side on two phones."],
-    chapters: [
-      { label: "Research", title: "What travelers actually ask for.", skim: "Eight interviews produced five unmet needs, every feature in the concept traces back to one of them.", body: "Informal interviews with travelers surfaced a consistent set of unmet needs: offline access for places without internet, one-stop consolidation of bookings and plans, easier group coordination, expense tracking, and a way to document trips as they happen. Every feature in the concept traces back to one of these quotes.", images: [
-        ["travelogue-research.png", "Research board of eight traveler quotes covering offline maps, one-stop planning, group coordination and expense tracking.", "Research synthesis: eight traveler interviews"],
-      ] },
-      { label: "Concept", title: "A trip hub, not another list app.", skim: "Each trip becomes one hub: people, route, itinerary, documents, gallery.", body: "Each trip becomes a hub: the people coming, the locations on a map, an itinerary nexus with dates and details, documents one tap away, and a shared gallery. Group trips stop living in chat threads; everyone sees the same plan.", images: [
-        ["travelogue-login.png", "Travelogue sign-in screen with the compass mark and social sign-in options.", "Entry point: sign up, log in, or connect socials"],
-        ["travelogue-tripdetail.png", "Travelogue trip detail screen showing people, a locations map, itinerary hub, documents, trip planner, and gallery.", "Trip hub: people, route, itinerary, documents, gallery"],
-      ], phone: true },
-      { label: "Interface", title: "Calm, glanceable, travel-ready.", skim: "Home opens on a countdown and contextual nudges rather than an empty search field.", body: "The home feed opens with a countdown to the next trip, upcoming trip cards with ratings and reviews, and contextual nudges: nearby cafés in the morning, wishlist check-offs in the afternoon. A deep-green palette and large imagery keep it feeling like travel, not admin.", images: [
-        ["travelogue-home.png", "Travelogue home feed with greeting, solo trip countdown, upcoming trips carousel and nearby cafés.", "Home: countdown, upcoming trips, nearby"],
-        ["travelogue-feed.png", "Travelogue home feed variant with trip countdown, weather, and wishlist suggestions.", "Feed: contextual suggestions and wishlist"],
-      ], phone: true },
-      { label: "Field note", title: "Designed for the road.", skim: "Outdoors, one-handed, bad light: contrast and touch targets were constraints, not polish.", body: "The compass states it plainly: travel tools are used outdoors, one-handed, in bad light. Contrast, large touch targets, and glanceable typography were non-negotiable constraints, not polish.", images: [
-        ["travelogue-compass.png", "A phone compass app held in hand inside a dim car, reading 186 degrees south.", "Field constraint: used one-handed, in motion"],
-      ] },
+    /* Fixed-taxonomy section content, sourced from
+       "info content/travelogue-content.md". Supersedes `chapters` below,
+       same as eye-ai and myocircle. "Challenges & Constraints" has no
+       matching prose in that file, but the existing "Field note" chapter
+       (already-published copy, not new) covers exactly that ground — reused
+       verbatim rather than leaving the section out or inventing something
+       new. "Outcomes / Impact" and "Next Steps" are omitted: no source
+       content for either. */
+    sections: [
+      {
+        id: "problem-statement",
+        navLabel: "Problem Statement",
+        paragraphs: [
+          "How can a technology-based solution enable users to collaboratively plan itineraries and share experiences in real time, while leveraging offline accessibility and gamified rewards to motivate exploration without feeling intrusive?",
+        ],
+      },
+      {
+        id: "research-insights",
+        navLabel: "Research & Key Insights",
+        subsections: [
+          {
+            heading: "Unified features = Smooth Execution",
+            paragraphs: [
+              "We conducted user interviews with 11 participants (aged 18-35) within our target demographic who were frequent users of multiple travel apps. The interview was aimed at uncovering major pain points and emotions felt through the process of executing a whole trip, solo or group.",
+            ],
+            images: [
+              ["travelogue-research.png", "Research board of eight traveler quotes covering offline maps, one-stop planning, group coordination and expense tracking.", "Research synthesis: traveler interviews"],
+            ],
+          },
+        ],
+      },
+      {
+        id: "my-role",
+        navLabel: "My Role",
+        bullets: [
+          "Collaborated with a multidisciplinary design team to create solutions that streamlined collaborative planning and enhanced user engagement, aiming to make the trip-planning experience user intuitive.",
+          "Took the lead on crafting the Branding Guide and Design System.",
+        ],
+      },
+      {
+        id: "approach-process",
+        navLabel: "Approach / Process",
+        subsections: [
+          {
+            heading: "Competition vs Focus",
+            paragraphs: [
+              "Initial research revealed several existing players in the travel app space. However, the majority of these tools prioritize itinerary cataloging or travel journaling in isolation, often neglecting the collaborative and social aspects that make travel inherently shared and interactive.",
+            ],
+            bullets: [
+              "Real-time itinerary collaboration",
+              "Storytelling and social interaction",
+              "Offline accessibility for maps and travel content",
+            ],
+          },
+          {
+            heading: "Designing Travelogue",
+            paragraphs: [
+              "The goal with Travelogue wasn't to replicate the entire travel ecosystem, but rather to refine the most collaborative and often chaotic part of the journey: trip planning and coordination. Rather than overcrowding the platform with booking engines or external hotel listings, we chose to prioritize clarity and usability by focusing on real user frustrations, the difficulty of getting everyone on the same page, the lack of offline access during travel, and the absence of a fun yet functional space to co-plan trips.",
+            ],
+            images: [
+              ["travelogue-login.png", "Travelogue sign-in screen with the compass mark and social sign-in options.", "Entry point: sign up, log in, or connect socials"],
+              ["travelogue-tripdetail.png", "Travelogue trip detail screen showing people, a locations map, itinerary hub, documents, trip planner, and gallery.", "Trip hub: people, route, itinerary, documents, gallery"],
+            ],
+          },
+          {
+            heading: "Smart Suggestions That Simplify Planning",
+            bullets: [
+              "A personal travel journal for eternity",
+              "Centralized details, no delays",
+            ],
+            videoPlaceholder: true,
+            imagePlaceholders: [null, null, null],
+          },
+        ],
+      },
+      {
+        id: "challenges-constraints",
+        navLabel: "Challenges & Constraints",
+        paragraphs: [
+          "The compass states it plainly: travel tools are used outdoors, one-handed, in bad light. Contrast, large touch targets, and glanceable typography were non-negotiable constraints, not polish.",
+        ],
+        images: [
+          ["travelogue-compass.png", "A phone compass app held in hand inside a dim car, reading 186 degrees south.", "Field constraint: used one-handed, in motion"],
+        ],
+      },
+      {
+        id: "final-design",
+        navLabel: "Final Design / Solution",
+        paragraphs: ["Travelogue visuals: the finished interface."],
+        images: [
+          ["travelogue-home.png", "Travelogue home feed with greeting, solo trip countdown, upcoming trips carousel and nearby cafés.", "Home: countdown, upcoming trips, nearby"],
+          ["travelogue-feed.png", "Travelogue home feed variant with trip countdown, weather, and wishlist suggestions.", "Feed: contextual suggestions and wishlist"],
+          ["travelogue-phones.png", "Travelogue home feed and an upcoming trips list shown side by side on two phones.", "Home feed and upcoming trips, side by side"],
+        ],
+        imagePlaceholders: [null, null],
+      },
+      {
+        id: "takeaways",
+        navLabel: "What I Took Away",
+        bullets: [
+          "Effort Compounds Through Iteration — from usability testing to feature trade-offs, consistent collective effort and feedback cycles are what ultimately drove this product toward maturity.",
+          "Inclusive Design is Never ‘Done’ — our research surfaced the need for stronger accessibility and localization, a reminder that global usability is an evolving, iterative responsibility.",
+          "Team Effort — iterating on the workflows required tight coordination between design, research, and testing, proving how aligned teamwork can elevate first-time user experience.",
+        ],
+      },
     ],
+    /* Superseded by `sections` above — see that field's comment. */
+    chapters: [],
   },
   {
     slug: "dab-of-india",

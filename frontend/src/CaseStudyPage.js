@@ -37,12 +37,43 @@ function ImagePlaceholderRow({ items }) {
   );
 }
 
+/* Same empty-state treatment as ImagePlaceholderRow, for a [Insert video
+   here] marker with no matching video asset in the codebase (shared with
+   the hero one in the Overview section below). */
+function VideoPlaceholder() {
+  return (
+    <div className="cs-video-placeholder" role="img" aria-label="Video coming soon">
+      <span className="play-glyph"><Play size={16} /></span>
+      <span className="label">Video coming soon</span>
+    </div>
+  );
+}
+
+function CaseStudyArt({ images, sectionId, company, keyPrefix = "" }) {
+  if (!images?.length) return null;
+  return (
+    <div className="cs-art">
+      {images.map(([src, alt, cap], j) => (
+        <RotateCard
+          key={src}
+          src={IMG(src)}
+          alt={alt}
+          caption={cap}
+          from={j % 2 === 0 ? "left" : "right"}
+          cursor={company.split(" ")[0]}
+          testId={`case-image-${sectionId}-${keyPrefix}${j}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* One section in the fixed-taxonomy content model (Overview, Problem
    Statement, Research & Key Insights, ...) — used only by case studies that
-   provide a `sections` array (currently eye-ai). Reuses the exact same
-   RotateCard/Wipe image treatment as the legacy `chapters` rendering below,
-   so real images keep their existing animation wrapper intact; this
-   component only adds the *layout* around them. */
+   provide a `sections` array (eye-ai, myocircle, travelogue). Reuses the
+   exact same RotateCard/Wipe image treatment as the legacy `chapters`
+   rendering below, so real images keep their existing animation wrapper
+   intact; this component only adds the *layout* around them. */
 function CaseStudySection({ index, section, company }) {
   return (
     <section
@@ -53,6 +84,7 @@ function CaseStudySection({ index, section, company }) {
       <Reveal>
         <p className="section-label">{String(index).padStart(2, "0")} · {section.navLabel}</p>
         <h2>{section.title || section.navLabel}</h2>
+        {section.videoPlaceholder && <VideoPlaceholder />}
         {section.paragraphs?.map((p, i) => <p className="cs-body" key={i}>{p}</p>)}
         {section.bullets && (
           <ul className="cs-bullets">
@@ -61,42 +93,20 @@ function CaseStudySection({ index, section, company }) {
         )}
       </Reveal>
 
-      {section.images && (
-        <div className="cs-art">
-          {section.images.map(([src, alt, cap], j) => (
-            <RotateCard
-              key={src}
-              src={IMG(src)}
-              alt={alt}
-              caption={cap}
-              from={j % 2 === 0 ? "left" : "right"}
-              cursor={company.split(" ")[0]}
-              testId={`case-image-${section.id}-${j}`}
-            />
-          ))}
-        </div>
-      )}
+      <CaseStudyArt images={section.images} sectionId={section.id} company={company} />
       <ImagePlaceholderRow items={section.imagePlaceholders} />
 
       {section.subsections?.map((sub, i) => (
         <div className="cs-subsection" key={i}>
           <h3>{sub.heading}</h3>
           {sub.paragraphs?.map((p, pi) => <p className="cs-body" key={pi}>{p}</p>)}
-          {sub.images && (
-            <div className="cs-art">
-              {sub.images.map(([src, alt, cap], j) => (
-                <RotateCard
-                  key={src}
-                  src={IMG(src)}
-                  alt={alt}
-                  caption={cap}
-                  from={j % 2 === 0 ? "left" : "right"}
-                  cursor={company.split(" ")[0]}
-                  testId={`case-image-${section.id}-sub${i}-${j}`}
-                />
-              ))}
-            </div>
+          {sub.bullets && (
+            <ul className="cs-bullets">
+              {sub.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
+            </ul>
           )}
+          <CaseStudyArt images={sub.images} sectionId={section.id} company={company} keyPrefix={`sub${i}-`} />
+          {sub.videoPlaceholder && <VideoPlaceholder />}
           <ImagePlaceholderRow items={sub.imagePlaceholders} />
         </div>
       ))}
@@ -247,12 +257,7 @@ export default function CaseStudyPage() {
 
           <div className="cs-toc-content">
             <section className="cs-overview" id="overview">
-              {study.heroVideoPlaceholder && (
-                <div className="cs-video-placeholder" role="img" aria-label="Video coming soon">
-                  <span className="play-glyph"><Play size={16} /></span>
-                  <span className="label">Video coming soon</span>
-                </div>
-              )}
+              {study.heroVideoPlaceholder && <VideoPlaceholder />}
               <Reveal><p className="lede">{study.overview}</p></Reveal>
               {!study.sections && <ReadModeToggle minutes={Math.max(3, study.chapters.length + 1)} />}
               {study.confidential && (
