@@ -778,14 +778,7 @@ export default function App() {
             <div className="section-head">
               <div>
                 <Reveal><p className="section-label">Selected work</p></Reveal>
-                <SplitText as="h2" text="An AI companion, built from zero." testId="work-heading" delay={0.05} />
               </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A hierarchy, not a grid: the work with the most to show leads,
-                  everything else supports it.
-                </p>
-              </Reveal>
             </div>
 
             <div className="stack" ref={stackRef}>
