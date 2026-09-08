@@ -1,23 +1,14 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import Lenis from "lenis";
 import "@/index.css";
 import App from "@/App";
 import CaseStudyPage from "@/CaseStudyPage";
 import { ReadModeProvider } from "@/components/site/ReadMode";
 import { LenisContext } from "@/lib/smoothScroll";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60_000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 /* Smooth inertia scrolling, applied once at the root so it covers every
    route. No `wrapper`/`content` options are passed, so Lenis attaches
@@ -56,8 +47,6 @@ function SmoothScrollProvider({ children }) {
       touchMultiplier: 2,
     });
 
-    console.log("[Lenis] initialized:", instance);
-
     let rafId;
     function raf(time) {
       instance.raf(time);
@@ -80,18 +69,17 @@ function SmoothScrollProvider({ children }) {
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <SmoothScrollProvider>
-        <BrowserRouter>
-          <ReadModeProvider>
+    <SmoothScrollProvider>
+      <BrowserRouter>
+        <ReadModeProvider>
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/work/:slug" element={<CaseStudyPage />} />
             <Route path="*" element={<App />} />
           </Routes>
-          </ReadModeProvider>
-        </BrowserRouter>
-      </SmoothScrollProvider>
-    </QueryClientProvider>
+        </ReadModeProvider>
+      </BrowserRouter>
+    </SmoothScrollProvider>
+    <Analytics />
   </React.StrictMode>,
 );

@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A personal portfolio site for Eshani Somwanshi (product/UX designer), built as a single-page React app (`frontend/`) with a small FastAPI backend (`backend/`) for a contact form. Originally scaffolded by emergent.sh (see `.emergent/`).
+A personal portfolio site for Eshani Somwanshi (product/UX designer), built as a single-page React app (`frontend/`) with a small FastAPI backend (`backend/`) for a contact form. Originally scaffolded by emergent.sh; the scaffold's unused kit (shadcn/Radix components, data-fetching libs, emergent tracking/visual-edits) has since been stripped out.
 
 ## Commands
 
@@ -42,17 +42,21 @@ Frontend reads `REACT_APP_BACKEND_URL` to know where the API lives (`frontend/sr
 
 ### Frontend structure
 
-- **`src/index.js`** — entry point. Sets up `react-router-dom` with two routes: `/` → `App` (the single-page portfolio) and `/work/:slug` → `CaseStudyPage` (full case study reader). Wraps everything in `ReadModeProvider` (`components/site/ReadMode`) and a `QueryClientProvider`.
+- **`src/index.js`** — entry point. Sets up `react-router-dom` with two routes: `/` → `App` (the single-page portfolio) and `/work/:slug` → `CaseStudyPage` (full case study reader). Wraps everything in `SmoothScrollProvider` (Lenis, skipped under reduced-motion) and `ReadModeProvider` (`components/site/ReadMode`); renders Vercel `<Analytics />`.
 - **`src/App.js`** — the entire one-page portfolio (header, hero, proof strip, project sections, chaptered case study, capabilities, experience accordion, about, resume, contact form) lives in this one file, ~1000 lines. Content data (proof stats, capabilities, experience, tools, testimonial, nav items) is defined as arrays/objects at the top of the file — **edit content there, not by hunting for it elsewhere**. Several `TODO(Eshani)` comments mark placeholder content (testimonial quote, work-authorization line) that needs a real value before shipping.
 - **`src/primitives.js`** — shared animation/UI primitives used throughout `App.js` and `CaseStudyPage.js`: `Reveal` (scroll-triggered fade/rise), `SplitText` (word-by-word headline reveal), `Wipe` (clip-path image reveal), `CountUp`, `Magnetic` (cursor-follow hover), `ThemeSwitch`/`useTheme`, and the `IMG()` helper that resolves `public/images/<name>`. `THEMES` here is the source of truth for the three color themes (paper/carbon/petrol) — theme id is written to `document.documentElement.dataset.theme` and persisted to `localStorage`.
 - **`src/caseStudies.js`** — data-only array of case study objects (chapters, metrics, tags, images) consumed by `CaseStudyPage.js`. Adding a new case study means adding an entry here plus a matching link/slug in `App.js`.
 - **`src/CaseStudyPage.js`** — renders one case study from `caseStudies.js` by `:slug` route param.
-- **`components/devices/`** — device-frame presentational components (`MacBookScroll`, `PhoneFrame`, `RotateCard`, `Assemble`, `ContactDevice`, `DeviceShowcase`) used to mock up screenshots inside project cards.
-- **`components/site/`** — page-level chrome: `Preloader` (boot animation), `ReadMode` (a reading-mode context/provider used by case study pages), `BeforeAfter` (before/after image comparison slider).
-- **`components/ui/`** — shadcn/ui-style primitives (Radix UI wrappers: dialog, dropdown, tabs, etc.), generated via `components.json` (`shadcn` config: style `new-york`, base color `neutral`, no RSC/TSX). Path alias `@/components/ui/...`.
+- **`components/devices/RotateCard.jsx`** — the one surviving device-frame component: a screenshot that swings in from an angle and locks flat on scroll. Used inside case-study art.
+- **`components/site/`** — page-level chrome: `Preloader` (boot animation), `ReadMode` (a reading-mode context/provider used by case study pages), `BeforeAfter` (before/after image comparison slider), `CaseStudyTOC` (sticky TOC + scrollspy).
+- **`components/ui/`** — just `AvatarHero.jsx` + `InteractiveAvatar.jsx` (the hero avatar). The rest of the scaffold's shadcn/Radix kit was unused and has been removed.
 - **`constants/testIds/`** — central registry of `data-testid` values, re-exported from `constants/testIds/index.js`. These IDs are consumed by an external QA/testing agent to drive automated UI tests — **when adding interactive UI, add a `data-testid`** following the existing per-feature file pattern (`auth.js`, `home.js`, …), and re-export new files from `index.js`.
-- **`lib/utils.js`** — `cn()` class-merge helper (clsx + tailwind-merge), standard shadcn convention.
-- Path alias `@/*` → `src/*` is configured in both `jsconfig.json` and webpack (`craco.config.js`), and mirrored in `components.json` aliases.
+- **`lib/smoothScroll.js`** — the Lenis context (`LenisContext` / `useLenis`), shared between `index.js` (creates the instance) and consumers that trigger programmatic scrolls.
+- Path alias `@/*` → `src/*` is configured in both `jsconfig.json` and webpack (`craco.config.js`).
+
+### Dependencies
+
+Kept deliberately small: `framer-motion` (all animation), `lenis` (smooth scroll), `lucide-react` (icons), `sonner` (contact-form toasts), `react-router-dom`, `@vercel/analytics`. Don't re-introduce a UI-component library, a data-fetching library (the contact form uses `fetch`), or `clsx`/`tailwind-merge` — the shadcn scaffold that pulled those in is gone. `npm install` needs `legacy-peer-deps=true` (in `.npmrc`) because of React 19 + CRA 5.
 
 ### Styling
 
@@ -80,7 +84,7 @@ Every rem value that existed anywhere in the codebase *before* this root change 
 
 ### Build tooling
 
-CRA is wrapped with **craco** (`craco.config.js`) rather than plain `react-scripts`, to add the `@` alias, tune webpack watch options, and optionally wire in an `@emergentbase/visual-edits` dev-mode plugin and a health-check webpack plugin (both gated by env vars — `ENABLE_HEALTH_CHECK`). No need to touch `craco.config.js` for typical feature work.
+CRA is wrapped with **craco** (`craco.config.js`) rather than plain `react-scripts`, to add the `@` alias, tune webpack watch options, and optionally wire in a health-check webpack plugin (gated by `ENABLE_HEALTH_CHECK`). No need to touch `craco.config.js` for typical feature work. The build script sets `GENERATE_SOURCEMAP=false` — production source maps aren't shipped.
 
 ### Backend
 

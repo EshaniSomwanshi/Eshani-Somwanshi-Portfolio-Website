@@ -861,7 +861,7 @@ export default function App() {
             <Reveal>
               <figure className="about-photo">
                 <Wipe
-                  src={IMG("profile.png")}
+                  src={IMG("profile.jpg")}
                   alt="Portrait of Eshani Somwanshi, product and UX designer."
                   testId="about-image-portrait"
                 />
