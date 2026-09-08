@@ -95,6 +95,8 @@ The GitHub repo has two relevant branches: `main` (preview) and `production` (wi
 
 Never push to `production` on a bare "push" — wait for the explicit go-ahead.
 
+Push step 1 (commit + preview deploy) happens after **every** change by default — don't wait to be asked "commit to git and vercel" each time; only step 2 (promoting to `production`) needs an explicit go-ahead. If the user says to wait/hold off/batch changes, respect that instead.
+
 ### Testing protocol (`test_result.md`)
 
 The repo root has a `test_result.md` file with a structured YAML-in-Markdown protocol for coordinating between a "main" agent and a "testing" agent (used by the emergent.sh workflow this project was scaffolded from). If asked to record or update test status, follow the format already documented inside that file rather than inventing a new one.

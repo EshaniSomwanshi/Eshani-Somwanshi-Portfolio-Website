@@ -774,11 +774,11 @@ figcaption {
 /* ---------- 01 lead panel ---------- */
 .lead-panel {
   border: 1px solid var(--ink);
-  /* Was 4px. Image (.lead-media) sits inset by the card's own padding,
-     never flush against an edge, so this doesn't need any matching
-     adjustment elsewhere -- overflow: hidden below clips it to whatever
-     this radius is regardless. */
-  border-radius: 15px;
+  /* Was 4px, then 15px. At 60px the curve reaches further in than the
+     card's own padding (~16-19px), so check the top-row content (index
+     label, CTA pill) isn't visually crowded/clipped near the corners
+     before shipping -- pad/adjust only if it actually looks wrong. */
+  border-radius: 60px;
   background: var(--card);
   padding: clamp(1.3333rem, 1.8vw, 1.6rem);
   position: relative;
