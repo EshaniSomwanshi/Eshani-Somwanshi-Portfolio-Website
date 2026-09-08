@@ -8,6 +8,8 @@ import {
   useReducedMotion,
   useSpring,
 } from "framer-motion";
+import { ArrowUp } from "lucide-react";
+import { useLenis } from "./lib/smoothScroll";
 
 export const IMG = (name) => `${process.env.PUBLIC_URL}/images/${name}`;
 
@@ -320,6 +322,50 @@ export function ThemeSwitch({ theme, setTheme, mobile = false, tabIndex }) {
       </span>
       {pill}
     </span>
+  );
+}
+
+/* Sticky "back to top" button — fixed bottom-right, appears once the page
+   is scrolled past `showAfter` px. Shared by the homepage and the case-study
+   pages so the affordance is identical everywhere. Scrolls through Lenis
+   when it's mounted (matching nav-link momentum), native smooth scroll
+   otherwise; under prefers-reduced-motion it jumps with no easing and the
+   entrance is a plain fade with no travel. */
+export function BackToTop({ showAfter = 600 }) {
+  const lenis = useLenis();
+  const reduced = useReducedMotion();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > showAfter);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [showAfter]);
+
+  const toTop = () => {
+    if (lenis) lenis.scrollTo(0, { duration: reduced ? 0 : 1.2 });
+    else window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+  };
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          type="button"
+          className="back-to-top"
+          onClick={toTop}
+          aria-label="Back to top"
+          data-testid="back-to-top-button"
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.9 }}
+          animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.9 }}
+          transition={{ duration: 0.28, ease: EASE }}
+        >
+          <ArrowUp size={18} />
+        </motion.button>
+      )}
+    </AnimatePresence>
   );
 }
 

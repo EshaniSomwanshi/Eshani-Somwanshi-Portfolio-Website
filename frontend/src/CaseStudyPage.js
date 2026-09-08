@@ -8,6 +8,7 @@ import CaseStudyTOC from "./components/site/CaseStudyTOC";
 import { ReadModeToggle, useReadMode } from "./components/site/ReadMode";
 import { useLenis } from "./lib/smoothScroll";
 import {
+  BackToTop,
   EASE,
   IMG,
   Reveal,
@@ -381,6 +382,9 @@ export default function CaseStudyPage() {
           <Link to="/#work" className="footer-top-link" data-testid="case-footer-home">Back to all work ↑</Link>
         </div>
       </footer>
+
+      {/* Same sticky back-to-top affordance as the homepage. */}
+      <BackToTop />
     </div>
   );
 }

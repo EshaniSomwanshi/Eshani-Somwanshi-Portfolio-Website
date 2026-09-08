@@ -10,10 +10,11 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ArrowDown, ArrowUp, ArrowUpRight, Menu, Minus, Plus, Send } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Menu, Minus, Plus, Send } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
 import {
+  BackToTop,
   CountUp,
   EASE,
   IMG,
@@ -501,7 +502,6 @@ export default function App() {
   const [theme, setTheme] = useTheme();
   const [menu, setMenu] = useState(false);
   const [openOffer, setOpenOffer] = useState(null);
-  const [showTop, setShowTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const headerRef = useRef(null);
   const navToggleRef = useRef(null);
@@ -523,7 +523,6 @@ export default function App() {
   /* Header compression */
   useMotionValueEvent(scrollY, "change", (y) => {
     headerRef.current?.style.setProperty("--p", Math.min(1, y / 120).toFixed(3));
-    setShowTop(y > 600);
   });
 
   /* Which nav item is current */
@@ -959,24 +958,9 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Sticky back-to-top, per notes: stays on screen, bottom-right. */}
-      <AnimatePresence>
-        {showTop && (
-          <motion.button
-            type="button"
-            className="back-to-top"
-            onClick={() => go("top")}
-            aria-label="Back to top"
-            data-testid="back-to-top-button"
-            initial={{ opacity: 0, y: 12, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.9 }}
-            transition={{ duration: 0.28, ease: EASE }}
-          >
-            <ArrowUp size={18} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Sticky back-to-top, per notes: stays on screen, bottom-right.
+          Shared with the case-study pages — see primitives BackToTop. */}
+      <BackToTop />
     </div>
   );
 }
