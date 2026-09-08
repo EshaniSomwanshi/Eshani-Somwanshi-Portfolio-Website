@@ -50,28 +50,6 @@ const tools = [
   ["axure", "Axure RP"], ["html5", "HTML5"], ["javascript", "JavaScript"], ["perplexity", "Perplexity"],
 ];
 
-/* A denser wall of real screens, dropped between the two lead case studies —
-   more of the actual work visible without a click-through, Brandon Lee
-   Designs-style. Rendered as CSS-column masonry so each image keeps its
-   native aspect ratio instead of being cropped into a uniform tile.
-   myocircle-profile.png was dropped: its 3-phone composite is nearly 2.5x
-   taller than everything else and dominated the grid awkwardly.
-   myocircle-level13.png has the same problem (a single 700x2083 phone
-   composite) but earns its spot on content, so it's capped with the "tall"
-   flag below instead of being cut entirely — see .shot--tall in App.css. */
-/* Natural pixel dimensions (w, h) are included so the <img> can reserve its
-   aspect ratio before the lazy-loaded image downloads — without this, each
-   image collapses to 0 height until loaded, which shifts everything below
-   the gallery (About, Contact) down mid-scroll and throws off any in-flight
-   scrollTo animation targeting a section further down the page. */
-const shots = [
-  ["onward-1.png", "Onward's EYE AI product site hero: “Enhance your practice with AI technology.”", "Onward Technologies · EYE AI", "The site clinicians land on first", false, 504, 420],
-  ["myocircle-interaction.png", "MyoCircle exercise screen with Zoe's congratulations card after a completed exercise, awarding points.", "OptraHealth · MyoCircle", "Zoe's encouragement moment, mid-exercise", false, 1200, 481],
-  ["travelogue-tripdetail.png", "Travelogue trip detail screen with people, map locations, and an itinerary hub.", "Travelogue", "One trip: people, places, and itinerary in one hub", false, 1200, 1595],
-  ["myocircle-day1.png", "MyoCircle Day 1 exercise screen with a guided video, sets and reps tracking, and a Start Exercise button.", "OptraHealth · MyoCircle", "Where a session starts", false, 900, 675],
-  ["myocircle-level13.png", "MyoCircle workout progress screen showing Level 13, 25% progress, and the Day 1 exercise video queue.", "OptraHealth · MyoCircle", "Progress and the exercise queue", true, 700, 2083],
-];
-
 const navItems = [
   ["top", "Home"],
   ["work", "Work"],
@@ -229,28 +207,9 @@ const workCards = [
     linkTestId: "read-case-eye-ai",
   },
   {
-    key: "rebecca",
-    testId: "project-card-rebecca",
-    index: "03",
-    company: "Rebecca Everlene Trust Company",
-    statusLabel: "Under NDA",
-    role: "UX/UI Designer · Oct 2025 – Present · Chicago, IL",
-    title: "Rebecca Everlene Trust Company",
-    desc: "Leading design from discovery through high-fidelity execution for a B2C web platform, restructuring dense financial content into gamified learning modules, and partnering with product and engineering to keep AI-driven features shippable.",
-    confidentialNote: "Screens aren’t public. The process is shareable and I’m happy to walk through the work live, just ask.",
-    metrics: [
-      { value: <CountUp value={25} suffix="%" />, label: "Task completion ↑", method: "Pre/post restructure" },
-      { value: <CountUp value={40} suffix="%" />, label: "Early drop-off ↓", method: "First-session funnel" },
-    ],
-    tags: ["0→1 product", "Gamified learning", "AI workflows"],
-    link: "/work/rebecca-everlene",
-    linkLabel: "Read the process",
-    linkTestId: "read-case-rebecca",
-  },
-  {
     key: "travelogue",
     testId: "project-card-travelogue",
-    index: "04",
+    index: "03",
     company: "Travelogue",
     statusLabel: "Full case study",
     role: "Product Designer · Personal case study · 2025",
@@ -267,25 +226,6 @@ const workCards = [
     linkLabel: "Read case study",
     linkSrOnly: "Travelogue",
     linkTestId: "read-case-travelogue",
-  },
-  {
-    key: "dab",
-    testId: "project-card-dab",
-    index: "05",
-    company: "DAB of India",
-    statusLabel: "Full case study",
-    role: "Visual Designer · Jan 2023 – Aug 2023 · Pune, India",
-    title: "DAB of India",
-    desc: "Built an AI-assisted design workflow spanning copy, mockups, and social and print assets across 25+ clients, maintaining brand standards over 1,000+ assets, and designing brand pitch decks used directly in client acquisition.",
-    metrics: [
-      { value: <CountUp value={25} suffix="+" />, label: "Clients served" },
-      { value: <CountUp value={1000} suffix="+" comma />, label: "Assets maintained" },
-    ],
-    tags: ["Brand design", "AI-assisted workflow", "Client work"],
-    link: "/work/dab-of-india",
-    linkLabel: "Read case study",
-    linkSrOnly: "DAB of India",
-    linkTestId: "read-case-dab",
   },
 ];
 
@@ -372,7 +312,7 @@ function useCardDepth(progress, i, total) {
 
 function StackCard({ i, total, progress, card }) {
   const {
-    testId, index, company, statusLabel, role, title, quiet, subtitle, desc,
+    testId, index, company, role, title, quiet, subtitle, desc,
     confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
   } = card;
   const { scale, y, opacity } = useCardDepth(progress, i, total);
@@ -386,7 +326,14 @@ function StackCard({ i, total, progress, card }) {
       >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
-          <span className="status-pill">{statusLabel}</span>
+          {/* Was a static "Full case study" status pill, with the actual
+              read-case link duplicated below under the tags. Consolidated
+              into one clickable CTA here — same pill look (.status-pill),
+              now an actual Link — so there's a single, unambiguous way to
+              open the case study instead of two. */}
+          <Link to={link} className="status-pill" data-testid={card.linkTestId}>
+            {linkLabel}{linkSrOnly && <span className="sr-only"> — {linkSrOnly}</span>} <ArrowUpRight size={14} />
+          </Link>
         </div>
         <div className="lead-columns">
           <div className="lead-col-text">
@@ -411,9 +358,6 @@ function StackCard({ i, total, progress, card }) {
             <div className="lead-tags tag-row">
               {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
             </div>
-            <Link to={link} className="read-case" data-testid={card.linkTestId}>
-              {linkLabel}{linkSrOnly && <span className="sr-only"> — {linkSrOnly}</span>} <ArrowUpRight size={14} />
-            </Link>
           </div>
           {image && (
             <div className="lead-media" data-cursor={cursorLabel}>
@@ -423,45 +367,6 @@ function StackCard({ i, total, progress, card }) {
         </div>
       </motion.article>
     </Reveal>
-  );
-}
-
-/* The 6th stack item — same depth treatment as StackCard, but its own
-   markup since it's a grid of screenshots rather than a text/image split. */
-function GalleryCard({ i, total, progress }) {
-  const { scale, y, opacity } = useCardDepth(progress, i, total);
-
-  return (
-    <motion.article
-      className="lead-panel gallery-card"
-      data-testid="project-card-gallery"
-      style={{ scale, y, opacity, originX: 0.5, originY: 0 }}
-    >
-      <div className="lead-top">
-        <span className="lead-index">06 · A closer look</span>
-        <span className="status-pill">{shots.length} screens</span>
-      </div>
-      <div className="gallery-card-head">
-        <h3>Real screens, not just covers.</h3>
-        <p className="lead-desc">A handful of the actual interfaces behind the work above.</p>
-      </div>
-      <div className="gallery-card-grid">
-        {shots.map(([src, alt, tag, cap, tall, w, h], i2) => (
-          <figure className="gallery-card-item" data-testid={`gallery-shot-${i2}`} key={src}>
-            <img
-              src={IMG(src)}
-              alt={alt}
-              width={w}
-              height={h}
-              loading="lazy"
-              decoding="async"
-              data-testid={`gallery-shot-img-${i2}`}
-            />
-            <figcaption><b>{tag}</b>{cap}</figcaption>
-          </figure>
-        ))}
-      </div>
-    </motion.article>
   );
 }
 
@@ -605,15 +510,15 @@ export default function App() {
   const { scrollY, scrollYProgress } = useScroll();
 
   /* Scroll progress across the whole "Selected work" sticky stack (not
-     the whole-page one above) — feeds StackCard/GalleryCard's depth
-     effect. See useCardDepth for how each card reads its own slice
-     of it. Doesn't touch the stack's own sticky top-offsets/CSS. */
+     the whole-page one above) — feeds StackCard's depth effect. See
+     useCardDepth for how each card reads its own slice of it. Doesn't
+     touch the stack's own sticky top-offsets/CSS. */
   const stackRef = useRef(null);
   const { scrollYProgress: stackProgress } = useScroll({
     target: stackRef,
     offset: ["start start", "end start"],
   });
-  const STACK_TOTAL = workCards.length + 1;
+  const STACK_TOTAL = workCards.length;
 
   /* Header compression */
   useMotionValueEvent(scrollY, "change", (y) => {
@@ -837,11 +742,12 @@ export default function App() {
         </section>
 
         {/* ---------- selected work — one unified sticky-stack ----------
-             All six entries (five projects + the gallery) share one card
-             template (StackCard) and one .stack, so scrolling through this
-             section is a single continuous stacking sequence instead of
-             three separate sections with their own headings. Experimental
-             — see PR/commit message for the easy revert path. ---------- */}
+             Three entries share one card template (StackCard) and one
+             .stack, so scrolling through this section is a single
+             continuous stacking sequence instead of separate sections with
+             their own headings. Rebecca Everlene, DAB of India, and the
+             screens-gallery card were removed from this section per
+             request; their full case-study pages are untouched. ---------- */}
         <section className="section" id="work">
           <div className="container">
             <div className="section-head">
@@ -861,10 +767,6 @@ export default function App() {
               {workCards.map((card, i) => (
                 <StackCard key={card.key} i={i} total={STACK_TOTAL} progress={stackProgress} card={card} />
               ))}
-
-              <Reveal className="stack-item" style={{ "--i": workCards.length }}>
-                <GalleryCard i={workCards.length} total={STACK_TOTAL} progress={stackProgress} />
-              </Reveal>
             </div>
           </div>
         </section>
