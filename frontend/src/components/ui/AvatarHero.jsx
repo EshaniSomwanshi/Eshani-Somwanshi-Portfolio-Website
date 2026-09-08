@@ -31,26 +31,29 @@ export default function AvatarHero({ theme = "paper", go }) {
   const smoothY = useSpring(mouseY, springConfig);
 
   /* Parallax offsets for different depth layers.
-     These clouds are decorative SVG shapes drawn to bleed off the edges of
-     .avatar-hero-stage (the enclosing rectangle) — their bezier paths dip
-     past the SVG's own viewBox at each edge, but only by a small, fixed
-     margin. The whole layer (SVG included) gets this x/y translate as one
-     rigid transform, so any offset larger than that built-in margin drags
-     the shape's edge away from the stage boundary and exposes bare
-     background in the gap — confirmed visually: the previous range (up to
-     ±30/±40px) revealed a ~22px seam at the back layer's left edge, and
-     the back layer's top / front layer's bottom edges have essentially
-     zero built-in bleed at all, so any offset there showed a gap almost
-     1:1. Ranges below are unchanged from that fix — same verified-safe
-     max displacement — and `clamp: true` is explicit (rather than relying
-     on the library default) so that even if the now-livelier spring above
-     overshoots past ±1, the cloud offset it produces can never exceed
-     this boundary. */
-  const cloudBackX = useTransform(smoothX, [-1, 1], [8, -8], { clamp: true });
-  const cloudBackY = useTransform(smoothY, [-1, 1], [4, -4], { clamp: true });
+     These clouds are decorative SVG shapes that get this x/y translate as a
+     rigid transform. Earlier fixes chased the problem of the shape's edge
+     pulling away from .avatar-hero-stage's clipped border by shrinking the
+     translate to fit inside each path's small built-in bleed — but that
+     bleed, measured in viewBox units and then stretched by
+     `preserveAspectRatio="none"`, is a *variable* number of CSS px
+     depending on viewport width/height, so a displacement that was safe at
+     one size re-exposed a seam at another.
 
-  const cloudFrontX = useTransform(smoothX, [-1, 1], [-12, 12], { clamp: true });
-  const cloudFrontY = useTransform(smoothY, [-1, 1], [-6, 6], { clamp: true });
+     The durable fix moved to CSS: `.hero-cloud-layer` is now sized well
+     past the stage on every edge (`--cloud-overscan`, a clamp() that always
+     exceeds the max displacement below), and the stage's `overflow: hidden`
+     clips the surplus. So the painted cloud edge is always outside the clip
+     no matter the viewport, and the translate just slides more of an
+     already-overflowing shape into view. That freed the range back up for a
+     livelier drift. `clamp: true` stays explicit so the mildly underdamped
+     spring above can't push the offset past these bounds even if it
+     overshoots ±1 — keep the maxima below `--cloud-overscan`'s floor. */
+  const cloudBackX = useTransform(smoothX, [-1, 1], [42, -42], { clamp: true });
+  const cloudBackY = useTransform(smoothY, [-1, 1], [24, -24], { clamp: true });
+
+  const cloudFrontX = useTransform(smoothX, [-1, 1], [-60, 60], { clamp: true });
+  const cloudFrontY = useTransform(smoothY, [-1, 1], [-32, 32], { clamp: true });
 
   const handleMouseMove = (e) => {
     if (reduced) return;

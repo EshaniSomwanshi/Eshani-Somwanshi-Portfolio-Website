@@ -329,19 +329,53 @@ export function ThemeSwitch({ theme, setTheme, mobile = false, tabIndex }) {
    is scrolled past `showAfter` px. Shared by the homepage and the case-study
    pages so the affordance is identical everywhere. Scrolls through Lenis
    when it's mounted (matching nav-link momentum), native smooth scroll
-   otherwise; under prefers-reduced-motion it jumps with no easing and the
-   entrance is a plain fade with no travel. */
+   otherwise; under prefers-reduced-motion it jumps with no easing.
+
+   Collapsed it's just the arrow. It grows leftward to reveal a "Back to Top"
+   label — a spring-ish width transition echoing the nav theme pill —
+   whenever the page footer is in view (you've reached the bottom) OR the
+   pointer is hovering / focus is on the button. All show/hide and
+   expand/collapse is CSS-class driven (no rAF/observer dependency) so it
+   behaves the same regardless of tab-visibility throttling. */
 export function BackToTop({ showAfter = 600 }) {
   const lenis = useLenis();
   const reduced = useReducedMotion();
   const [visible, setVisible] = useState(false);
+  const [footerInView, setFooterInView] = useState(false);
+  const [footerH, setFooterH] = useState(0);
+  const [hovered, setHovered] = useState(false);
 
+  // One scroll handler drives both "is the button shown" (scrolled past
+  // showAfter) and "has the footer been reached" (its top edge is within the
+  // viewport). A plain rect check rather than IntersectionObserver so it's
+  // synchronous and unaffected by tab-visibility throttling. The footer
+  // always renders before <BackToTop> in both routes, so it's queryable here.
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > showAfter);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const read = () => {
+      setVisible(window.scrollY > showAfter);
+      const footer = document.querySelector(".site-footer");
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        setFooterInView(rect.top < window.innerHeight);
+        setFooterH(footer.offsetHeight);
+      }
+    };
+    read();
+    window.addEventListener("scroll", read, { passive: true });
+    window.addEventListener("resize", read);
+    return () => {
+      window.removeEventListener("scroll", read);
+      window.removeEventListener("resize", read);
+    };
   }, [showAfter]);
+
+  const expanded = footerInView || hovered;
+  // Once the footer is in view, park the pill just above it so the expanded
+  // label never covers the footer's own sign-off text; otherwise the CSS
+  // default (bottom-right corner) applies.
+  const style = footerInView
+    ? { bottom: `calc(${footerH}px + 1.25rem)` }
+    : undefined;
 
   const toTop = () => {
     if (lenis) lenis.scrollTo(0, { duration: reduced ? 0 : 1.2 });
@@ -349,23 +383,25 @@ export function BackToTop({ showAfter = 600 }) {
   };
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.button
-          type="button"
-          className="back-to-top"
-          onClick={toTop}
-          aria-label="Back to top"
-          data-testid="back-to-top-button"
-          initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.9 }}
-          animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-          exit={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.9 }}
-          transition={{ duration: 0.28, ease: EASE }}
-        >
-          <ArrowUp size={18} />
-        </motion.button>
-      )}
-    </AnimatePresence>
+    <button
+      type="button"
+      className={
+        "back-to-top" +
+        (visible ? " is-visible" : "") +
+        (expanded ? " is-expanded" : "")
+      }
+      style={style}
+      onClick={toTop}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
+      aria-label="Back to top"
+      data-testid="back-to-top-button"
+    >
+      <span className="back-to-top-label" aria-hidden={!expanded}>Back to Top</span>
+      <ArrowUp size={18} />
+    </button>
   );
 }
 

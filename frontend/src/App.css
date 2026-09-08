@@ -1311,9 +1311,16 @@ figcaption {
   gap: 1.3333rem;
 }
 .footer-location { justify-self: start; }
-.footer-emoji { font-size: 1.35em; line-height: 1; vertical-align: middle; display: inline-block; }
+.footer-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 1.35em;
+  line-height: 1;
+  vertical-align: middle;
+  display: inline-block;
+}
 .footer-copyright { justify-self: center; text-align: center; }
 .footer-top-link { justify-self: end; }
+.footer-signoff { white-space: nowrap; color: var(--inv-muted); }
 .footer-row a { transition: color var(--dur-fast) var(--ease-state); }
 .footer-row a:hover { color: var(--accent); }
 
@@ -1641,36 +1648,48 @@ figcaption {
   opacity: 0.7;
 }
 
-/* Cloud Layers */
+/* Cloud Layers.
+   Each layer is drawn well past .avatar-hero-stage on every edge — the
+   stage's `overflow: hidden` clips the surplus — so the cursor-driven
+   parallax translate (see AvatarHero.jsx) only ever slides more of an
+   already-overflowing shape into view and can never pull a painted edge
+   off the stage border, at any viewport size. `--cloud-overscan` (sides)
+   and `--cloud-overscan-y` (top/bottom) must both stay larger than the
+   largest parallax displacement. */
 .hero-cloud-layer {
+  --cloud-overscan: clamp(140px, 15vw, 280px);
+  --cloud-overscan-y: 100px;
   position: absolute;
-  left: 0;
-  right: 0;
-  width: 100%;
+  left: calc(-1 * var(--cloud-overscan));
+  right: calc(-1 * var(--cloud-overscan));
   pointer-events: none;
   user-select: none;
 }
 
 .hero-cloud-back {
-  top: 0;
-  height: 100%;
+  top: calc(-1 * var(--cloud-overscan-y));
+  height: calc(100% + var(--cloud-overscan-y) * 2);
   z-index: 2;
 }
 
 .cloud-svg-back {
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 .hero-cloud-front {
-  bottom: -2px;
-  height: 38%;
+  bottom: calc(-1 * var(--cloud-overscan-y));
+  /* top edge stays at ~38% of stage height (bottom offset and the added
+     height cancel); only the bottom is extended past the stage. */
+  height: calc(38% + var(--cloud-overscan-y));
   z-index: 5;
 }
 
 .cloud-svg-front {
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 /* Theme Adaptive Cloud Fills */
@@ -2009,22 +2028,72 @@ figcaption {
 .lede { line-height: 1.62; }
 
 
-/* ---------- back to top (sticky) ---------- */
+/* ---------- back to top (sticky) ----------
+   Collapsed = a 46px square with just the arrow (label clipped to 0 width).
+   `.is-visible` fades/rises it in once the page is scrolled; `.is-expanded`
+   grows it leftward to sit a "Back to Top" label beside the arrow when the
+   footer is in view or the button is hovered/focused — the label's max-width
+   transition uses a slight-overshoot curve for the nav theme-pill spring
+   feel, and the inline-flex button reflows to match. All class-driven so it
+   doesn't depend on rAF / IntersectionObserver. */
 .back-to-top {
   position: fixed;
   right: clamp(1.3333rem, 3vw, 2.6667rem);
   bottom: clamp(1.3333rem, 3vw, 2.6667rem);
   z-index: 40;
-  width: 46px;
   height: 46px;
+  min-width: 46px;
+  padding: 0 15px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--ink);
   color: var(--bg);
   border-radius: var(--radius-btn);
-  box-shadow: 0 6px 18px rgba(var(--shadow-rgb), .18);
+  /* Accent hairline keeps the pill legible even when it sits over the
+     inverted footer, whose background is the same colour as --ink. */
+  box-shadow: 0 6px 18px rgba(var(--shadow-rgb), .18), 0 0 0 1.5px var(--accent-strong);
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(12px) scale(.92);
+  pointer-events: none;
+  transition:
+    opacity .3s var(--ease-state),
+    transform .3s var(--ease-state),
+    bottom .35s var(--ease-state),
+    background-color var(--dur-fast) var(--ease-state);
+}
+.back-to-top.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.back-to-top-label {
+  display: inline-block;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: .889rem;
+  font-weight: 500;
+  line-height: 1;
+  transition:
+    max-width .42s cubic-bezier(.34, 1.4, .64, 1),
+    margin-right .42s cubic-bezier(.34, 1.4, .64, 1),
+    opacity .24s var(--ease-state);
+}
+.back-to-top.is-expanded .back-to-top-label {
+  max-width: 12rem;
+  margin-right: 7px;
+  opacity: 1;
 }
 .back-to-top:hover, .back-to-top:focus-visible { background: var(--accent-strong); }
-.back-to-top svg { transition: transform .3s var(--ease-state); }
-.back-to-top:hover svg { transform: translateY(-2px); }
+.back-to-top svg { flex: none; transition: transform .3s var(--ease-state); }
+.back-to-top:hover svg, .back-to-top:focus-visible svg { transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top,
+  .back-to-top-label { transition-duration: .01ms; }
+  .back-to-top { transform: none; }
+}

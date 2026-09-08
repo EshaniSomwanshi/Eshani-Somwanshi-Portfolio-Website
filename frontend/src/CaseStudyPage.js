@@ -376,10 +376,12 @@ export default function CaseStudyPage() {
         <div className="container footer-row">
           <span className="footer-location"><span className="footer-emoji">🌁</span> San Francisco, CA</span>
           <span className="footer-copyright">© {new Date().getFullYear()} Eshani Somwanshi</span>
-          {/* Mirrors the header "Selected work" back link — to="/#work" lands
-              on the Selected work section (App.js scrolls there on the hash),
-              not the top of the homepage. */}
-          <Link to="/#work" className="footer-top-link" data-testid="case-footer-home">Back to all work ↑</Link>
+          {/* Static sign-off, matching the homepage footer. The header's
+              "← Selected work" link still covers getting back to the work
+              list, and the sticky BackToTop control covers scroll-to-top. */}
+          <span className="footer-top-link footer-signoff" data-testid="case-footer-home">
+            You are the sun <span className="footer-emoji">☀️</span>
+          </span>
         </div>
       </footer>
 

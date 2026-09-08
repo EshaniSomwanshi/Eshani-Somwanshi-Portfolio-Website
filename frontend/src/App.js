@@ -203,6 +203,7 @@ const workCards = [
     ],
     tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
     image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
+    cursorLabel: "EYE AI",
     link: "/work/eye-ai",
     linkLabel: "Open full case study",
     linkTestId: "read-case-eye-ai",
@@ -947,14 +948,12 @@ export default function App() {
         <div className="container footer-row">
           <span className="footer-location"><span className="footer-emoji">🌁</span> San Francisco, CA</span>
           <span className="footer-copyright">© {new Date().getFullYear()} Eshani Somwanshi</span>
-          <a
-            href="#top"
-            className="footer-top-link"
-            data-testid="back-to-top-link"
-            onClick={(e) => { e.preventDefault(); go("top"); }}
-          >
-            Back to top ↑
-          </a>
+          {/* Static sign-off. Scroll-to-top now lives entirely in the sticky
+              BackToTop control (which expands to "Back to Top" at the foot
+              of the page), so the footer doesn't need its own link. */}
+          <span className="footer-top-link footer-signoff" data-testid="back-to-top-link">
+            You are the sun <span className="footer-emoji">☀️</span>
+          </span>
         </div>
       </footer>
 
