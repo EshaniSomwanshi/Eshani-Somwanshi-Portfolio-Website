@@ -132,16 +132,25 @@ function Cursor() {
    Tool marquee / grid
    ======================================================================== */
 
+/* Themes whose page background is dark. */
+const DARK_THEMES = new Set(["carbon", "petrol"]);
+
+/* These four marks are black (or near-black) by brand design, so they all
+   but vanish on the dark themes. Each has an official reversed/white
+   variant sitting alongside it as <slug>-dark.svg, swapped in below.
+   Everything else keeps one piece of artwork across all three themes — a
+   multi-colour logo can't be tinted without misrepresenting the mark. */
+const REVERSIBLE_LOGOS = new Set(["framer", "openai", "cursor", "axure"]);
+
 /* Logos are the brands' own full-colour marks, served locally from
    public/Logos/ (was cdn.simpleicons.org, which only had monochrome marks
-   and cost 17 external requests). They are deliberately *not* recoloured
-   per theme — a multi-colour logo can't be tinted without misrepresenting
-   the mark, so the same artwork runs across paper/carbon/petrol. */
-function ToolLogo({ slug, name, size }) {
+   and cost 17 external requests). */
+function ToolLogo({ slug, name, size, theme }) {
+  const reversed = REVERSIBLE_LOGOS.has(slug) && DARK_THEMES.has(theme);
   return (
     <span className="tool-tile">
       <img
-        src={`${process.env.PUBLIC_URL}/Logos/${slug}.svg`}
+        src={`${process.env.PUBLIC_URL}/Logos/${slug}${reversed ? "-dark" : ""}.svg`}
         alt=""
         width={size}
         height={size}
@@ -156,12 +165,12 @@ function ToolLogo({ slug, name, size }) {
 
 /* Horizontal auto-scrolling strip. The list is rendered twice so the
    translateX(-50%) keyframe loops seamlessly. */
-function ToolMarquee() {
+function ToolMarquee({ theme }) {
   return (
     <div className="tool-marquee" aria-label="Tools of the trade" data-testid="tool-marquee">
       <div className="tool-track">
         {[...tools, ...tools].map(([slug, name], i) => (
-          <ToolLogo key={`${slug}-${i}`} slug={slug} name={name} size={157} />
+          <ToolLogo key={`${slug}-${i}`} slug={slug} name={name} size={157} theme={theme} />
         ))}
       </div>
     </div>
@@ -171,11 +180,11 @@ function ToolMarquee() {
 /* Static four-across grid, centred on the page. Laid out with wrapping flex
    rather than CSS grid so the final short row (17 tools don't divide by 4)
    centres itself instead of hanging off the left edge. */
-function ToolGrid() {
+function ToolGrid({ theme }) {
   return (
     <div className="tool-grid" aria-label="Tools of the trade" data-testid="tool-grid">
       {tools.map(([slug, name]) => (
-        <ToolLogo key={slug} slug={slug} name={name} size={77} />
+        <ToolLogo key={slug} slug={slug} name={name} size={77} theme={theme} />
       ))}
     </div>
   );
@@ -902,7 +911,7 @@ export default function App() {
               </Reveal>
             </div>
             <Reveal delay={0.15}>
-              {toolsView === "grid" ? <ToolGrid /> : <ToolMarquee />}
+              {toolsView === "grid" ? <ToolGrid theme={theme} /> : <ToolMarquee theme={theme} />}
             </Reveal>
           </div>
         </section>
