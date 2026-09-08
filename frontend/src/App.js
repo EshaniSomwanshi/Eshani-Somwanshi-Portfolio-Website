@@ -10,7 +10,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ArrowDown, ArrowUpRight, Menu, Minus, Plus, Send } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUpRight, LayoutGrid, Menu, Minus, Plus, Send } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
 import {
@@ -129,7 +129,7 @@ function Cursor() {
 }
 
 /* ========================================================================
-   Tool marquee
+   Tool marquee / grid
    ======================================================================== */
 
 /* Logos are the brands' own full-colour marks, served locally from
@@ -137,25 +137,46 @@ function Cursor() {
    and cost 17 external requests). They are deliberately *not* recoloured
    per theme — a multi-colour logo can't be tinted without misrepresenting
    the mark, so the same artwork runs across paper/carbon/petrol. */
+function ToolLogo({ slug, name, size }) {
+  return (
+    <span className="tool-tile">
+      <img
+        src={`${process.env.PUBLIC_URL}/Logos/${slug}.svg`}
+        alt=""
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
+        onError={(e) => { e.currentTarget.style.display = "none"; }}
+      />
+      <span className="tool-tile-label">{name}</span>
+    </span>
+  );
+}
+
+/* Horizontal auto-scrolling strip. The list is rendered twice so the
+   translateX(-50%) keyframe loops seamlessly. */
 function ToolMarquee() {
   return (
     <div className="tool-marquee" aria-label="Tools of the trade" data-testid="tool-marquee">
       <div className="tool-track">
         {[...tools, ...tools].map(([slug, name], i) => (
-          <span className="tool-tile" key={`${slug}-${i}`}>
-            <img
-              src={`${process.env.PUBLIC_URL}/Logos/${slug}.svg`}
-              alt=""
-              width="28"
-              height="28"
-              loading="lazy"
-              decoding="async"
-              onError={(e) => { e.currentTarget.style.display = "none"; }}
-            />
-            <span className="tool-tile-label">{name}</span>
-          </span>
+          <ToolLogo key={`${slug}-${i}`} slug={slug} name={name} size={64} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/* Static four-across grid, centred on the page. Laid out with wrapping flex
+   rather than CSS grid so the final short row (17 tools don't divide by 4)
+   centres itself instead of hanging off the left edge. */
+function ToolGrid() {
+  return (
+    <div className="tool-grid" aria-label="Tools of the trade" data-testid="tool-grid">
+      {tools.map(([slug, name]) => (
+        <ToolLogo key={slug} slug={slug} name={name} size={64} />
+      ))}
     </div>
   );
 }
@@ -509,6 +530,7 @@ export default function App() {
   const [theme, setTheme] = useTheme();
   const [menu, setMenu] = useState(false);
   const [openOffer, setOpenOffer] = useState(null);
+  const [toolsView, setToolsView] = useState("scroll"); // "scroll" | "grid"
   const [activeSection, setActiveSection] = useState("");
   const headerRef = useRef(null);
   const navToggleRef = useRef(null);
@@ -854,9 +876,33 @@ export default function App() {
                 <Reveal><p className="section-label">Design tools</p></Reveal>
                 <SplitText as="h2" text="What the work above was made with." testId="tools-heading" delay={0.05} />
               </div>
+              {/* Layout switch, scoped to this section only — no persistence,
+                  it resets to the scrolling strip on reload. */}
+              <Reveal delay={0.1}>
+                <div className="tools-switch" role="group" aria-label="Tool logo layout">
+                  <button
+                    type="button"
+                    className="tools-switch-btn"
+                    aria-pressed={toolsView === "scroll"}
+                    onClick={() => setToolsView("scroll")}
+                    data-testid="tools-view-scroll"
+                  >
+                    <ArrowLeftRight size={14} aria-hidden="true" /> Scroll
+                  </button>
+                  <button
+                    type="button"
+                    className="tools-switch-btn"
+                    aria-pressed={toolsView === "grid"}
+                    onClick={() => setToolsView("grid")}
+                    data-testid="tools-view-grid"
+                  >
+                    <LayoutGrid size={14} aria-hidden="true" /> Grid
+                  </button>
+                </div>
+              </Reveal>
             </div>
             <Reveal delay={0.15}>
-              <ToolMarquee />
+              {toolsView === "grid" ? <ToolGrid /> : <ToolMarquee />}
             </Reveal>
           </div>
         </section>
