@@ -375,7 +375,10 @@ export default function CaseStudyPage() {
         <div className="container footer-row">
           <span className="footer-location"><span className="footer-emoji">🌁</span> San Francisco, CA</span>
           <span className="footer-copyright">© {new Date().getFullYear()} Eshani Somwanshi</span>
-          <Link to="/" className="footer-top-link" data-testid="case-footer-home">Back to all work ↑</Link>
+          {/* Mirrors the header "Selected work" back link — to="/#work" lands
+              on the Selected work section (App.js scrolls there on the hash),
+              not the top of the homepage. */}
+          <Link to="/#work" className="footer-top-link" data-testid="case-footer-home">Back to all work ↑</Link>
         </div>
       </footer>
     </div>
