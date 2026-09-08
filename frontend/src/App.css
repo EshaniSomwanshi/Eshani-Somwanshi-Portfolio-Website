@@ -774,7 +774,11 @@ figcaption {
 /* ---------- 01 lead panel ---------- */
 .lead-panel {
   border: 1px solid var(--ink);
-  border-radius: 4px;
+  /* Was 4px. Image (.lead-media) sits inset by the card's own padding,
+     never flush against an edge, so this doesn't need any matching
+     adjustment elsewhere -- overflow: hidden below clips it to whatever
+     this radius is regardless. */
+  border-radius: 15px;
   background: var(--card);
   padding: clamp(1.3333rem, 1.8vw, 1.6rem);
   position: relative;
