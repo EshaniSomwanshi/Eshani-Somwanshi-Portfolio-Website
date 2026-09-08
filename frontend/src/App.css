@@ -1170,13 +1170,22 @@ figcaption {
   color: var(--muted);
   transition: color var(--dur-fast) var(--ease-state);
 }
+/* Size is set per view below — the scrolling strip and the grid run at
+   different scales. object-fit: contain keeps non-square marks (Figma,
+   Axure) at their true proportions inside the square box. */
 .tool-tile img {
-  width: 64px;
-  height: 64px;
   display: block;
   object-fit: contain;
+  /* The tile is a shrink-to-fit column, so its width comes from whichever
+     child is widest. Without this, the global `img { max-width: 100% }`
+     reset clamps the logo to the *label's* width once the logo is set
+     larger than the text — it stays full height but squeezes narrow. */
+  max-width: none;
   transition: transform .25s var(--ease-state);
 }
+/* 180px logo + 8px gap + ~11px label = ~200px of content in the 320px
+   strip, leaving ~60px of air above and below. */
+.tool-track .tool-tile img { width: 180px; height: 180px; }
 .tool-tile-label { display: block; }
 .tool-tile:hover { color: var(--ink); }
 .tool-tile:hover img { transform: scale(1.08); }
@@ -1225,7 +1234,6 @@ figcaption {
   padding: clamp(1.6rem, 3vw, 2.6667rem) 0;
 }
 .tool-grid .tool-tile { flex: 0 0 auto; width: 12.5rem; }
-/* Grid logos run 20% larger than the marquee's 64px. */
 .tool-grid .tool-tile img { width: 77px; height: 77px; }
 @media (max-width: 720px) {
   .tool-grid { max-width: 34rem; }
