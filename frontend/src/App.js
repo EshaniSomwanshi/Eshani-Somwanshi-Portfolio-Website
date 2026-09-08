@@ -43,11 +43,12 @@ const offerings = [
   ["Industrial Design", []],
 ];
 
+/* [filename in public/Logos/, visible label] — see ToolMarquee below. */
 const tools = [
-  ["figma", "Figma"], ["framer", "Framer"], ["anthropic", "Claude"], ["openai", "ChatGPT"],
-  ["miro", "Miro"], ["adobephotoshop", "Photoshop"], ["adobeillustrator", "Illustrator"],
-  ["adobeaftereffects", "After Effects"], ["cursor", "Cursor"], ["canva", "Canva"],
-  ["adobecreativecloud", "Adobe CC"], ["wordpress", "WordPress"], ["visualstudiocode", "VS Code"],
+  ["figma", "Figma"], ["framer", "Framer"], ["claude", "Claude"], ["openai", "ChatGPT"],
+  ["miro", "Miro"], ["photoshop", "Photoshop"], ["illustrator", "Illustrator"],
+  ["after-effects", "After Effects"], ["cursor", "Cursor"], ["canva", "Canva"],
+  ["adobe", "Adobe CC"], ["wordpress", "WordPress"], ["vscode", "VS Code"],
   ["axure", "Axure RP"], ["html5", "HTML5"], ["javascript", "JavaScript"], ["perplexity", "Perplexity"],
 ];
 
@@ -131,22 +132,27 @@ function Cursor() {
    Tool marquee
    ======================================================================== */
 
-function ToolMarquee({ theme }) {
-  const ink = theme === "paper" ? "14130F" : theme === "petrol" ? "E4F1F2" : "F4F2ED";
+/* Logos are the brands' own full-colour marks, served locally from
+   public/Logos/ (was cdn.simpleicons.org, which only had monochrome marks
+   and cost 17 external requests). They are deliberately *not* recoloured
+   per theme — a multi-colour logo can't be tinted without misrepresenting
+   the mark, so the same artwork runs across paper/carbon/petrol. */
+function ToolMarquee() {
   return (
     <div className="tool-marquee" aria-label="Tools of the trade" data-testid="tool-marquee">
       <div className="tool-track">
         {[...tools, ...tools].map(([slug, name], i) => (
           <span className="tool-tile" key={`${slug}-${i}`}>
             <img
-              src={`https://cdn.simpleicons.org/${slug}/${ink}`}
+              src={`${process.env.PUBLIC_URL}/Logos/${slug}.svg`}
               alt=""
-              width="19"
-              height="19"
+              width="28"
+              height="28"
               loading="lazy"
+              decoding="async"
               onError={(e) => { e.currentTarget.style.display = "none"; }}
             />
-            {name}
+            <span className="tool-tile-label">{name}</span>
           </span>
         ))}
       </div>
@@ -850,7 +856,7 @@ export default function App() {
               </div>
             </div>
             <Reveal delay={0.15}>
-              <ToolMarquee theme={theme} />
+              <ToolMarquee />
             </Reveal>
           </div>
         </section>

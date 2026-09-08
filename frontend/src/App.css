@@ -1127,33 +1127,48 @@ figcaption {
   margin-top: clamp(4rem, 6vw, 6rem);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  padding: 1.8667rem 0;
+  /* The strip between the two hairlines is 60px tall; .tool-track sets that
+     height and centres each stacked logo + label inside it. */
+  padding: 0;
   overflow: hidden;
   white-space: nowrap;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
 }
-.tool-track { display: inline-flex; gap: 4.2667rem; animation: slide 34s linear infinite; }
-.tool-marquee:hover .tool-track { animation-play-state: paused; }
-.tool-tile {
+.tool-track {
   display: inline-flex;
   align-items: center;
-  gap: 0.9333rem;
+  height: 60px;
+  gap: 3.2rem;
+  animation: slide 34s linear infinite;
+}
+.tool-marquee:hover .tool-track { animation-play-state: paused; }
+/* Logo on top, label centred beneath it. Logos keep their own brand colours
+   in every theme — no grayscale, no tint (see ToolMarquee in App.js). */
+.tool-tile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3333rem;
   font-family: var(--font-mono);
-  font-size: 1.0667rem;
-  letter-spacing: .1em;
+  font-size: .79rem;
+  line-height: 1;
+  letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--muted);
   transition: color var(--dur-fast) var(--ease-state);
 }
 .tool-tile img {
-  width: 19px; height: 19px;
-  filter: grayscale(1);
-  opacity: .6;
-  transition: filter var(--dur-fast) var(--ease-state), opacity var(--dur-fast) var(--ease-state), transform .25s var(--ease-state);
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: contain;
+  transition: transform .25s var(--ease-state);
 }
+.tool-tile-label { display: block; }
 .tool-tile:hover { color: var(--ink); }
-.tool-tile:hover img { filter: grayscale(0); opacity: 1; transform: scale(1.2); }
+.tool-tile:hover img { transform: scale(1.12); }
 
 @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
