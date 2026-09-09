@@ -553,44 +553,6 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .btn svg { transition: transform .3s var(--ease-state); position: relative; }
 .btn:hover svg { transform: translate(2px, -2px); }
 
-/* ---------- name band ---------- */
-.name-band {
-  overflow: hidden;
-  padding: calc(var(--nav-h) + clamp(2.6667rem, 6vw, 6rem)) 0 clamp(2rem, 3vw, 3.3333rem);
-  position: relative;
-}
-.name-band .line { display: block; overflow: hidden; padding-bottom: .06em; }
-.name-band .line > span { display: block; }
-.name-line {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(4.5333rem, 13.2vw, 16.6667rem);
-  /* Tight tracking only pays off at display sizes. */
-  letter-spacing: -.025em;
-  line-height: .92;
-  white-space: nowrap;
-  padding-left: var(--edge);
-}
-.name-solid { color: var(--ink); }
-.name-outline {
-  color: transparent;
-  -webkit-text-stroke: 2px var(--ink);
-}
-.line-indent { margin-top: .04em; }
-.name-band .name-sub {
-  margin: 2.6667rem var(--edge) 0;
-  font-family: var(--font-mono);
-  font-size: 1.04rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 1.0667rem;
-  flex-wrap: wrap;
-}
-
 /* availability dot */
 .avail { display: inline-flex; align-items: center; gap: 0.6667rem; color: var(--secondary); }
 .avail::before {
@@ -607,11 +569,6 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   100% { box-shadow: 0 0 0 0 rgba(217, 81, 44, 0); }
 }
 
-@media (max-width: 700px) {
-  .name-outline { -webkit-text-stroke-width: 1.2px; }
-  .name-line { font-size: 12.4vw; }
-  .line-indent { margin-left: 0; }
-}
 
 /* ---------- hero ---------- */
 .hero {
@@ -2118,50 +2075,6 @@ figcaption {
   line-height: 1.4;
 }
 .gallery-card-item figcaption b { display: block; font-weight: 600; }
-
-/* ---------- gallery: a wall of real screens, masonry-style ---------- */
-.shot-grid {
-  margin-top: 0.8rem;
-  columns: 3 260px;
-  column-gap: 1.7333rem;
-}
-/* Assemble wraps each figure in its own .assemble-item motion div — that's
-   the actual column child now, not a .shot-item we render ourselves. */
-.shot-grid .assemble-item { display: block; break-inside: avoid; margin-bottom: 1.7333rem; }
-.shot {
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--card);
-}
-.shot .wipe img { height: auto; transform: none !important; }
-.shot:hover .wipe img { transform: scale(1.03) !important; }
-/* One shot (myocircle-level13.png) is a 700x2083 phone composite — nearly
-   3x taller than its neighbours. Left at its native aspect ratio it towered
-   over the whole grid, so it's capped and cropped to the top of the frame
-   (Level 13 / 25% progress — the part worth showing) instead. */
-.shot--tall .wipe { max-height: 420px; }
-.shot--tall .wipe img { height: 100%; object-fit: cover; object-position: top; }
-.shot figcaption {
-  padding: 1.0667rem 1.3333rem 1.2rem;
-  border-top: 1px solid var(--line);
-}
-.shot figcaption b {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 0.88rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--accent, var(--ink));
-  margin-bottom: 0.4rem;
-}
-@media (max-width: 860px) {
-  .shot-grid { columns: 2 auto; }
-}
-@media (max-width: 560px) {
-  .shot-grid { columns: 1 auto; }
-}
 
 /* Two-up metric rows now that the third pseudo-metric is gone. */
 .lead-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
