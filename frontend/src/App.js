@@ -45,14 +45,18 @@ const offerings = [
 
 /* [filename in public/Logos/, visible label] — see ToolMarquee below. Covers
    both the design side and the code side, which is what the section heading
-   claims: design tools first, then what the front end gets built in. */
+   claims.
+
+   Ordered by how prominently Eshani actually uses each one, most first. This
+   array is the single source of truth for both views: the marquee scrolls in
+   this order, and the grid reads it left to right, top to bottom. Reorder
+   here, not in either component. */
 const tools = [
-  ["figma", "Figma"], ["framer", "Framer"], ["claude", "Claude"], ["openai", "ChatGPT"],
-  ["miro", "Miro"], ["photoshop", "Photoshop"], ["illustrator", "Illustrator"],
-  ["after-effects", "After Effects"], ["cursor", "Cursor"], ["canva", "Canva"],
-  ["adobe", "Adobe CC"], ["wordpress", "WordPress"], ["vscode", "VS Code"],
-  ["axure", "Axure RP"], ["html5", "HTML5"], ["javascript", "JavaScript"],
-  ["react", "React"], ["perplexity", "Perplexity"],
+  ["figma", "Figma"], ["claude", "Claude"], ["vscode", "VS Code"], ["html5", "HTML5"],
+  ["javascript", "JavaScript"], ["react", "React"], ["cursor", "Cursor"], ["framer", "Framer"],
+  ["photoshop", "Photoshop"], ["illustrator", "Illustrator"], ["after-effects", "After Effects"], ["miro", "Miro"],
+  ["adobe", "Adobe CC"], ["canva", "Canva"], ["openai", "ChatGPT"], ["wordpress", "WordPress"],
+  ["axure", "Axure RP"], ["perplexity", "Perplexity"],
 ];
 
 const navItems = [
