@@ -75,10 +75,14 @@
 
   /* Fluid rather than a step at 576. The header used to snap from 78px to
      64px on crossing the phone breakpoint, taking every sticky offset and
-     scroll-margin that reads this with it; now it eases between the two across
-     the same span. The formula is the usual fluid one: hold the low value to
-     576, the high value from 1281, interpolate between. */
-  --nav-h: clamp(64px, calc(52.56px + 1.9858vw), 78px);
+     scroll-margin that reads this with it.
+
+     The floor is deliberately below where the curve is still moving: it keeps
+     easing right through phone widths (60px at 390, 59px at 320) instead of
+     flattening at 576 and sitting at one size for every phone. 56px is a
+     safety net that only engages under ~172px, not a design step. Same idea
+     for .stack-item and .avatar-hero-stage. */
+  --nav-h: clamp(56px, calc(52.56px + 1.9858vw), 78px);
   --container: 1320px;
   --edge: clamp(1.6667rem, 5vw, 5.3333rem);
   --radius-btn: 8px;
@@ -887,9 +891,9 @@ figcaption {
 .stack-item {
   position: sticky;
   top: calc(var(--nav-h) + 1.6rem);
-  /* 1.6rem up to 576, 2.1333rem from 1281, easing between — replaces the step
-     the tablet block used to make. */
-  margin-top: clamp(1.6rem, calc(13.97px + 0.9078vw), 2.1333rem);
+  /* Eases the whole way rather than stepping at 1024, and keeps easing below
+     576 rather than flattening — the floor is a safety net, not a step. */
+  margin-top: clamp(1rem, calc(13.97px + 0.9078vw), 2.1333rem);
 }
 .stack-item:first-child { margin-top: 0; }
 
@@ -1483,8 +1487,9 @@ figcaption {
   position: relative;
   width: 100%;
   flex: 1;
-  /* 380px up to 576, 420px from 1281 — was a step at 1024. */
-  min-height: clamp(380px, calc(347.32px + 5.6738vw), 420px);
+  /* Eases the whole way rather than stepping at 1024, and keeps shrinking
+     below 576 so a small phone gets a shorter stage than a large one. */
+  min-height: clamp(320px, calc(347.32px + 5.6738vw), 420px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
