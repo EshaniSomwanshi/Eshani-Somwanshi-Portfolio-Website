@@ -651,7 +651,7 @@ export default function App() {
             onClick={(e) => { e.preventDefault(); go("top"); }}
           >
             <img
-              src={`${process.env.PUBLIC_URL}/logo/${theme === "paper" ? "black-logo.svg" : "logo-white.svg"}`}
+              src={`${process.env.PUBLIC_URL}/es-logo/${theme === "paper" ? "black-logo.svg" : "logo-white.svg"}`}
               alt=""
               className="wordmark-logo"
             />
@@ -941,7 +941,13 @@ export default function App() {
         {/* ---------- about ---------- */}
         <section className="section section-bright" id="about">
           <div className="container about-grid">
-            <Reveal>
+            {/* The "About" label lives outside .about-copy so tablet/mobile can
+                order it above the portrait while the rest of the copy stays
+                below it. On desktop it sits in the copy column as before. */}
+            <Reveal className="about-lead">
+              <p className="section-label">About</p>
+            </Reveal>
+            <Reveal className="about-figure">
               <figure className="about-photo">
                 <Wipe
                   src={IMG("profile.jpg")}
@@ -952,7 +958,6 @@ export default function App() {
               </figure>
             </Reveal>
             <Reveal className="about-copy" testId="about-copy">
-              <p className="section-label" style={{ marginBottom: "1rem" }}>About</p>
               <p>
                 Eshani Somwanshi is a product and UX designer working at the intersection of
                 research, systems thinking, and visual craft. Her work spans healthcare, AI

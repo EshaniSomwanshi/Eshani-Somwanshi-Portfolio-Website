@@ -1237,6 +1237,11 @@ figcaption {
 
 /* ---------- about ---------- */
 .about-grid { display: grid; grid-template-columns: .72fr 1.28fr; gap: clamp(2.6667rem, 4vw, 4.6667rem); align-items: start; }
+/* Photo spans both rows on the left; the "About" label and the copy stack in
+   the right-hand column, so the label reads with the text it introduces. */
+.about-figure { grid-column: 1; grid-row: 1 / span 2; }
+.about-lead { grid-column: 2; grid-row: 1; margin-bottom: -1.6rem; }
+.about-copy { grid-column: 2; grid-row: 2; }
 .about-photo { border: 1px solid var(--line); overflow: hidden; background: transparent; }
 .about-photo .wipe { aspect-ratio: 4 / 5; }
 .about-photo .wipe img { object-position: center 20%; }
@@ -1576,12 +1581,19 @@ figcaption {
   .case { grid-template-columns: 1fr; }
   .case-rail { position: static; }
   .chapter-nav { display: none; }
-  .stack-item { position: static; margin-top: 2.1333rem; }
+  /* The sticky stack stays on at tablet/mobile — it's the section's whole
+     behaviour, and flattening it here made the cards a plain list. */
+  .stack-item { margin-top: 1.6rem; }
   .proj-wide { grid-template-columns: 1fr; }
   .proj-compact .proj-body { grid-template-columns: 1fr; gap: 1.8667rem; }
   .proj-metrics { flex-direction: row; flex-wrap: wrap; gap: 2.1333rem 2.9333rem; }
   .impact-grid { grid-template-columns: repeat(3, 1fr); }
+  /* Heading first, then the portrait, then the rest of the copy. .about-lead
+     is the "About" label lifted out of .about-copy so it can be ordered
+     independently of it. */
   .about-grid { grid-template-columns: 1fr; }
+  .about-figure, .about-lead, .about-copy { grid-column: 1; grid-row: auto; }
+  .about-lead { margin-bottom: 0; }
   .about-photo { max-width: 520px; }
   .contact-grid { grid-template-columns: 1fr; gap: 3.3333rem; align-items: start; }
   .cs-metrics-row { grid-template-columns: repeat(2, 1fr); row-gap: 2.6667rem; }

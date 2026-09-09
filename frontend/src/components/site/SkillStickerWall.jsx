@@ -41,6 +41,11 @@ export const PHYSICS = {
      drops, so the wall doesn't burst into motion the instant it appears.
      Unrelated to maxThrowSpeed above, which governs post-throw settle time. */
   entryDelay: 1500,      // ms
+  /* Coarse pointers get no drag-and-throw (Matter's touch handlers would eat
+     page scrolling), so a tap instead shoves the nearby cubes apart — the
+     wall stays playable on a phone without hijacking the scroll. */
+  tapImpulse: 0.34,      // shove strength at the tap point
+  tapRadius: 260,        // px falloff around the tap
   spawnStagger: 95,      // ms between each sticker dropping in
   wallThickness: 400,    // static bound thickness (thick = nothing tunnels out)
 };
@@ -90,6 +95,17 @@ const deepStopFor = (slug) => (GRADIENTS[slug] || ["#8D877D", "#4A4A4A"]).at(-1)
    the brand colour with no backing chip. */
 const REVERSED_LOGOS = new Set(["framer", "openai", "cursor", "axure", "react"]);
 
+/* Marks whose standard asset bakes in its own app-icon tile — a visible box
+   inside the cube. These transparent versions are the bare glyph, so the mark
+   sits straight on the gradient like every other logo. */
+const TRANSPARENT_LOGOS = {
+  "after-effects": "AE-transaprent.svg",
+  illustrator: "AI-transparent.svg",
+  javascript: "Javascript-transparent.svg",
+  miro: "Miro-transparent.svg",
+  photoshop: "Photoshop-transparent.svg",
+};
+
 /* Single-colour marks whose own hue is the cube's hue, so they vanish against
    it (Claude on Claude, Adobe red on red, and so on). These get knocked out
    to solid white or solid black depending on the cube — which is exactly the
@@ -115,7 +131,7 @@ function inkFor(hex) {
 const STICKER = {
   baseWidth: 116,        // px, before per-sticker variance
   baseHeight: 116,       // square-ish, so the cubes read as cubes
-  sizeVariance: 0.11,    // ±11% — organic, not wildly different
+  sizeVariance: 0,       // uniform — every cube the same size
   maxTilt: 16,           // degrees of random rotation at spawn
   /* Cube size scales with the container so 18 of them still fit — and still
      read — on a phone. There is deliberately no minimum width that disables
@@ -161,6 +177,8 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
      variant exists. inkFor() is the same luminance test the label uses, so
      icon and label always agree about how dark the cube is. */
   const logoSrc = useCallback((slug) => {
+    const bare = TRANSPARENT_LOGOS[slug];
+    if (bare) return `${process.env.PUBLIC_URL}/Logos/${bare}`;
     const wantsWhite = REVERSED_LOGOS.has(slug) && inkFor(deepStopFor(slug)) === "#FFFFFF";
     return `${process.env.PUBLIC_URL}/Logos/${slug}${wantsWhite ? "-dark" : ""}.svg`;
   }, []);
@@ -173,8 +191,9 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     timersRef.current = [];
     const ctx = engineRef.current;
     if (ctx) {
-      const { Matter, engine, mouseConstraint, mouse, onResize, releaseDrag } = ctx;
+      const { Matter, engine, mouseConstraint, mouse, onResize, releaseDrag, onTap } = ctx;
       if (onResize) window.removeEventListener("resize", onResize);
+      if (onTap && wrapRef.current) wrapRef.current.removeEventListener("pointerdown", onTap);
       if (releaseDrag) {
         window.removeEventListener("mouseup", releaseDrag);
         window.removeEventListener("pointerup", releaseDrag);
@@ -263,7 +282,8 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     let mouse = null;
     let mouseConstraint = null;
     let releaseDrag = null;
-    if (window.matchMedia("(pointer: fine)").matches) {
+    const fine = window.matchMedia("(pointer: fine)").matches;
+    if (fine) {
       mouse = Matter.Mouse.create(wrap);
       /* Matter binds wheel handlers that swallow scroll over the canvas area.
          This section sits mid-page, so they have to go. */
@@ -312,7 +332,35 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       document.addEventListener("mouseleave", releaseDrag);
     }
 
-    engineRef.current = { Matter, engine, bodies, mouse, mouseConstraint, releaseDrag, floor, leftWall, rightWall, W, H };
+    /* Coarse pointers (phones, tablets): no MouseConstraint, so a tap applies
+       a radial impulse instead — cubes near the touch scatter outward, harder
+       the closer they are. Desktop is deliberately untouched. */
+    let onTap = null;
+    if (!fine) {
+      onTap = (ev) => {
+        const ctx = engineRef.current;
+        if (!ctx) return;
+        const t = ev.touches?.[0] || ev.changedTouches?.[0] || ev;
+        const r = wrap.getBoundingClientRect();
+        const px = t.clientX - r.left;
+        const py = t.clientY - r.top;
+        for (const b of ctx.bodies) {
+          const dx = b.position.x - px;
+          const dy = b.position.y - py;
+          const d = Math.hypot(dx, dy) || 1;
+          if (d > PHYSICS.tapRadius) continue;
+          const falloff = 1 - d / PHYSICS.tapRadius;
+          const mag = PHYSICS.tapImpulse * falloff * b.mass;
+          Matter.Body.applyForce(b, b.position, {
+            x: (dx / d) * mag,
+            y: (dy / d) * mag - mag * 0.45, // bias upward so it reads as a pop
+          });
+        }
+      };
+      wrap.addEventListener("pointerdown", onTap, { passive: true });
+    }
+
+    engineRef.current = { Matter, engine, bodies, mouse, mouseConstraint, releaseDrag, onTap, floor, leftWall, rightWall, W, H };
 
     /* Keep the bounds matched to the wall as it resizes — the floor is a
        fixed body, so without this it stays at the old height and cubes
