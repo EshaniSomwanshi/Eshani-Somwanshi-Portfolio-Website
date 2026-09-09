@@ -2,6 +2,27 @@
    Eshani Somwanshi — portfolio design system
    Fonts are loaded from public/index.html (a <link>, not an @import here:
    @import inside CSS is render-blocking and delays first paint).
+
+   ---------------------------------------------------------------------------
+   BREAKPOINTS — four tiers, three dividing lines. Desktop is the base, with no
+   media query of its own; each query steps down from it.
+
+       Phone   <= 576        @media (max-width:  576px)
+       Tablet   577 - 1024   @media (max-width: 1024px)
+       Laptop  1025 - 1280   @media (max-width: 1280px)
+       Desktop >= 1281       (plain rules, no query)
+
+   These three widths are the whole set — there are no others, and none should
+   be added. Anything that only grows or shrinks belongs in clamp() instead of
+   a breakpoint; a query is for structural changes a fluid value cannot express
+   (hamburger vs inline nav, column counts, reordering).
+
+   The same width may appear as several separate blocks. That is deliberate:
+   each one sits beside the component it styles, because in this file the
+   cascade depends on position — several base rules are declared *after* the
+   media query that modifies them, and gathering the queries into three blocks
+   would silently switch some rules on and others off.
+   ---------------------------------------------------------------------------
    ========================================================================= */
 
 
@@ -340,7 +361,18 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .wordmark b { color: var(--accent); font-weight: 500; margin-right: 0.6667rem; }
 .wordmark-logo { height: 22px; width: auto; display: block; }
 
-.nav-links { display: flex; gap: 2.8rem; font-family: var(--font-mono); font-size: 1.04rem; }
+/* The gap is fluid so the links can survive down to the phone tier, which is
+   what lets the hamburger live at 576 instead of needing a breakpoint of its
+   own. It resolves to 2.8rem (33.6px) — the previous fixed value — at 1344px
+   and wider, so desktop and laptop are unchanged; below that it closes up.
+   Measured: at the old fixed gap the links collided with the theme pill at
+   ~590px; at 20px they clear it by ~50px. */
+.nav-links {
+  display: flex;
+  gap: clamp(20px, 2.5vw, 2.8rem);
+  font-family: var(--font-mono);
+  font-size: 1.04rem;
+}
 .nav-links a {
   position: relative;
   display: inline-flex;
@@ -454,7 +486,8 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .theme-dot[data-theme-value="paper"]  .theme-swatch { --sw-bg: #F2EEE7; --sw-text: #14130F; --sw-accent: #D9512C; }
 .theme-dot[data-theme-value="carbon"] .theme-swatch { --sw-bg: #0B0B0B; --sw-text: #F4F2ED; --sw-accent: #E5825F; }
 .theme-dot[data-theme-value="petrol"] .theme-swatch { --sw-bg: #052A31; --sw-text: #E4F1F2; --sw-accent: #CBF24E; }
-@media (max-width: 1100px) {
+/* Laptop and below — see the tier table at the top of this file. */
+@media (max-width: 1280px) {
   .site-header .theme-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 }
 
@@ -1203,7 +1236,7 @@ figcaption {
    of the reason the wider layout uses flex applies. Order is untouched — the
    tiles render in the prominence order they are declared in, so the grid
    still reads left to right, most-used first, at every width. */
-@media (max-width: 720px) {
+@media (max-width: 576px) {
   .tool-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1404,7 +1437,7 @@ figcaption {
 .footer-row a { transition: color var(--dur-fast) var(--ease-state); }
 .footer-row a:hover { color: var(--accent); }
 
-@media (max-width: 640px) {
+@media (max-width: 576px) {
   .footer-row {
     grid-template-columns: 1fr;
     justify-items: center;
@@ -1614,7 +1647,7 @@ figcaption {
   .chapter-art figure:nth-of-type(2) { margin-left: 0; max-width: 100%; }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 576px) {
   :root { --nav-h: 64px; }
   .nav-links { display: none; }
   .site-header .theme-switch { display: none; }
@@ -1986,7 +2019,11 @@ figcaption {
   align-items: center;
 }
 
-@media (max-width: 768px) {
+/* Tablet and below. Deliberately left where it sits rather than merged with
+   the other tablet block above: the .avatar-hero-* base rules are declared
+   immediately before it, so moving this earlier would put those base rules
+   after it and silently switch it off. */
+@media (max-width: 1024px) {
   .avatar-hero-stage {
     min-height: 380px;
   }

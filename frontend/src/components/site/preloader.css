@@ -60,7 +60,7 @@
   color: var(--inv-muted);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 576px) {
   .intro-letter { letter-spacing: -0.03em; }
   .intro-sub { font-size: 0.8267rem; letter-spacing: 0.18em; }
 }

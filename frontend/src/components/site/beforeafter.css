@@ -97,7 +97,7 @@
   color: var(--muted);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 576px) {
   .ba-handle { width: 38px; height: 38px; margin: -19px 0 0 -19px; }
   .ba-tag { font-size: 0.7733rem; padding: 0.4rem 0.6667rem; }
 }
