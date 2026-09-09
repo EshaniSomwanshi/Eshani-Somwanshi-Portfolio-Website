@@ -100,9 +100,14 @@
    ------------------------------------------------------------------------- */
 .sticker {
   /* Physics overwrites these inline with a container-derived px size; this is
-     the static-fallback / pre-arming size. */
-  width: clamp(62px, 9.8vw, 128px);
-  height: clamp(62px, 9.8vw, 128px);
+     the static-fallback / pre-arming size, kept in step with
+     STICKER.sizePerWidth / minSize so the two layouts agree. */
+  width: clamp(62px, 8.33vw, 109px);
+  height: clamp(62px, 8.33vw, 109px);
+  /* Mirrors STICKER.logoPerWidth / logoOffset / logoMinSize so the static
+     layout sizes its marks the same way physics does. The physics pass
+     overwrites this inline with the exact container-derived px. */
+  --logo: max(15px, calc(3.33vw - 6.5px));
   position: absolute;
   top: 0;
   left: 0;
@@ -145,8 +150,14 @@
    shadow does the separating instead, which keeps the silhouette clean. */
 .sticker img {
   display: block;
-  width: 34%;
-  height: 34%;
+  /* An absolute size, not a share of the cube — that is what lets the boxes
+     shrink without the marks shrinking with them. --logo is set just above
+     for the static layout and overwritten inline by the physics sizing pass.
+     flex: none because the cube is a column flex container: without it the
+     mark is a shrinkable item and the size stops being the size. */
+  width: var(--logo);
+  height: var(--logo);
+  flex: none;
   max-width: none;
   object-fit: contain;
   pointer-events: none;

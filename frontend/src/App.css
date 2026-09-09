@@ -1650,7 +1650,12 @@ figcaption {
   .section-head h2 { max-width: none; }
   .cs-header .theme-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .phone-row .phone { flex: 1 1 100%; }
-  .intro { flex-direction: column; align-items: flex-start; justify-content: flex-end; }
+  /* NB: no `.intro` rule here. There used to be one — a leftover from the
+     flexbox preloader that preloader.css replaced — and because it set
+     `justify-content: flex-end`, a property the new grid-based `.intro` never
+     sets and so could not override, the whole name block was pushed to the
+     right edge below 700px. Desktop was unaffected only because the rule was
+     inside this breakpoint. */
   .scroll-cue { display: none; }
 }
 

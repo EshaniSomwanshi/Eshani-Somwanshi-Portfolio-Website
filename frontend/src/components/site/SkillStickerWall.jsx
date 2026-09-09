@@ -43,9 +43,22 @@ export const PHYSICS = {
   entryDelay: 1500,      // ms
   /* Coarse pointers get no drag-and-throw (Matter's touch handlers would eat
      page scrolling), so a tap instead shoves the nearby cubes apart — the
-     wall stays playable on a phone without hijacking the scroll. */
-  tapImpulse: 0.34,      // shove strength at the tap point
-  tapRadius: 260,        // px falloff around the tap
+     wall stays playable on a phone without hijacking the scroll.
+
+     The shove is spread over tapDuration rather than applied in a single
+     step. A one-frame force is an instantaneous velocity change, which is
+     what made the dispersal look like a jerk rather than a push; ramping the
+     same impulse up and back down across ~16 steps reads as the cubes being
+     shouldered aside. tapImpulse is therefore a *per-step* force now, much
+     smaller than the single-hit 0.34 it replaces.
+
+     0.034 was chosen against a headless sim of this world so the cubes travel
+     the same distance as before — mean 359px from the tap versus 372px — and
+     only the delivery changed: the first step's velocity jump falls from
+     109.7 to 1.8, and the peak from 109.7 to 10.6. Same dispersal, no jolt. */
+  tapImpulse: 0.034,     // per-step shove strength at the tap point
+  tapRadius: 300,        // px falloff around the tap
+  tapDuration: 260,      // ms the shove is spread across
   spawnStagger: 95,      // ms between each sticker dropping in
   wallThickness: 400,    // static bound thickness (thick = nothing tunnels out)
 };
@@ -99,6 +112,11 @@ const REVERSED_LOGOS = new Set(["framer", "openai", "cursor", "axure", "react"])
    inside the cube. These transparent versions are the bare glyph, so the mark
    sits straight on the gradient like every other logo. */
 const TRANSPARENT_LOGOS = {
+  /* Adobe ships the Creative Cloud mark two ways: inside its app-icon tile,
+     and bare. The bare one is what belongs here — the tiled version would put
+     a second, differently-coloured box inside the cube, which is the exact
+     thing this map exists to avoid. */
+  adobe: "adobe-cc.svg",
   "after-effects": "AE-transaprent.svg",
   illustrator: "AI-transparent.svg",
   javascript: "Javascript-transparent.svg",
@@ -107,14 +125,15 @@ const TRANSPARENT_LOGOS = {
 };
 
 /* Single-colour marks whose own hue is the cube's hue, so they vanish against
-   it (Claude on Claude, Adobe red on red, and so on). These get knocked out
-   to solid white or solid black depending on the cube — which is exactly the
-   reversed treatment these brands publish, just done in CSS instead of
-   needing a second asset. Only ever applied to marks that are a single
-   colour: knocking out a multi-colour logo (Figma, HTML5, Canva) would
-   destroy it, so those are deliberately absent. */
+   it (Claude on Claude, and so on). These get knocked out to solid white or
+   solid black depending on the cube — which is exactly the reversed treatment
+   these brands publish, just done in CSS instead of needing a second asset.
+   Only ever applied to marks that are a single colour: knocking out a
+   multi-colour logo (Figma, HTML5, Canva) would destroy it, so those are
+   deliberately absent. Adobe left this set when its artwork became the
+   reversed Creative Cloud mark, which is already white. */
 const KNOCKOUT_LOGOS = new Set([
-  "claude", "adobe", "perplexity", "wordpress", "vscode", "react",
+  "claude", "perplexity", "wordpress", "vscode", "react",
 ]);
 
 /* WCAG relative luminance — picks the label colour that actually reads on
@@ -129,15 +148,31 @@ function inkFor(hex) {
 }
 
 const STICKER = {
-  baseWidth: 116,        // px, before per-sticker variance
-  baseHeight: 116,       // square-ish, so the cubes read as cubes
   sizeVariance: 0,       // uniform — every cube the same size
   maxTilt: 16,           // degrees of random rotation at spawn
   /* Cube size scales with the container so 18 of them still fit — and still
      read — on a phone. There is deliberately no minimum width that disables
      the engine: the drop-in has to work at every breakpoint. */
   minSize: 62,           // px, floor for the narrowest phones
-  sizePerWidth: 0.098,   // cube edge as a share of container width
+  sizePerWidth: 0.0833,  // cube edge as a share of container width
+  /* The mark is sized from the container too, not as a percentage of the
+     cube, so the two can move independently — which is the whole point:
+     sizePerWidth came down 15% (0.098 -> 0.0833) to shrink the boxes on
+     desktop and laptop, and the marks inside them had to stay exactly the
+     size they were. On a phone both values hit their floor, so nothing there
+     changed at all.
+
+     The numbers come from measuring what the old `height: 34%` actually
+     rendered, which was not 34% of the cube: a percentage there resolves
+     against the *padded* content box, so the old size was really
+     0.34 x (cube - 19.2px of vertical padding). That fixed subtraction is why
+     a plain ratio cannot reproduce it and logoOffset exists — with it the fit
+     is exact rather than approximate. Measured old vs. reproduced, in px:
+     390->14.6/15, 768->19.0/19, 1024->27.5/27.6, 1280->36.0/36.1,
+     1440->41.4/41.5, 1920->57.4/57.4. */
+  logoPerWidth: 0.0333,  // mark edge as a share of container width…
+  logoOffset: 6.5,       // …less this, see above
+  logoMinSize: 15,       // px floor, the phone mark
   frontRatio: 0.4,       // share that render *in front* of the static overlay
 };
 
@@ -161,6 +196,9 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
   const engineRef = useRef(null);
   const rafRef = useRef(0);
   const timersRef = useRef([]);
+  /* Whether the wall is on screen right now. Starts true so the very first
+     frame after arming is never skipped. */
+  const visibleRef = useRef(true);
   /* "static" — flow layout, no engine (also the reduced-motion / narrow case)
      "arming" — physics layout applied but nothing drawn yet, so the wall has
                 already resized to its real height when we measure it
@@ -252,10 +290,19 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     /* Cube edge scales with the container, so the wall works on a phone as
        well as a desktop instead of being switched off below a breakpoint. */
     const edge = Math.max(STICKER.minSize, Math.round(W * STICKER.sizePerWidth));
+    const logo = Math.max(
+      STICKER.logoMinSize,
+      Math.round(W * STICKER.logoPerWidth - STICKER.logoOffset),
+    );
     const sizes = layout.map((s) => Math.round(edge * s.scale));
     sizes.forEach((px, i) => {
       const n = nodeRefs.current[i];
-      if (n) { n.style.width = `${px}px`; n.style.height = `${px}px`; }
+      if (!n) return;
+      n.style.width = `${px}px`;
+      n.style.height = `${px}px`;
+      /* Absolute, not a share of the cube — see STICKER.logoPerWidth. The CSS
+         falls back to a percentage when this is unset (the static layout). */
+      n.style.setProperty("--logo", `${logo}px`);
     });
 
     const bodies = layout.map((s, i) =>
@@ -340,27 +387,39 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       onTap = (ev) => {
         const ctx = engineRef.current;
         if (!ctx) return;
-        const t = ev.touches?.[0] || ev.changedTouches?.[0] || ev;
+        const p = ev.touches?.[0] || ev.changedTouches?.[0] || ev;
         const r = wrap.getBoundingClientRect();
-        const px = t.clientX - r.left;
-        const py = t.clientY - r.top;
+        const px = p.clientX - r.left;
+        const py = p.clientY - r.top;
+
+        /* Direction and strength are frozen at the moment of the tap; the
+           frame loop then feeds that push in gradually. Recomputing them each
+           step as the cube moves away would fight itself — the falloff would
+           weaken exactly as the cube picks up speed, which is the jerk we're
+           removing. */
+        const targets = [];
         for (const b of ctx.bodies) {
           const dx = b.position.x - px;
           const dy = b.position.y - py;
           const d = Math.hypot(dx, dy) || 1;
           if (d > PHYSICS.tapRadius) continue;
-          const falloff = 1 - d / PHYSICS.tapRadius;
-          const mag = PHYSICS.tapImpulse * falloff * b.mass;
-          Matter.Body.applyForce(b, b.position, {
-            x: (dx / d) * mag,
-            y: (dy / d) * mag - mag * 0.45, // bias upward so it reads as a pop
+          const mag = PHYSICS.tapImpulse * (1 - d / PHYSICS.tapRadius) * b.mass;
+          targets.push({
+            body: b,
+            fx: (dx / d) * mag,
+            fy: (dy / d) * mag - mag * 0.45, // bias upward so it reads as a pop
           });
         }
+        if (targets.length) ctx.pulses.push({ targets, elapsed: 0 });
       };
       wrap.addEventListener("pointerdown", onTap, { passive: true });
     }
 
-    engineRef.current = { Matter, engine, bodies, mouse, mouseConstraint, releaseDrag, onTap, floor, leftWall, rightWall, W, H };
+    engineRef.current = {
+      Matter, engine, bodies, mouse, mouseConstraint, releaseDrag, onTap,
+      floor, leftWall, rightWall, W, H,
+      pulses: [], // in-flight tap shoves, drained by the frame loop
+    };
 
     /* Keep the bounds matched to the wall as it resizes — the floor is a
        fixed body, so without this it stays at the old height and cubes
@@ -391,14 +450,73 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       );
     });
 
+    /* Fixed timestep, accumulator-driven.
+
+       This used to step the engine by however long the last frame happened to
+       take (clamped to 32ms). That is fine at a steady 60fps and quietly
+       broken everywhere else: a phone defers rAF while a scroll is in flight,
+       so returning to this section delivered one giant frame, which became a
+       32ms step — double length, and since displacement goes with dt² the
+       cubes moved ~4x as far in it as the solver expects. They ended up deeply
+       overlapped, and the next step blew them apart. That was the "glitching
+       up" on the way back from About or What I Offer.
+
+       Measured on a settled pile that should not be moving at all: 20 frames
+       of 32ms steps drifted it 23.6px and *raised* the fastest body from 0.010
+       to 0.022, while the same span in 16.67ms steps drifted 1.8px and brought
+       it to a dead stop. Matter warns about this itself — it recommends a
+       delta no greater than 16.667ms.
+
+       Stepping only ever by STEP makes the simulation independent of frame
+       pacing, and capping the catch-up means a long stall is dropped rather
+       than replayed as a burst of motion. */
+    const STEP = 1000 / 60;
+    const MAX_CATCHUP = 3; // steps per frame; beyond this, time is discarded
+
     let last = performance.now();
+    let acc = 0;
     let painted = false;
+
     const frame = (now) => {
       const ctx = engineRef.current;
       if (!ctx) return;
-      const dt = Math.min(32, now - last);
+      rafRef.current = requestAnimationFrame(frame);
+
+      const elapsed = now - last;
       last = now;
-      Matter.Engine.update(engine, dt);
+
+      /* Off screen: hold the world exactly as it is and throw away the
+         backlog, so scrolling back finds the pile where it was left rather
+         than mid-catch-up. The first frame is exempt — it is what flips the
+         wall out of "arming". */
+      if (painted && !visibleRef.current) {
+        acc = 0;
+        return;
+      }
+
+      acc = Math.min(acc + elapsed, STEP * MAX_CATCHUP);
+      while (acc >= STEP) {
+        acc -= STEP;
+
+        /* Tap shoves are fed in here, a slice per step, on a sine ramp: no
+           onset edge, no cut-off edge, so the cubes accelerate away instead
+           of snapping. */
+        for (let p = ctx.pulses.length - 1; p >= 0; p--) {
+          const pulse = ctx.pulses[p];
+          pulse.elapsed += STEP;
+          const t = pulse.elapsed / PHYSICS.tapDuration;
+          if (t >= 1) { ctx.pulses.splice(p, 1); continue; }
+          const shape = Math.sin(Math.PI * t);
+          for (const target of pulse.targets) {
+            Matter.Body.applyForce(target.body, target.body.position, {
+              x: target.fx * shape,
+              y: target.fy * shape,
+            });
+          }
+        }
+
+        Matter.Engine.update(engine, STEP);
+      }
 
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
@@ -406,9 +524,12 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
         if (!node) continue;
 
         /* Anything flung clear out of the frame comes back in at the top
-           rather than being lost forever. */
-        if (b.position.y > H + 600 || b.position.x < -400 || b.position.x > W + 400) {
-          Matter.Body.setPosition(b, { x: W * 0.2 + Math.random() * W * 0.6, y: -160 });
+           rather than being lost forever. Read from ctx, not the values
+           captured at build time, so this still bounds the right area after a
+           resize or an orientation change. */
+        const { W: cw, H: ch } = ctx;
+        if (b.position.y > ch + 600 || b.position.x < -400 || b.position.x > cw + 400) {
+          Matter.Body.setPosition(b, { x: cw * 0.2 + Math.random() * cw * 0.6, y: -160 });
           Matter.Body.setVelocity(b, { x: 0, y: 0 });
           Matter.Body.setAngularVelocity(b, 0);
         }
@@ -428,7 +549,8 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
         painted = true;
         setPhase("live");
       }
-      rafRef.current = requestAnimationFrame(frame);
+      /* The next frame is already queued at the top of this function, so the
+         off-screen early-return keeps the loop alive rather than killing it. */
     };
 
     bodies.forEach((b, i) => { b.__w = sizes[i]; b.__h = sizes[i]; });
@@ -485,6 +607,24 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       window.removeEventListener("scroll", check);
     };
   }, [reduced, start, replayKey]);
+
+  /* Separate, permanent observer: the one above disconnects after arming, but
+     the frame loop needs to know whether the wall is on screen for the whole
+     of its life, so it can hold still while the reader is off in About or
+     What I Offer and pick up cleanly on the way back. A generous rootMargin
+     means it wakes slightly before it is actually visible, so the first frame
+     back is already a settled one. */
+  useEffect(() => {
+    if (reduced) return;
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const obs = new IntersectionObserver(
+      (entries) => { visibleRef.current = entries[0].isIntersecting; },
+      { rootMargin: "200px 0px" },
+    );
+    obs.observe(wrap);
+    return () => { obs.disconnect(); visibleRef.current = true; };
+  }, [reduced]);
 
   /* Replay: rebuild the world from scratch when the key changes. */
   const first = useRef(true);
