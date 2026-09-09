@@ -8,10 +8,13 @@ import {
   useReducedMotion,
   useScroll,
   useSpring,
+  useTransform,
 } from "framer-motion";
-import { ArrowUp, ArrowUpRight, Check, Menu, Minus, Plus, Send } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Layers, LayoutGrid, Menu, Minus, Plus, Send } from "lucide-react";
 import { Toaster, toast } from "sonner";
+import { useLenis } from "./lib/smoothScroll";
 import {
+  BackToTop,
   CountUp,
   EASE,
   IMG,
@@ -24,28 +27,16 @@ import {
 } from "./primitives";
 import "./App.css";
 import Preloader from "./components/site/Preloader";
+import SkillStickerWall from "./components/site/SkillStickerWall";
 import AvatarHero from "./components/ui/AvatarHero";
-import MacBookScroll from "./components/devices/MacBookScroll";
-import Assemble from "./components/devices/Assemble";
 
 /* ========================================================================
    Content
    ======================================================================== */
 
-/* Four numbers, top of page. Each carries how it was measured — a metric
-   without a method reads as decoration.
-   TODO(Eshani): confirm each `method` string matches what you can defend
-   in an interview. Do not ship a method you can't explain. */
-const proof = [
-  [30, "%", "Higher weekly engagement", "OptraHealth", "Post-launch vs. prior release"],
-  [28, "%", "Higher tutorial completion", "OptraHealth", "Across 20+ usability sessions"],
-  [20, "%", "Faster clinician diagnostic tasks", "Onward Technologies", "Timed task testing, pre/post"],
-  [25, "%", "Higher task completion", "Rebecca Everlene Trust Co.", "Pre/post content restructure"],
-];
-
-/* TODO(Eshani): fill in the subpoints for each offering (bullet lists, same
-   pattern as `experience` below). Left empty for now per your notes — an
-   accordion with nothing inside just shows a "Detail coming soon" line. */
+/* TODO(Eshani): fill in the subpoints for each offering (bullet lists).
+   Left empty for now per your notes — an accordion with nothing inside just
+   shows a "Detail coming soon" line. */
 const offerings = [
   ["UX/UI Design", []],
   ["Graphic Design", []],
@@ -53,53 +44,21 @@ const offerings = [
   ["Industrial Design", []],
 ];
 
-const experience = [
-  ["UX/UI Designer", "Rebecca Everlene Trust Company", "Oct 2025 – Present · Chicago, IL",
-    "Leading 0→1 design for a B2C web platform, restructuring dense content into gamified learning modules and integrating AI-automated workflows across 10+ features.",
-    ["Led 0→1 user-centered design from discovery through wireframing, prototyping, and high-fidelity execution.",
-      "Structured complex content into gamified learning modules, increasing task completion by 25% and reducing early-stage drop-off by 40%.",
-      "Partnered with Product and Engineering on AI-driven solutions, flagging technical constraints early and avoiding 2 late-stage redesigns.",
-      "Compressed time-to-prototype by 50% by integrating AI-automated design workflows across 10+ features."]],
-  ["Product Designer", "OptraHealth", "Dec 2024 – Mar 2025 · San Jose, CA",
-    "Primary designer for Zoe, an AI companion, plus onboarding, patient management, and provider monitoring for a health-tech SaaS platform.",
-    ["Shipped mobile onboarding flows, a patient management dashboard, and provider monitoring, lifting weekly engagement by 30%.",
-      "Designed Zoe's interaction layer from the ground up, increasing exercise tutorial completion by 28%.",
-      "Built a 100+ component Figma library adopted by PMs and engineers for independent prototyping.",
-      "Ran 20+ usability and heuristic evaluation sessions, cutting onboarding drop-off among parents by 20%."]],
-  ["UX Designer", "Onward Technologies", "Jul 2024 – Aug 2024 · Chicago, IL",
-    "Designed diagnostic workflows and automated reporting for a regulated B2B health-tech MVP, from journey mapping through high-fidelity delivery.",
-    ["Enabled clinicians to complete diagnostic tasks 20% faster while maintaining compliance in a regulated environment.",
-      "Compressed the MVP timeline from 10 to 7 weeks, eliminating 5 high-severity interaction issues before engineering commitment.",
-      "Set design direction across 3 product pivots through heuristic evaluation and 15+ stakeholder workshops."]],
-  ["Visual Designer", "DAB of India", "Jan 2023 – Aug 2023 · Pune, India",
-    "Built an AI-assisted design workflow across copy, mockups, and social/print assets for 25+ clients.",
-    ["Maintained brand standards across 1,000+ assets with an AI-assisted production workflow.",
-      "Designed brand pitch decks used in client acquisition, contributing to 5+ new client wins."]],
-];
+/* [filename in public/Logos/, visible label]. Feeds both Toolkit views —
+   SkillStickerWall (the physics wall) and ToolGrid below. Covers
+   both the design side and the code side, which is what the section heading
+   claims.
 
+   Ordered by how prominently Eshani actually uses each one, most first. This
+   array is the single source of truth for both views: the marquee scrolls in
+   this order, and the grid reads it left to right, top to bottom. Reorder
+   here, not in either component. */
 const tools = [
-  ["figma", "Figma"], ["framer", "Framer"], ["anthropic", "Claude"], ["openai", "ChatGPT"],
-  ["miro", "Miro"], ["adobephotoshop", "Photoshop"], ["adobeillustrator", "Illustrator"],
-  ["adobeaftereffects", "After Effects"], ["cursor", "Cursor"], ["canva", "Canva"],
-  ["adobecreativecloud", "Adobe CC"], ["wordpress", "WordPress"], ["visualstudiocode", "VS Code"],
-  ["axure", "Axure RP"], ["html5", "HTML5"], ["javascript", "JavaScript"], ["perplexity", "Perplexity"],
-];
-
-/* A denser wall of real screens, dropped between the two lead case studies —
-   more of the actual work visible without a click-through, Brandon Lee
-   Designs-style. Rendered as CSS-column masonry so each image keeps its
-   native aspect ratio instead of being cropped into a uniform tile.
-   myocircle-profile.png was dropped: its 3-phone composite is nearly 2.5x
-   taller than everything else and dominated the grid awkwardly.
-   myocircle-level13.png has the same problem (a single 700x2083 phone
-   composite) but earns its spot on content, so it's capped with the "tall"
-   flag below instead of being cut entirely — see .shot--tall in App.css. */
-const shots = [
-  ["onward-1.png", "Onward's EYE AI product site hero: “Enhance your practice with AI technology.”", "Onward Technologies · EYE AI", "The site clinicians land on first"],
-  ["myocircle-interaction.png", "MyoCircle exercise screen with Zoe's congratulations card after a completed exercise, awarding points.", "OptraHealth · MyoCircle", "Zoe's encouragement moment, mid-exercise"],
-  ["travelogue-tripdetail.png", "Travelogue trip detail screen with people, map locations, and an itinerary hub.", "Travelogue", "One trip: people, places, and itinerary in one hub"],
-  ["myocircle-day1.png", "MyoCircle Day 1 exercise screen with a guided video, sets and reps tracking, and a Start Exercise button.", "OptraHealth · MyoCircle", "Where a session starts"],
-  ["myocircle-level13.png", "MyoCircle workout progress screen showing Level 13, 25% progress, and the Day 1 exercise video queue.", "OptraHealth · MyoCircle", "Progress and the exercise queue", true],
+  ["figma", "Figma"], ["claude", "Claude"], ["vscode", "VS Code"], ["html5", "HTML5"],
+  ["javascript", "JavaScript"], ["react", "React"], ["cursor", "Cursor"], ["framer", "Framer"],
+  ["photoshop", "Photoshop"], ["illustrator", "Illustrator"], ["after-effects", "After Effects"], ["miro", "Miro"],
+  ["adobe", "Adobe CC"], ["canva", "Canva"], ["openai", "ChatGPT"], ["wordpress", "WordPress"],
+  ["axure", "Axure RP"], ["perplexity", "Perplexity"],
 ];
 
 const navItems = [
@@ -179,166 +138,294 @@ function Cursor() {
 }
 
 /* ========================================================================
-   Tool marquee
+   Tool marquee / grid
    ======================================================================== */
 
-function ToolMarquee({ theme }) {
-  const ink = theme === "paper" ? "14130F" : theme === "petrol" ? "E4F1F2" : "F4F2ED";
+/* Themes whose page background is dark. */
+const DARK_THEMES = new Set(["carbon", "petrol"]);
+
+/* Brands that publish a second mark for dark backgrounds, sitting alongside
+   the default as <slug>-dark.svg. Framer/ChatGPT/Cursor/Axure are black by
+   design and would all but vanish; React's is a lighter blue than its
+   on-light version. Everything else keeps one piece of artwork across all
+   three themes — a multi-colour logo can't be tinted without
+   misrepresenting the mark. */
+const THEME_VARIANT_LOGOS = new Set(["framer", "openai", "cursor", "axure", "react"]);
+
+/* Where the filename doesn't follow the slug. The grid wants Adobe's own
+   Creative Cloud app icon — the one on its coloured tile — rather than the
+   bare corporate "A": tiles here sit on the page background next to
+   Photoshop, Illustrator and After Effects, which are all app icons on their
+   own tiles, so the tile is what makes it match. (The wall is the opposite
+   case and uses the bare mark, since a tile inside a coloured cube reads as a
+   box in a box.) */
+const GRID_LOGO_FILES = {
+  adobe: "adobe-cc-tile.svg",
+};
+
+/* Per-logo size correction. Every tile gets the same box, but the artwork
+   inside each file doesn't fill its own viewBox by the same amount — Adobe's
+   CC icon carries noticeably more built-in padding than its neighbours, so at
+   an identical box it reads smaller than Photoshop or Illustrator next to it.
+   This nudges the drawn mark, not the box or the layout. */
+const GRID_LOGO_SCALE = {
+  adobe: 1.05,
+};
+
+/* Logos are the brands' own full-colour marks, served locally from
+   public/Logos/ (was cdn.simpleicons.org, which only had monochrome marks
+   and cost 17 external requests). */
+function ToolLogo({ slug, name, size, theme }) {
+  const onDark = THEME_VARIANT_LOGOS.has(slug) && DARK_THEMES.has(theme);
+  const file = GRID_LOGO_FILES[slug] || `${slug}${onDark ? "-dark" : ""}.svg`;
+  /* Inline, because the px size the grid uses lives in CSS and would other-
+     wise win over the width/height attributes. */
+  const px = Math.round(size * (GRID_LOGO_SCALE[slug] || 1));
   return (
-    <div className="tool-marquee" aria-label="Tools of the trade" data-testid="tool-marquee">
-      <div className="tool-track">
-        {[...tools, ...tools].map(([slug, name], i) => (
-          <span className="tool-tile" key={`${slug}-${i}`}>
-            <img
-              src={`https://cdn.simpleicons.org/${slug}/${ink}`}
-              alt=""
-              width="19"
-              height="19"
-              loading="lazy"
-              onError={(e) => { e.currentTarget.style.display = "none"; }}
-            />
-            {name}
-          </span>
-        ))}
-      </div>
+    <span className="tool-tile">
+      <img
+        src={`${process.env.PUBLIC_URL}/Logos/${file}`}
+        alt=""
+        width={px}
+        height={px}
+        style={px === size ? undefined : { width: px, height: px }}
+        loading="lazy"
+        decoding="async"
+        onError={(e) => { e.currentTarget.style.display = "none"; }}
+      />
+      <span className="tool-tile-label">{name}</span>
+    </span>
+  );
+}
+
+/* Static four-across grid, centred on the page. Laid out with wrapping flex
+   rather than CSS grid so the final short row (18 tools don't divide by 4)
+   centres itself instead of hanging off the left edge. */
+function ToolGrid({ theme }) {
+  return (
+    <div className="tool-grid" aria-label="Tools of the trade" data-testid="tool-grid">
+      {tools.map(([slug, name]) => (
+        <ToolLogo key={slug} slug={slug} name={name} size={77} theme={theme} />
+      ))}
     </div>
   );
 }
 
 /* ========================================================================
-   02 — chaptered case study (EYE AI)
+   Selected work — one shared card template, driven by data, so all six
+   entries (five projects + the screens gallery) render identically and
+   the sticky-stack below just repeats one component. Content here is the
+   same information already live elsewhere (the EYE AI/Rebecca/Travelogue/
+   DAB fields mirror caseStudies.js and the case-study rail this replaces
+   on the homepage teaser) — nothing is new copy, just reshaped to fit.
    ======================================================================== */
 
-function CaseStudy({ go }) {
-  const [active, setActive] = useState("ch-1");
-  const flowRef = useRef(null);
+const workCards = [
+  {
+    key: "optra",
+    testId: "project-card-optra",
+    index: "01",
+    company: "OptraHealth",
+    statusLabel: "Full case study",
+    role: "Product Designer · Dec 2024 – Mar 2025 · San Jose, CA",
+    title: "Pediatric Therapy App",
+    quiet: "(Zoe, an AI companion inside a health-tech platform)",
+    subtitle: "Companion-guided app connecting patients, parents, and providers.",
+    desc: "Primary designer for Zoe, building the interaction layer from the ground up alongside mobile onboarding, a patient management dashboard, and provider monitoring. Validated across 20+ usability and heuristic evaluation sessions with patients, parents, and providers.",
+    metrics: [
+      { value: <CountUp value={30} suffix="%" />, label: "Weekly engagement ↑", method: "Post-launch vs. prior release" },
+      { value: <CountUp value={28} suffix="%" />, label: "Tutorial completion ↑", method: "Across 20+ sessions" },
+      { value: <CountUp value={100} suffix="+" />, label: "Component library", method: "Adopted by PMs and engineers" },
+    ],
+    tags: ["AI companion", "Healthcare SaaS", "Design system"],
+    image: { src: "myocircle-cover.png", alt: "MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow." },
+    cursorLabel: "MyoCircle",
+    link: "/work/optrahealth",
+    linkLabel: "Read the case study",
+    linkTestId: "read-case-optra",
+  },
+  {
+    key: "eyeai",
+    testId: "project-card-eyeai",
+    index: "02",
+    company: "Onward Technologies · EYE AI",
+    statusLabel: "Full case study",
+    role: "UX Designer · Jul 2024 – Aug 2024 · Chicago, IL",
+    title: "Retinal Diagnostic Platform",
+    subtitle: "Streamlining complex diagnostics into a unified, actionable experience.",
+    desc: "Streamlining complex diagnostics into one unified, actionable experience for clinicians: a regulated B2B health-tech MVP followed end to end, from heuristic evaluation and stakeholder research through journey mapping, iterative prototyping, and high-fidelity delivery of a diagnostic tool clinicians could trust.",
+    metrics: [
+      { value: <CountUp value={20} suffix="%" />, label: "Faster diagnostic tasks", method: "Timed task testing, pre/post" },
+      { value: "10→7", label: "Week MVP timeline", method: "Against the original delivery plan" },
+    ],
+    tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
+    image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
+    cursorLabel: "EYE AI",
+    link: "/work/eye-ai",
+    linkLabel: "Open full case study",
+    linkTestId: "read-case-eye-ai",
+  },
+  {
+    key: "travelogue",
+    testId: "project-card-travelogue",
+    index: "03",
+    company: "Travelogue",
+    statusLabel: "Full case study",
+    role: "Product Designer · Personal case study · 2025",
+    title: "Travelogue",
+    desc: "A self-initiated, research-led concept that consolidates trip planning into one home: upcoming trips, itineraries, documents, and the people coming along, shaped directly by traveler interviews about offline access, group coordination, and expense tracking.",
+    metrics: [
+      { value: "08", label: "Traveler interviews" },
+      { value: "05", label: "Unmet needs mapped" },
+    ],
+    tags: ["Personal project", "Mobile UX", "Research-led"],
+    image: { src: "travelogue-cover.png", alt: "Travelogue home feed and a group trip hub shown side by side on two phones." },
+    cursorLabel: "Travelogue",
+    link: "/work/travelogue",
+    linkLabel: "Read case study",
+    linkSrOnly: "Travelogue",
+    linkTestId: "read-case-travelogue",
+  },
+];
 
-  useEffect(() => {
-    const root = flowRef.current;
-    if (!root) return;
-    const chapters = root.querySelectorAll(".chapter");
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => { if (en.isIntersecting) setActive(en.target.id); });
-      },
-      { rootMargin: "-30% 0px -55% 0px" },
-    );
-    chapters.forEach((c) => obs.observe(c));
-    return () => obs.disconnect();
-  }, []);
+/* Depth-of-stack values for one card, i of total, driven by the whole
+   stack's own scroll progress (see the `stackProgress` MotionValue set up
+   in App() and passed down here — computed once for the whole section,
+   not per-card scroll tracking). Card i owns the [i/total, (i+1)/total]
+   slice of that progress: it sits at rest (scale 1, full brightness) until
+   the next card's turn begins, then recedes — scaling down, dimming, and
+   gaining a deeper shadow — as it gets covered. The last card never has
+   anything covering it, so its range is left neutral. Purely a visual
+   read of the *existing* sticky-stack scroll; it doesn't change the
+   trigger points, the top-offset stagger, or the stack's scroll length.
 
-  const chapters = [["ch-1", "01", "Research"], ["ch-2", "02", "Method"], ["ch-3", "03", "Interface"]];
+   Scale only — no opacity dim, no blur, no shadow. Cards stay flush,
+   full-opacity, with their existing border as the only edge treatment;
+   the shrinking width/height against the next (undimmed) card is what
+   reads as "receding." Once a card is fully covered it's simply hidden
+   behind the next one — nothing keeps it partially visible on purpose,
+   so there's no multi-tier depth to track, just this card's own single
+   handoff to the one right after it. */
+function useCardDepth(progress, i, total) {
+  const reduced = useReducedMotion();
+  const isLast = i >= total - 1;
+  const start = i / total;
+  const end = (i + 1) / total;
+
+  /* Two distinct phases, sharing only the "home" position (scale 1, y 0 —
+     at progress = start, the exact spot the previous card recedes FROM
+     and this one arrives AT) as their single handoff point:
+
+     - Incoming (before `start`, i.e. the previous card's own [i-1, i]
+       window): Y only, sliding up from RECEDE_Y to 0. Scale stays flat
+       at 1 for this entire phase — no scale-down while still arriving.
+       That fall-through is automatic: `scale` below is a plain 2-point
+       [start, end] transform, so useTransform just clamps it to its
+       first value (1) for any progress before `start`.
+     - Outgoing (this card's own [start, end] window, unchanged): scale
+       1 -> RECEDE_SCALE and y 0 -> RECEDE_Y together, only once this
+       card is already home and the next one begins entering. */
+  const RECEDE_SCALE = 0.8;
+  const RECEDE_Y = 48;
+
+  const yPoints = [];
+  const yVals = [];
+  if (i > 0) {
+    yPoints.push((i - 1) / total);
+    yVals.push(RECEDE_Y);
+  }
+  yPoints.push(start);
+  yVals.push(0);
+  if (!isLast) {
+    yPoints.push(end);
+    yVals.push(RECEDE_Y);
+  }
+
+  const rawScale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : RECEDE_SCALE], { clamp: true });
+  const rawY = useTransform(progress, yPoints, reduced ? yPoints.map(() => 0) : yVals, { clamp: true });
+  /* Step 2 — scroll inertia: the target values/breakpoints above are
+     untouched (same trigger points, same home position, same scroll
+     distance); this just smooths the *rendered* number trailing behind
+     them each frame, instead of snapping 1:1 to scroll. Damping stays
+     just above 2·√(stiffness·mass) (~1.15x critical) so it still never
+     overshoots past the target — a lag, not a bounce. Settle time scales
+     with √(mass/stiffness): stiffness 300 (original) settled in ~1-2
+     frames; 120 (previous pass) landed around 300-400ms; this is a
+     further ~2.4x drop in stiffness (~6x off the original 300),
+     targeting a ~600-800ms settle (time constant √(mass/stiffness) ≈
+     141ms, ×5 to reach ~99% ≈ 707ms).
+     Always called (Rules of Hooks — reduced can change at runtime), but
+     it's a no-op under reduced-motion: rawScale/rawY are already flat
+     constants there, and a spring only produces motion when its input
+     changes, so nothing animates either way. */
+  const springConfig = { stiffness: 50, damping: 16, mass: 1 };
+  const scale = useSpring(rawScale, springConfig);
+  const y = useSpring(rawY, springConfig);
+  /* Same threshold as the scale-down's own end point — unchanged — but a
+     hard step instead of an eased fade: full opacity for the entire time
+     the card is shrinking, then it disappears outright the instant it's
+     fully covered, rather than gradually dimming into that state. */
+  const opacity = useTransform(progress, (p) => (reduced || isLast || p < end ? 1 : 0));
+  return { scale, y, opacity };
+}
+
+function StackCard({ i, total, progress, card }) {
+  const {
+    testId, index, company, role, title, quiet, subtitle, desc,
+    confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
+  } = card;
+  const { scale, y, opacity } = useCardDepth(progress, i, total);
 
   return (
-    <div className="case">
-      <div className="case-rail">
-        <Reveal>
-          <p className="lead-index">Onward Technologies · EYE AI</p>
-          <h3 data-testid="case-study-heading">
-            Retinal Diagnostic Platform
-          </h3>
-          <p className="lead-subtitle">
-            Streamlining complex diagnostics into a unified, actionable experience.
-          </p>
-          <p className="lead-role">UX Designer · Jul 2024 – Aug 2024 · Chicago, IL</p>
-          <div className="case-metrics">
-            <div>
-              <div className="m-value"><CountUp value={20} suffix="%" /></div>
-              <div className="m-label">Faster diagnostic tasks</div>
-              <div className="m-method">Timed task testing, pre/post</div>
-            </div>
-            <div>
-              <div className="m-value">10→7</div>
-              <div className="m-label">Week MVP timeline</div>
-              <div className="m-method">Against the original delivery plan</div>
-            </div>
-          </div>
-          <ul className="case-highlights" data-testid="case-highlights-eye-ai">
-            <li><Check size={15} /> Unified patient data, AI image analysis, and reporting into one clinical interface.</li>
-            <li><Check size={15} /> Compressed MVP delivery timeline by 3 weeks through rapid prototyping and usability validation.</li>
-            <li><Check size={15} /> Enabled clinicians to streamline diagnostic tasks 20% quicker while maintaining regulatory compliance.</li>
-          </ul>
-          <figure className="case-cover-preview">
-            <Wipe
-              src={IMG("onward-1.png")}
-              alt="Eye AI product site: onboarding clinicians to the diagnostic platform"
-              testId="case-onward-cover"
-            />
-          </figure>
-          <nav className="chapter-nav" aria-label="Case study chapters">
-            <ul>
-              {chapters.map(([id, n, label]) => (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    aria-current={active === id}
-                    data-testid={`chapter-nav-${id}`}
-                    onClick={(e) => { e.preventDefault(); go(id); }}
-                  >
-                    <span className="n">{n}</span> {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <Link
-            to="/work/eye-ai"
-            className="read-case"
-            data-testid="read-case-eye-ai"
-            style={{ marginTop: "1.6rem" }}
-          >
-            Open full case study <ArrowUpRight size={14} />
+    <Reveal className="stack-item" style={{ "--i": i }}>
+      <motion.article
+        className={`lead-panel${image ? "" : " no-image"}`}
+        data-testid={testId}
+        style={{ scale, y, opacity, originX: 0.5, originY: 0 }}
+      >
+        <div className="lead-top">
+          <span className="lead-index">{index} · {company}</span>
+          {/* Was a static "Full case study" status pill, with the actual
+              read-case link duplicated below under the tags. Consolidated
+              into one clickable CTA here — same pill look (.status-pill),
+              now an actual Link — so there's a single, unambiguous way to
+              open the case study instead of two. */}
+          <Link to={link} className="status-pill" data-testid={card.linkTestId}>
+            {linkLabel}{linkSrOnly && <span className="sr-only"> — {linkSrOnly}</span>} <ArrowUpRight size={14} />
           </Link>
-        </Reveal>
-      </div>
-
-      <div className="chapter-flow" ref={flowRef}>
-        <article className="chapter" id="ch-1">
-          <Reveal>
-            <p className="section-label">01 · Research</p>
-            <h4>Where clinicians lose time.</h4>
-            <p>
-              Applied heuristic evaluation and competitive analysis across 15+ stakeholder
-              workshops to set design direction through 3 product pivots, directly reshaping
-              sprint priorities and roadmap sequencing.
-            </p>
-          </Reveal>
-        </article>
-
-        <article className="chapter" id="ch-2">
-          <Reveal>
-            <p className="section-label">02 · Method</p>
-            <h4>A defined path from research to handoff.</h4>
-            <p>
-              Journey mapping through wireframing, iterative prototyping, and high-fidelity
-              delivery. Compressed the MVP timeline from 10 to 7 weeks through user-centered
-              prototyping and early usability validation, eliminating 5 high-severity
-              interaction issues before engineering commitment.
-            </p>
-          </Reveal>
-        </article>
-
-        <article className="chapter" id="ch-3">
-          <Reveal>
-            <p className="section-label">03 · Interface</p>
-            <h4>The clinician&rsquo;s four minutes.</h4>
-            <p>
-              Diagnostic workflows and automated reporting for a B2B health-tech platform MVP,
-              enabling clinicians to complete diagnostic tasks 20% faster while maintaining
-              compliance in a regulated environment.
-            </p>
-          </Reveal>
-          <div className="chapter-art">
-            <MacBookScroll
-              src={IMG("eyeai-cover.png")}
-              alt="Eye AI clinician dashboard listing patients with diagnostic status and images analyzed."
-              caption="Patient dashboard: status and diagnostic queue at a glance"
-              testId="case-image-cover"
-            />
+        </div>
+        <div className="lead-columns">
+          <div className="lead-col-text">
+            <p className="lead-role" style={{ marginTop: ".75rem" }}>{role}</p>
+            <h3 {...(cursorLabel && image ? { "data-cursor": cursorLabel, "data-cursor-img": IMG(image.src) } : {})}>
+              {title} {quiet && <span className="quiet">{quiet}</span>}
+            </h3>
+            {subtitle && <p className="lead-subtitle">{subtitle}</p>}
+            <p className="lead-desc">{desc}</p>
+            {confidentialNote && <p className="nda-note">{confidentialNote}</p>}
+            {metrics?.length > 0 && (
+              <div className="lead-metrics">
+                {metrics.map((m, mi) => (
+                  <div key={mi}>
+                    <div className="m-value">{m.value}</div>
+                    <div className="m-label">{m.label}</div>
+                    {m.method && <div className="m-method">{m.method}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="lead-tags tag-row">
+              {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
+            </div>
           </div>
-        </article>
-      </div>
-    </div>
+          {image && (
+            <div className="lead-media" data-cursor={cursorLabel}>
+              <Wipe src={IMG(image.src)} alt={image.alt} testId={`project-image-${card.key}`} />
+            </div>
+          )}
+        </div>
+      </motion.article>
+    </Reveal>
   );
 }
 
@@ -348,14 +435,36 @@ function CaseStudy({ go }) {
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/+$/, "");
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [state, setState] = useState("idle");
+  const [errors, setErrors] = useState({});
+  const fieldRefs = { name: useRef(null), email: useRef(null), message: useRef(null) };
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const validate = () => {
+    const next = {};
+    if (!form.name.trim()) next.name = "Enter your name.";
+    if (!form.email.trim()) next.email = "Enter your email address.";
+    else if (!EMAIL_RE.test(form.email)) next.email = "Enter an email address like name@example.com.";
+    if (!form.message.trim()) next.message = "Enter a message.";
+    return next;
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     if (state === "sending") return;
+
+    const nextErrors = validate();
+    setErrors(nextErrors);
+    const firstInvalid = ["name", "email", "message"].find((k) => nextErrors[k]);
+    if (firstInvalid) {
+      fieldRefs[firstInvalid].current?.focus();
+      return;
+    }
+
     setState("sending");
     try {
       const res = await fetch(`${API_BASE}/api/messages`, {
@@ -383,18 +492,51 @@ function ContactForm() {
   }
 
   return (
-    <form className="contact-form" onSubmit={submit} data-testid="contact-form" noValidate={false}>
+    <form className="contact-form" onSubmit={submit} data-testid="contact-form" noValidate>
       <div className="form-field">
         <label htmlFor="cf-name">Your name</label>
-        <input id="cf-name" name="name" required value={form.name} onChange={set("name")} data-testid="contact-form-name" autoComplete="name" />
+        <input
+          id="cf-name"
+          name="name"
+          ref={fieldRefs.name}
+          value={form.name}
+          onChange={set("name")}
+          data-testid="contact-form-name"
+          autoComplete="name"
+          aria-invalid={errors.name ? "true" : undefined}
+          aria-describedby={errors.name ? "cf-name-error" : undefined}
+        />
+        {errors.name && <p className="form-error" id="cf-name-error" role="alert">{errors.name}</p>}
       </div>
       <div className="form-field">
         <label htmlFor="cf-email">Your email</label>
-        <input id="cf-email" name="email" type="email" required value={form.email} onChange={set("email")} data-testid="contact-form-email" autoComplete="email" />
+        <input
+          id="cf-email"
+          name="email"
+          type="email"
+          ref={fieldRefs.email}
+          value={form.email}
+          onChange={set("email")}
+          data-testid="contact-form-email"
+          autoComplete="email"
+          aria-invalid={errors.email ? "true" : undefined}
+          aria-describedby={errors.email ? "cf-email-error" : undefined}
+        />
+        {errors.email && <p className="form-error" id="cf-email-error" role="alert">{errors.email}</p>}
       </div>
       <div className="form-field">
         <label htmlFor="cf-message">What&rsquo;s on your mind?</label>
-        <textarea id="cf-message" name="message" required value={form.message} onChange={set("message")} data-testid="contact-form-message" />
+        <textarea
+          id="cf-message"
+          name="message"
+          ref={fieldRefs.message}
+          value={form.message}
+          onChange={set("message")}
+          data-testid="contact-form-message"
+          aria-invalid={errors.message ? "true" : undefined}
+          aria-describedby={errors.message ? "cf-message-error" : undefined}
+        />
+        {errors.message && <p className="form-error" id="cf-message-error" role="alert">{errors.message}</p>}
       </div>
       <button
         type="submit"
@@ -414,19 +556,33 @@ function ContactForm() {
    ======================================================================== */
 
 export default function App() {
+  const lenis = useLenis();
   const [theme, setTheme] = useTheme();
   const [menu, setMenu] = useState(false);
-  const [openExp, setOpenExp] = useState(null);
   const [openOffer, setOpenOffer] = useState(null);
-  const [showTop, setShowTop] = useState(false);
+  const [toolsView, setToolsView] = useState("wall"); // "wall" | "grid"
+  const [wallReplay, setWallReplay] = useState(0);     // bump to re-drop the stickers
   const [activeSection, setActiveSection] = useState("");
   const headerRef = useRef(null);
+  const navToggleRef = useRef(null);
+  const menuCloseRef = useRef(null);
+  const wasMenuOpen = useRef(false);
   const { scrollY, scrollYProgress } = useScroll();
+
+  /* Scroll progress across the whole "Selected work" sticky stack (not
+     the whole-page one above) — feeds StackCard's depth effect. See
+     useCardDepth for how each card reads its own slice of it. Doesn't
+     touch the stack's own sticky top-offsets/CSS. */
+  const stackRef = useRef(null);
+  const { scrollYProgress: stackProgress } = useScroll({
+    target: stackRef,
+    offset: ["start start", "end start"],
+  });
+  const STACK_TOTAL = workCards.length;
 
   /* Header compression */
   useMotionValueEvent(scrollY, "change", (y) => {
     headerRef.current?.style.setProperty("--p", Math.min(1, y / 120).toFixed(3));
-    setShowTop(y > 600);
   });
 
   /* Which nav item is current */
@@ -444,31 +600,158 @@ export default function App() {
     return () => obs.disconnect();
   }, []);
 
-  /* Native smooth scrolling — Lenis was removed. Its momentum curve fought
-     the macOS trackpad and desynced from the OS, which is the single most
-     common complaint about portfolio sites on a hiring manager's laptop. */
-  const go = useCallback((id) => {
-    setMenu(false);
-    if (id === "top") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
+  /* Undoes the menu's body pin and puts the document scroll back where it
+     was. Held in a ref rather than closed over by the effect so that go() can
+     call it early; a second call does nothing. Declared above go() because
+     go() depends on it. */
+  const scrollLockRef = useRef(null);
+  const releaseScrollLock = useCallback(() => {
+    const lock = scrollLockRef.current;
+    if (!lock) return;
+    scrollLockRef.current = null;
+    document.body.classList.remove("menu-open");
+    document.body.style.top = "";
+    /* Restore through Lenis, not window.scrollTo, whenever it is running.
+       Lenis keeps its own idea of the scroll position and ignores scroll
+       events it did not cause while stopped, so a bare window.scrollTo here
+       left it believing the page was still at 0 while the document sat
+       hundreds of pixels down. Every later scrollTo would then animate from
+       that stale origin — and if the stale origin happened to be near the
+       target, Lenis would conclude it had already arrived and do nothing at
+       all. `immediate` moves both the page and Lenis's own state together. */
+    if (lock.lenis) {
+      lock.lenis.start();
+      lock.lenis.scrollTo(lock.y, { immediate: true, force: true });
+    } else {
+      window.scrollTo(0, lock.y);
     }
-    const el = document.getElementById(id);
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - 90;
-    window.scrollTo({ top, behavior: "smooth" });
   }, []);
 
-  /* Menu: lock the page, close on Escape */
+  /* Nav-link scrolling goes through Lenis (when it's ready) so a click feels
+     like the same momentum as a manual scroll, rather than the browser's
+     separate smooth-scroll curve. Falls back to native smooth scroll if
+     Lenis hasn't mounted yet. */
+  const go = useCallback((id) => {
+    /* Release the menu's scroll lock *before* measuring anything. While the
+       lock is on, <body> is position:fixed at a negative offset and
+       window.scrollY reads 0, so a getBoundingClientRect-based target comes
+       out short by exactly the locked scroll position — and then the lock's
+       own restore-on-close would scroll back over the top of the navigation
+       anyway. Releasing first fixes both: the page is a normal scrolling
+       document again by the time the target is computed. */
+    releaseScrollLock();
+    setMenu(false);
+    const top = id === "top" ? 0 : (() => {
+      const el = document.getElementById(id);
+      return el ? el.getBoundingClientRect().top + window.scrollY - 90 : null;
+    })();
+    if (top === null) return;
+
+    if (!lenis) {
+      window.scrollTo({ top, behavior: "smooth" });
+      return;
+    }
+
+    lenis.scrollTo(top, { duration: 1.2, force: true });
+
+    /* Safety net. Lenis animates from a requestAnimationFrame loop, so if that
+       loop is not running — or its internal position has drifted far enough
+       that it thinks it has already arrived — scrollTo is dropped in silence
+       and the link does nothing whatsoever, which is the one outcome a nav
+       link must never have. 250ms in, this easing is ~75% of the way, so any
+       real scroll has visibly started by then; if nothing has moved, finish
+       the job natively.
+
+       This is a guard, not a diagnosis: Eshani hit dead nav links on the
+       deployed preview that could not be reproduced here, because Chrome
+       suspends rAF in the backgrounded tab this gets tested from, which makes
+       the frame-driven path unobservable. The check is cheap and cannot fire
+       when the scroll is working.
+
+       The fallback jumps rather than easing on purpose. Whatever stops Lenis
+       animating — a suspended frame loop most likely — stops the browser's own
+       smooth scroll for exactly the same reason, so asking for `smooth` here
+       reproduces the failure instead of escaping it. Verified: with frames
+       suspended, a `smooth` fallback still went nowhere; an instant one
+       arrives. */
+    const from = window.scrollY;
+    window.setTimeout(() => {
+      const movedNothing = Math.abs(window.scrollY - from) < 4;
+      const hadSomewhereToGo = Math.abs(top - from) > 8;
+      if (movedNothing && hadSomewhereToGo) window.scrollTo(0, top);
+    }, 250);
+  }, [lenis, releaseScrollLock]);
+
+  /* Landing here with #work in the URL (e.g. the case-study page's "←
+     Selected work" back button) should scroll to that section, not sit at
+     the top of the page — the browser's own hash-scroll can't be relied on
+     here since Lenis owns scroll and the hero above #work is still
+     laying out right after mount. One-time effect (empty deps, so it can't
+     double-fire once Lenis finishes initializing): a short delay lets
+     Lenis's own mount effect (in index.js, a sibling/ancestor effect that
+     hasn't necessarily run yet on this same commit) finish setting up, and
+     `lenisRef` — kept in sync every render — is read at call time so this
+     always sees the current instance rather than whatever `lenis` was
+     when the effect first ran. */
+  const lenisRef = useRef(lenis);
+  useEffect(() => { lenisRef.current = lenis; }, [lenis]);
   useEffect(() => {
-    if (menu) document.body.classList.add("menu-open");
-    else document.body.classList.remove("menu-open");
+    if (window.location.hash !== "#work") return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("work");
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 90;
+      if (lenisRef.current) lenisRef.current.scrollTo(top, { duration: 1.2 });
+      else window.scrollTo({ top, behavior: "smooth" });
+    }, 80);
+    return () => clearTimeout(t);
+  }, []);
+
+  /* Menu scroll lock.
+
+     `overflow: hidden` on <body> alone does not hold on iOS Safari — the page
+     keeps scrolling behind the open panel, so closing the menu dropped the
+     reader somewhere else entirely. Pinning the body with position:fixed at a
+     negative offset is the lock that actually works there; the offset keeps
+     the page looking unmoved, and the scroll position is put back by hand on
+     close. Lenis is paused for the duration because on desktop it drives
+     window scroll itself and would fight the pin.
+
+     Releasing is a named function rather than an inline cleanup because a nav
+     link has to be able to release it *early* — see go(). It is idempotent,
+     so the effect cleanup running afterwards is a no-op. */
+  useEffect(() => {
+    if (!menu) return;
+    const lenisNow = lenisRef.current;
+    lenisNow?.stop();
+    const y = window.scrollY;
+    scrollLockRef.current = { y, lenis: lenisNow };
+    document.body.classList.add("menu-open");
+    document.body.style.top = `-${y}px`;
+    return releaseScrollLock;
+  }, [menu, releaseScrollLock]);
+
+  /* Menu: close on Escape, manage focus in/out of the panel */
+  useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") setMenu(false); };
     window.addEventListener("keydown", onKey);
+
+    if (menu) {
+      menuCloseRef.current?.focus();
+    } else if (wasMenuOpen.current) {
+      navToggleRef.current?.focus();
+    }
+    wasMenuOpen.current = menu;
+
     return () => window.removeEventListener("keydown", onKey);
   }, [menu]);
 
-  useEffect(() => () => document.body.classList.remove("menu-open"), []);
+  /* Unmount safety net: never leave the body pinned if the tree goes away
+     with the menu still open. */
+  useEffect(() => () => {
+    document.body.classList.remove("menu-open");
+    document.body.style.top = "";
+  }, []);
 
   return (
     <div className="portfolio-shell">
@@ -487,7 +770,7 @@ export default function App() {
             onClick={(e) => { e.preventDefault(); go("top"); }}
           >
             <img
-              src={`${process.env.PUBLIC_URL}/logo/${theme === "paper" ? "black-logo.svg" : "logo-white.svg"}`}
+              src={`${process.env.PUBLIC_URL}/es-logo/${theme === "paper" ? "black-logo.svg" : "logo-white.svg"}`}
               alt=""
               className="wordmark-logo"
             />
@@ -520,13 +803,14 @@ export default function App() {
               rel="noopener noreferrer"
               data-testid="nav-resume"
             >
-              Resume
+              Resume<span className="sr-only"> (opens in new tab)</span>
             </a>
           </nav>
 
           <div className="header-right">
             <ThemeSwitch theme={theme} setTheme={setTheme} />
             <button
+              ref={navToggleRef}
               className="nav-toggle"
               onClick={() => setMenu(true)}
               aria-expanded={menu}
@@ -547,7 +831,13 @@ export default function App() {
         data-testid="mobile-menu"
         aria-hidden={!menu}
       >
-        <button className="mobile-menu-close" onClick={() => setMenu(false)} data-testid="mobile-menu-close">
+        <button
+          ref={menuCloseRef}
+          className="mobile-menu-close"
+          onClick={() => setMenu(false)}
+          tabIndex={menu ? 0 : -1}
+          data-testid="mobile-menu-close"
+        >
           Close
         </button>
         <ul>
@@ -573,323 +863,81 @@ export default function App() {
               tabIndex={menu ? 0 : -1}
               onClick={() => setMenu(false)}
             >
-              Resume
+              Resume<span className="sr-only"> (opens in new tab)</span>
               <ArrowUpRight size={20} />
             </a>
           </li>
         </ul>
-        <ThemeSwitch theme={theme} setTheme={setTheme} mobile />
+        <ThemeSwitch theme={theme} setTheme={setTheme} mobile tabIndex={menu ? 0 : -1} />
       </div>
 
       <main id="main">
-        <AvatarHero go={go} theme={theme} />
+        <AvatarHero theme={theme} go={go} />
 
-        {/* ---------- proof strip ---------- */}
-        <section className="proof-strip" aria-label="Selected outcomes">
-          <div className="container proof-grid">
-            {proof.map(([v, s, label, ctx, method]) => (
-              <div className="proof-item" key={label}>
-                <div className="proof-value"><CountUp value={v} suffix={s} /></div>
-                <div className="proof-label">{label}</div>
-                <div className="proof-context">{ctx}</div>
-                <div className="proof-method">{method}</div>
-              </div>
-            ))}
+        {/* ---------- design ---------- */}
+        <section className="section" id="design">
+          <div className="container hero-content-bottom">
+            <h1 className="hero-main-title" data-testid="design-heading">
+              <SplitText text="Designing clarity into" delay={0.05} />{" "}
+              <SplitText text="complex systems." className="hero-serif-accent" delay={0.185} />
+            </h1>
+
+            <p className="hero-lede-text">
+              I work across healthcare, AI, and enterprise products, using research,
+              systems thinking, and interactive craft to make complex experiences
+              easier to understand and navigate.
+            </p>
+
+            <div className="hero-btn-group">
+              <Magnetic>
+                <a
+                  href="#work"
+                  className="btn btn-primary"
+                  data-testid="hero-work-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    go("work");
+                  }}
+                >
+                  Explore selected work <ArrowDown size={16} />
+                </a>
+              </Magnetic>
+              <Magnetic>
+                <a
+                  href="#contact"
+                  className="btn btn-secondary"
+                  data-testid="hero-contact-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    go("contact");
+                  }}
+                >
+                  Hire Me <ArrowDown size={16} />
+                </a>
+              </Magnetic>
+            </div>
           </div>
         </section>
 
-        {/* ---------- 01 lead project — OptraHealth (has shippable screens) ---------- */}
+        {/* ---------- selected work — one unified sticky-stack ----------
+             Three entries share one card template (StackCard) and one
+             .stack, so scrolling through this section is a single
+             continuous stacking sequence instead of separate sections with
+             their own headings. Rebecca Everlene, DAB of India, and the
+             screens-gallery card were removed from this section per
+             request; their full case-study pages are untouched. ---------- */}
         <section className="section" id="work">
           <div className="container">
             <div className="section-head">
               <div>
                 <Reveal><p className="section-label">Selected work</p></Reveal>
-                <SplitText as="h2" text="An AI companion, built from zero." testId="work-heading" delay={0.05} />
               </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A hierarchy, not a grid: the work with the most to show leads,
-                  everything else supports it.
-                </p>
-              </Reveal>
             </div>
 
-            <Reveal>
-              <article className="lead-panel" data-testid="project-card-optra">
-                <div className="lead-top">
-                  <span className="lead-index">01 · OptraHealth</span>
-                  <span className="status-pill">Full case study</span>
-                </div>
-                <p className="lead-role" style={{ marginTop: "1.6rem" }}>
-                  Product Designer · Dec 2024 – Mar 2025 · San Jose, CA
-                </p>
-                <h3
-                  data-cursor="MyoCircle"
-                  data-cursor-img={IMG("myocircle-cover.png")}
-                >
-                  Pediatric Therapy App <span className="quiet">(Zoe, an AI companion inside a health-tech platform)</span>
-                </h3>
-                <p className="lead-subtitle">
-                  Companion-guided app connecting patients, parents, and providers.
-                </p>
-                {/* TODO(Eshani): the 3 checklist bullets you sent for OptraHealth were
-                    identical to Onward's — looked like a copy/paste. Swap the paragraph
-                    below for real OptraHealth-specific highlights once you have them. */}
-                <div className="lead-media" data-cursor="MyoCircle">
-                  <Wipe
-                    src={IMG("myocircle-cover.png")}
-                    alt="MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow."
-                    testId="project-image-myocircle"
-                  />
-                </div>
-                <div className="lead-body">
-                  <div>
-                    <p>
-                      Primary designer for Zoe, building the interaction layer from the
-                      ground up alongside mobile onboarding, a patient management dashboard,
-                      and provider monitoring. Validated across 20+ usability and heuristic
-                      evaluation sessions with patients, parents, and providers.
-                    </p>
-                  </div>
-                  <div className="lead-metrics">
-                    <div>
-                      <div className="m-value"><CountUp value={30} suffix="%" /></div>
-                      <div className="m-label">Weekly engagement ↑</div>
-                      <div className="m-method">Post-launch vs. prior release</div>
-                    </div>
-                    <div>
-                      <div className="m-value"><CountUp value={28} suffix="%" /></div>
-                      <div className="m-label">Tutorial completion ↑</div>
-                      <div className="m-method">Across 20+ sessions</div>
-                    </div>
-                    <div>
-                      <div className="m-value"><CountUp value={100} suffix="+" /></div>
-                      <div className="m-label">Component library</div>
-                      <div className="m-method">Adopted by PMs and engineers</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="lead-tags tag-row">
-                  <span className="tag">AI companion</span>
-                  <span className="tag">Healthcare SaaS</span>
-                  <span className="tag">Design system</span>
-                </div>
-                <Link
-                  to="/work/optrahealth"
-                  className="read-case"
-                  data-testid="read-case-optra"
-                  style={{ marginTop: "1.8rem" }}
-                >
-                  Read the case study <ArrowUpRight size={14} />
-                </Link>
-              </article>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ---------- 02 chaptered case study ---------- */}
-        <section className="section section-bright" id="case-onward">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">Case study 02</p></Reveal>
-                <SplitText as="h2" text="From clinician pain points to a shippable diagnostic tool." delay={0.05} />
-              </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A regulated B2B health-tech MVP, followed end to end: research, method,
-                  and the interface they produced.
-                </p>
-              </Reveal>
-            </div>
-            <CaseStudy go={go} />
-          </div>
-        </section>
-
-        {/* ---------- a closer look: real screens, no click-through ---------- */}
-        <section className="section" id="gallery" aria-label="Selected screens">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">A closer look</p></Reveal>
-                <SplitText as="h2" text="Real screens, not just covers." testId="gallery-heading" delay={0.05} />
-              </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A handful of the actual interfaces behind the work above.
-                </p>
-              </Reveal>
-            </div>
-            {/* Plain <img>, not Wipe — Assemble already supplies the entrance
-                motion, so a second clip-path reveal on top of it would just
-                fight the fly-in. */}
-            <Assemble className="shot-grid" spread={220} swirl={10} stagger={0.3}>
-              {shots.map(([src, alt, tag, cap, tall], i) => (
-                <figure className={`shot${tall ? " shot--tall" : ""}`} data-testid={`gallery-shot-${i}`} key={src}>
-                  <div className="wipe">
-                    <img
-                      src={IMG(src)}
-                      alt={alt}
-                      loading="lazy"
-                      decoding="async"
-                      data-testid={`gallery-shot-img-${i}`}
-                    />
-                  </div>
-                  <figcaption><b>{tag}</b>{cap}</figcaption>
-                </figure>
+            <div className="stack" ref={stackRef}>
+              {workCards.map((card, i) => (
+                <StackCard key={card.key} i={i} total={STACK_TOTAL} progress={stackProgress} card={card} />
               ))}
-            </Assemble>
-          </div>
-        </section>
-
-        {/* ---------- 03-05 supporting projects ---------- */}
-        <section className="section">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">Selected work 03, 04 &amp; 05</p></Reveal>
-                <SplitText as="h2" text="Current 0→1 work, a travel concept, and brand at scale." delay={0.05} />
-              </div>
-              <Reveal delay={0.15}>
-                <p className="desc">
-                  A gamified B2C platform under NDA, a research-led travel concept, and
-                  production design across a client roster.
-                </p>
-              </Reveal>
-            </div>
-
-            <div className="stack">
-              {/* 03 — current role, under NDA. Third by design: the strongest work
-                  a recruiter can actually see goes first. */}
-              <Reveal className="stack-item" style={{ "--i": "0" }}>
-                <article className="proj proj-compact" data-testid="project-card-rebecca">
-                  <div className="proj-body">
-                    <div>
-                      <div className="lead-top">
-                        <h3>Rebecca Everlene Trust Company</h3>
-                        <span className="status-pill">Under NDA</span>
-                      </div>
-                      <p className="lead-role">UX/UI Designer · Oct 2025 – Present · Chicago, IL</p>
-                    </div>
-                    <div>
-                      <p className="summary">
-                        Leading design from discovery through high-fidelity execution for a
-                        B2C web platform, restructuring dense financial content into gamified
-                        learning modules, and partnering with product and engineering to keep
-                        AI-driven features shippable.
-                      </p>
-                      <p className="nda-note">
-                        Screens aren&rsquo;t public. The process is shareable and I&rsquo;m happy
-                        to walk through the work live, just ask.
-                      </p>
-                      <div className="tag-row">
-                        <span className="tag">0→1 product</span>
-                        <span className="tag">Gamified learning</span>
-                        <span className="tag">AI workflows</span>
-                      </div>
-                      <Link
-                        to="/work/rebecca-everlene"
-                        className="read-case"
-                        data-testid="read-case-rebecca"
-                        style={{ marginTop: "1.4rem" }}
-                      >
-                        Read the process <ArrowUpRight size={14} />
-                      </Link>
-                    </div>
-                    <div className="proj-metrics">
-                      <div>
-                        <div className="m-value"><CountUp value={25} suffix="%" /></div>
-                        <div className="m-label">Task completion ↑</div>
-                        <div className="m-method">Pre/post restructure</div>
-                      </div>
-                      <div>
-                        <div className="m-value"><CountUp value={40} suffix="%" /></div>
-                        <div className="m-label">Early drop-off ↓</div>
-                        <div className="m-method">First-session funnel</div>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </Reveal>
-
-              {/* 04 — Travelogue.
-                  TODO(Eshani): your notes marked this card's title, subtitle, and 3
-                  checklist bullets as "I will input info here" — swap the summary
-                  paragraph below for that copy once you've written it. */}
-              <Reveal className="stack-item" style={{ "--i": "1" }}>
-                <article className="proj proj-wide" data-testid="project-card-travelogue">
-                  <div className="proj-media" data-cursor="Travelogue">
-                    <Wipe
-                      src={IMG("travelogue-cover.png")}
-                      alt="Travelogue home feed and a group trip hub shown side by side on two phones."
-                      testId="project-image-travelogue"
-                    />
-                  </div>
-                  <div className="proj-body">
-                    <div>
-                      <h3 data-cursor="Travelogue" data-cursor-img={IMG("travelogue-login-thumb.png")}>Travelogue</h3>
-                      <p className="lead-role">Product Designer · Personal case study · 2025</p>
-                    </div>
-                    <p className="summary">
-                      A self-initiated, research-led concept that consolidates trip planning into
-                      one home: upcoming trips, itineraries, documents, and the people coming
-                      along, shaped directly by traveler interviews about offline access, group
-                      coordination, and expense tracking.
-                    </p>
-                    <div className="tag-row">
-                      <span className="tag">Personal project</span>
-                      <span className="tag">Mobile UX</span>
-                      <span className="tag">Research-led</span>
-                    </div>
-                    <Link to="/work/travelogue" className="read-case" data-testid="read-case-travelogue">
-                      Read case study <ArrowUpRight size={14} />
-                    </Link>
-                  </div>
-                </article>
-              </Reveal>
-
-              {/* 05 — DAB of India */}
-              <Reveal className="stack-item" style={{ "--i": "2" }}>
-                <article className="proj proj-compact" data-testid="project-card-dab">
-                  <div className="proj-body">
-                    <div>
-                      <h3>DAB of India</h3>
-                      <p className="lead-role">Visual Designer · Jan 2023 – Aug 2023 · Pune, India</p>
-                    </div>
-                    <div>
-                      <p className="summary">
-                        Built an AI-assisted design workflow spanning copy, mockups, and social
-                        and print assets across 25+ clients, maintaining brand standards over
-                        1,000+ assets, and designing brand pitch decks used directly in client
-                        acquisition.
-                      </p>
-                      <div className="tag-row">
-                        <span className="tag">Brand design</span>
-                        <span className="tag">AI-assisted workflow</span>
-                        <span className="tag">Client work</span>
-                      </div>
-                      <Link
-                        to="/work/dab-of-india"
-                        className="read-case"
-                        data-testid="read-case-dab"
-                        style={{ marginTop: "1.4rem" }}
-                      >
-                        Read case study <ArrowUpRight size={14} />
-                      </Link>
-                    </div>
-                    <div className="proj-metrics">
-                      <div>
-                        <div className="m-value"><CountUp value={25} suffix="+" /></div>
-                        <div className="m-label">Clients served</div>
-                      </div>
-                      <div>
-                        <div className="m-value"><CountUp value={1000} suffix="+" comma /></div>
-                        <div className="m-label">Assets maintained</div>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </Reveal>
             </div>
           </div>
         </section>
@@ -946,80 +994,82 @@ export default function App() {
         </section>
 
         {/* ---------- design tools ---------- */}
-        <section className="section" id="tools">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">Design tools</p></Reveal>
-                <SplitText as="h2" text="What the work above was made with." testId="tools-heading" delay={0.05} />
-              </div>
-            </div>
-            <Reveal delay={0.15}>
-              <ToolMarquee theme={theme} />
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ---------- experience ---------- */}
-        <section className="section" id="experience">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                <Reveal><p className="section-label">Experience</p></Reveal>
-                <SplitText as="h2" text="Four roles, one throughline." testId="experience-heading" delay={0.05} />
-              </div>
-              <Reveal delay={0.15}>
-                <p className="desc">Expand any role for the full, verified detail from the résumé.</p>
-              </Reveal>
-            </div>
-            <div>
-              {experience.map(([role, company, dates, summary, detail], idx) => {
-                const isOpen = openExp === idx;
-                return (
-                  <div className="exp-item" key={company} data-testid={`experience-${idx}`}>
-                    <div>
-                      <div className="exp-role">{role}</div>
-                      <div className="exp-company">{company}</div>
-                    </div>
-                    <div>
-                      <p className="exp-summary">{summary}</p>
-                      <button
-                        className="exp-toggle"
-                        onClick={() => setOpenExp(isOpen ? null : idx)}
-                        aria-expanded={isOpen}
-                        data-testid={`experience-toggle-${idx}`}
-                      >
-                        {isOpen ? <><Minus size={13} /> Hide detail</> : <><Plus size={13} /> Show detail</>}
-                      </button>
-                      <AnimatePresence initial={false}>
-                        {isOpen && (
-                          <motion.div
-                            className="exp-detail"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.38, ease: EASE }}
-                          >
-                            <ul>{detail.map((d) => <li key={d.slice(0, 32)}>{d}</li>)}</ul>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <div className="exp-dates">{dates}</div>
+        {/* The heading block is shared by both views. In Wall it's handed to
+            SkillStickerWall as children and rendered as a static overlay
+            *inside* the physics container, with cubes piling behind and in
+            front of it; in Grid it sits in normal flow above the grid. */}
+        {(() => {
+          const toolkitHead = (
+            <div className="container">
+              <div className="section-head">
+                <div>
+                  <Reveal><p className="section-label">Design Tools</p></Reveal>
+                  <SplitText as="h2" text="What I design and build with." testId="tools-heading" delay={0.05} />
+                </div>
+                {/* Layout switch, scoped to this section only — no persistence,
+                    it resets to the wall on reload. Pressing "Wall" while it's
+                    already showing re-drops the cubes, so the button doubles
+                    as a replay without needing a second control. */}
+                <Reveal delay={0.1}>
+                  <div className="tools-switch" role="group" aria-label="Tool logo layout">
+                    <button
+                      type="button"
+                      className="tools-switch-btn"
+                      aria-pressed={toolsView === "wall"}
+                      onClick={() => {
+                        if (toolsView === "wall") setWallReplay((n) => n + 1);
+                        else setToolsView("wall");
+                      }}
+                      data-testid="tools-view-wall"
+                    >
+                      <Layers size={14} aria-hidden="true" /> Wall
+                    </button>
+                    <button
+                      type="button"
+                      className="tools-switch-btn"
+                      aria-pressed={toolsView === "grid"}
+                      onClick={() => setToolsView("grid")}
+                      data-testid="tools-view-grid"
+                    >
+                      <LayoutGrid size={14} aria-hidden="true" /> Grid
+                    </button>
                   </div>
-                );
-              })}
+                </Reveal>
+              </div>
             </div>
-          </div>
-        </section>
+          );
+
+          return (
+            <section className="section" id="tools" data-tools-view={toolsView}>
+              {toolsView === "grid" ? (
+                <>
+                  {toolkitHead}
+                  <div className="container">
+                    <Reveal delay={0.15}><ToolGrid theme={theme} /></Reveal>
+                  </div>
+                </>
+              ) : (
+                <SkillStickerWall tools={tools} replayKey={wallReplay}>
+                  {toolkitHead}
+                </SkillStickerWall>
+              )}
+            </section>
+          );
+        })()}
 
         {/* ---------- about ---------- */}
         <section className="section section-bright" id="about">
           <div className="container about-grid">
-            <Reveal>
+            {/* The "About" label lives outside .about-copy so tablet/mobile can
+                order it above the portrait while the rest of the copy stays
+                below it. On desktop it sits in the copy column as before. */}
+            <Reveal className="about-lead">
+              <p className="section-label">About</p>
+            </Reveal>
+            <Reveal className="about-figure">
               <figure className="about-photo">
                 <Wipe
-                  src={IMG("profile.png")}
+                  src={IMG("profile.jpg")}
                   alt="Portrait of Eshani Somwanshi, product and UX designer."
                   testId="about-image-portrait"
                 />
@@ -1027,7 +1077,6 @@ export default function App() {
               </figure>
             </Reveal>
             <Reveal className="about-copy" testId="about-copy">
-              <p className="section-label" style={{ marginBottom: "1rem" }}>About</p>
               <p>
                 Eshani Somwanshi is a product and UX designer working at the intersection of
                 research, systems thinking, and visual craft. Her work spans healthcare, AI
@@ -1070,10 +1119,10 @@ export default function App() {
             <Reveal>
               <p className="eyebrow contact-eyebrow">Get in touch</p>
               <h2 data-testid="contact-heading">
-                Hiring for a <em>product design</em> role?
+                Hiring for a <em>Product/UX design</em> role?
               </h2>
               <p className="lede">
-                I&rsquo;m open to product design roles across healthcare, AI, and enterprise
+                I&rsquo;m open to Product/UX design roles across healthcare, AI, and enterprise
                 systems. Send a message here, or reach out directly. I reply to every one.
               </p>
               <div className="contact-actions">
@@ -1090,26 +1139,13 @@ export default function App() {
                     className="btn btn-secondary"
                     data-testid="contact-linkedin-link"
                   >
-                    View LinkedIn
+                    View LinkedIn<span className="sr-only"> (opens in new tab)</span> <ArrowUpRight size={15} />
                   </a>
                 </Magnetic>
               </div>
             </Reveal>
             <Reveal className="contact-side" testId="contact-side">
               <ContactForm />
-              <div className="contact-links">
-                <a href="mailto:eshani.swdesign@gmail.com" data-testid="contact-links-email">
-                  <span>Email</span><span>eshani.swdesign@gmail.com</span>
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/eshani-somwanshi/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="contact-links-linkedin"
-                >
-                  <span>LinkedIn</span><span>/in/eshani-somwanshi</span>
-                </a>
-              </div>
             </Reveal>
           </div>
         </section>
@@ -1117,35 +1153,20 @@ export default function App() {
 
       <footer className="site-footer">
         <div className="container footer-row">
-          <span>© {new Date().getFullYear()} Eshani Somwanshi</span>
-          <a
-            href="#top"
-            data-testid="back-to-top-link"
-            onClick={(e) => { e.preventDefault(); go("top"); }}
-          >
-            Back to top ↑
-          </a>
+          <span className="footer-location"><span className="footer-emoji">🌁</span> San Francisco, CA</span>
+          <span className="footer-copyright">© {new Date().getFullYear()} Eshani Somwanshi</span>
+          {/* Static sign-off. Scroll-to-top now lives entirely in the sticky
+              BackToTop control (which expands to "Back to Top" at the foot
+              of the page), so the footer doesn't need its own link. */}
+          <span className="footer-top-link footer-signoff" data-testid="back-to-top-link">
+            You are the sun <span className="footer-emoji">☀️</span>
+          </span>
         </div>
       </footer>
 
-      {/* Sticky back-to-top, per notes: stays on screen, bottom-right. */}
-      <AnimatePresence>
-        {showTop && (
-          <motion.button
-            type="button"
-            className="back-to-top"
-            onClick={() => go("top")}
-            aria-label="Back to top"
-            data-testid="back-to-top-button"
-            initial={{ opacity: 0, y: 12, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.9 }}
-            transition={{ duration: 0.28, ease: EASE }}
-          >
-            <ArrowUp size={18} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Sticky back-to-top, per notes: stays on screen, bottom-right.
+          Shared with the case-study pages — see primitives BackToTop. */}
+      <BackToTop />
     </div>
   );
 }

@@ -1,0 +1,235 @@
+/* ==========================================================================
+   Skill sticker wall — the "Wall" view of the Design Tools section.
+
+   The wall fills the whole section; the heading, one-liner and Wall/Grid
+   switch sit inside it as a static overlay. Cubes are split across two
+   layers, one behind that overlay and one in front, so the text reads as
+   part of the pile rather than a panel sitting on top of it.
+
+   Physics writes transforms onto .sticker from JS (SkillStickerWall.jsx).
+   ========================================================================== */
+
+.sticker-wall {
+  position: relative;
+  width: 100%;
+  /* Fills the section. #tools is min-height:100svh with 60px of padding-top,
+     so this takes the rest of it. svh rather than dvh matters more here than
+     anywhere: dvh changes as the mobile URL bar hides, which fired the resize
+     handler and rebuilt the floor and side walls mid-scroll, so the whole pile
+     jumped. svh holds still. */
+  height: calc(100vh - 60px);
+  height: calc(100svh - 60px);
+  min-height: 520px;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y; /* never swallow vertical page scroll on touch */
+  /* Cursor lives here rather than on .sticker, which is pointer-events:none. */
+  cursor: grab;
+}
+.sticker-wall:active { cursor: grabbing; }
+.sticker-wall.is-static { cursor: default; }
+
+/* Both cube layers cover the wall; only the z-index differs.
+   pointer-events: none is deliberate and load-bearing — Matter hit-tests
+   bodies from a listener on the *container*, not from per-element pointer
+   events, so dragging still works while front-layer cubes stop swallowing
+   clicks on the Wall/Grid switch they visually cover. */
+.sticker-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sticker-layer--back { z-index: 1; }
+.sticker-layer--front { z-index: 3; }
+
+/* Between leaving the static flow layout and the first physics frame landing,
+   the cubes are absolutely positioned with no transform yet — all 18 stacked
+   at 0,0 in the corner. That one-frame heap is the entry "glitch"; hiding the
+   layers until a real transform is on them removes it at the source rather
+   than covering it with the entry delay. */
+.sticker-wall.is-arming .sticker-layer { visibility: hidden; }
+
+/* -------------------------------------------------------------------------
+   Static overlay: heading + one-liner + view switch
+   ------------------------------------------------------------------------- */
+.sticker-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none; /* clicks fall through to cubes… */
+}
+.sticker-overlay-inner {
+  position: relative;
+  height: 100%;
+  padding-top: clamp(1.6rem, 3vw, 2.6667rem);
+}
+/* …except on the actual controls. */
+.sticker-overlay-inner a,
+.sticker-overlay-inner button {
+  pointer-events: auto;
+}
+
+/* Soft scrim so the copy holds up when cubes stack directly behind it.
+   Vertical fade only — no backdrop-filter, which would cost a full-area
+   blur repaint every frame while 18 bodies are moving behind it. */
+.sticker-overlay-scrim {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: clamp(220px, 34%, 340px);
+  /* --header-rgb is the page background per theme — same value the sticky
+     header tints with, so the scrim reads as the page showing through. */
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--header-rgb), .93) 0%,
+    rgba(var(--header-rgb), .8) 46%,
+    rgba(var(--header-rgb), 0) 100%
+  );
+}
+.sticker-overlay .section-head { margin-bottom: 0; }
+.sticker-overlay .section-label,
+.sticker-overlay h2 {
+  text-shadow: 0 1px 3px rgba(var(--header-rgb), .95);
+}
+
+/* -------------------------------------------------------------------------
+   The cube
+   Volume comes from lighting, not from a big drop shadow: a puffy squircle
+   silhouette, a specular highlight top-left, deep shading into the bottom
+   and edges, and a tight contact shadow underneath.
+   ------------------------------------------------------------------------- */
+.sticker {
+  /* Physics overwrites these inline with a container-derived px size; this is
+     the static-fallback / pre-arming size, kept in step with
+     STICKER.sizePerWidth / minSize so the two layouts agree. */
+  width: clamp(62px, 8.33vw, 109px);
+  height: clamp(62px, 8.33vw, 109px);
+  /* Mirrors STICKER.logoPerWidth / logoOffset / logoMinSize so the static
+     layout sizes its marks the same way physics does. The physics pass
+     overwrites this inline with the exact container-derived px. */
+  --logo: max(15px, calc(3.33vw - 6.5px));
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5333rem;
+  padding: 0.8rem 0.5333rem;
+  box-sizing: border-box;
+  border-radius: 27%;
+  /* One stacked background, no separate highlight element. The specular is a
+     wide, low-alpha radial that fades into the surface's own colour, and the
+     edge darkening is a second radial of the same hue — so the light reads as
+     falling *on* the material rather than as a shape sitting over it.
+     The base ramp is the true brand colour, lifted slightly at the top-left
+     and deepened at the bottom-right: a two-tone of that exact colour, not a
+     pastel tint of it. */
+  background:
+    radial-gradient(52% 42% at 30% 16%,
+      rgba(255, 255, 255, .50) 0%,
+      rgba(255, 255, 255, .20) 38%,
+      rgba(255, 255, 255, .05) 62%,
+      rgba(255, 255, 255, 0) 82%),
+    radial-gradient(135% 118% at 46% 2%,
+      rgba(0, 0, 0, 0) 46%,
+      color-mix(in srgb, var(--brand) 64%, #000) 100%),
+    var(--grad);
+  box-shadow:
+    /* interior shading only — all tinted in the cube's own hue, never white,
+       so there is no pale halo ringing the silhouette */
+    inset 0 -16px 22px -14px color-mix(in srgb, var(--brand) 55%, #000),
+    inset 0 3px 8px -4px rgba(255, 255, 255, .3),
+    /* real contact shadow: dark, tight, under the cube */
+    0 6px 10px -5px rgba(var(--shadow-rgb), .5);
+  will-change: transform;
+}
+
+/* The mark sits directly on the cube's gradient — no backing box. A drop
+   shadow does the separating instead, which keeps the silhouette clean. */
+.sticker img {
+  display: block;
+  /* An absolute size, not a share of the cube — that is what lets the boxes
+     shrink without the marks shrinking with them. --logo is set just above
+     for the static layout and overwritten inline by the physics sizing pass.
+     flex: none because the cube is a column flex container: without it the
+     mark is a shrinkable item and the size stops being the size. */
+  width: var(--logo);
+  height: var(--logo);
+  flex: none;
+  max-width: none;
+  object-fit: contain;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, .34))
+    drop-shadow(0 0 2px rgba(0, 0, 0, .22));
+}
+
+/* Knockout: a single-colour mark whose hue matches its cube would otherwise
+   disappear into it. brightness(0) flattens the artwork to solid black;
+   invert(1) then lifts it to solid white where the cube is dark. Applied only
+   to the marks listed in KNOCKOUT_LOGOS — never to multi-colour artwork. */
+.sticker[data-knockout="light"] img {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, .3));
+  opacity: .96;
+}
+.sticker[data-knockout="dark"] img {
+  filter: brightness(0) drop-shadow(0 1px 2px rgba(255, 255, 255, .25));
+  opacity: .82;
+}
+
+.sticker-label {
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  line-height: 1;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink);
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Static fallback — before the engine starts, under prefers-reduced-motion,
+   and on viewports too narrow for the playground. Same cube material, laid
+   out as a scattered row with each one's random tilt kept so it still reads
+   hand-placed rather than gridded. The overlay returns to normal flow.
+   -------------------------------------------------------------------------- */
+.sticker-wall.is-static {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(1.0667rem, 2vw, 1.6rem);
+  height: auto;
+  min-height: 0;
+  padding-bottom: clamp(2rem, 4vw, 3.2rem);
+  touch-action: auto;
+}
+/* Collapse both depth layers so all 18 cubes become direct flex children —
+   the back/front split only means anything once physics is driving them. */
+.sticker-wall.is-static .sticker-layer { display: contents; }
+.sticker-wall.is-static .sticker-overlay {
+  position: relative;
+  inset: auto;
+  order: -1;               /* heading first, then the cubes */
+  width: 100%;
+  pointer-events: auto;
+}
+.sticker-wall.is-static .sticker-overlay-scrim { display: none; }
+.sticker-wall.is-static .sticker-overlay-inner {
+  height: auto;
+  padding-top: 0;
+  margin-bottom: clamp(2.6667rem, 4vw, 4rem);
+}
+.sticker-wall.is-static .sticker {
+  position: relative;
+  transform: rotate(var(--tilt));
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker { will-change: auto; }
+}

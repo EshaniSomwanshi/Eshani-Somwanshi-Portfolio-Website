@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   animate,
+  AnimatePresence,
   motion,
   useInView,
   useMotionValue,
   useReducedMotion,
   useSpring,
 } from "framer-motion";
+import { ArrowUp } from "lucide-react";
+import { useLenis } from "./lib/smoothScroll";
 
 export const IMG = (name) => `${process.env.PUBLIC_URL}/images/${name}`;
 
@@ -229,30 +232,176 @@ export function Magnetic({ children, strength = 0.28, className = "" }) {
   );
 }
 
-/* Theme switch ------------------------------------------------------------- */
-export function ThemeSwitch({ theme, setTheme, mobile = false }) {
-  return (
-    <div
-      className={`theme-switch${mobile ? " theme-switch-mobile" : ""}`}
+/* Theme switch — collapsed to a single pill showing the active theme;
+   expands inline into all three options (active first) on click, Apple-style
+   expanding/collapsible capsule. Picking an option or clicking outside
+   collapses it back down. ------------------------------------------------- */
+export function ThemeSwitch({ theme, setTheme, mobile = false, tabIndex }) {
+  const [expanded, setExpanded] = useState(false);
+  const reduced = useReducedMotion();
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const close = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setExpanded(false);
+    };
+    const onKey = (e) => { if (e.key === "Escape") setExpanded(false); };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [expanded]);
+
+  const active = THEMES.find((t) => t.id === theme) || THEMES[0];
+  const shown = expanded ? [active, ...THEMES.filter((t) => t.id !== theme)] : [active];
+
+  const pill = (
+    <motion.div
+      ref={ref}
+      layout
+      transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38, mass: 0.7 }}
+      className={`theme-switch${mobile ? " theme-switch-mobile" : " theme-switch-floating"}${expanded ? " is-expanded" : ""}`}
       role="group"
       aria-label="Colour theme"
       data-testid={mobile ? "theme-switch-mobile" : "theme-switch"}
     >
-      {THEMES.map((t) => (
-        <button
-          type="button"
-          key={t.id}
-          className="theme-dot"
-          data-theme-value={t.id}
-          aria-pressed={theme === t.id}
-          onClick={() => setTheme(t.id)}
-          data-testid={`theme-${t.id}-button`}
-        >
-          <span className="theme-swatch" aria-hidden="true" />
-          <span className="theme-name">{t.label}</span>
-        </button>
-      ))}
-    </div>
+      <AnimatePresence initial={false}>
+        {shown.map((t, i) => (
+          <motion.button
+            type="button"
+            key={t.id}
+            layout
+            initial={reduced ? false : { opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduced ? undefined : { opacity: 0, scale: 0.85 }}
+            transition={{
+              layout: reduced ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38, mass: 0.7 },
+              opacity: { duration: 0.16, delay: expanded ? i * 0.03 : 0 },
+              scale: { duration: 0.16, delay: expanded ? i * 0.03 : 0 },
+            }}
+            className="theme-dot"
+            data-theme-value={t.id}
+            aria-pressed={theme === t.id}
+            aria-expanded={i === 0 ? expanded : undefined}
+            tabIndex={tabIndex}
+            onClick={() => {
+              if (!expanded) setExpanded(true);
+              else if (t.id === theme) setExpanded(false);
+              else { setTheme(t.id); setExpanded(false); }
+            }}
+            data-testid={`theme-${t.id}-button`}
+          >
+            <span className="theme-swatch" aria-hidden="true" />
+            <span className="theme-name">{t.label}</span>
+          </motion.button>
+        ))}
+      </AnimatePresence>
+    </motion.div>
+  );
+
+  if (mobile) return pill;
+
+  // Desktop: the pill floats absolutely, anchored to its own right edge, so
+  // expanding/collapsing never reflows the rest of the nav row (wordmark,
+  // links) and always grows leftward instead of pushing its right edge out.
+  // This invisible spacer reserves the collapsed pill's real footprint
+  // (measured from its own rendered markup, not a guessed pixel value) so
+  // the surrounding flex layout sees a constant-width slot at all times.
+  return (
+    <span className="theme-switch-anchor">
+      <span className="theme-switch-spacer" aria-hidden="true">
+        <span className="theme-switch">
+          <span className="theme-dot" data-theme-value={active.id} aria-pressed="true">
+            <span className="theme-swatch" />
+            <span className="theme-name">{active.label}</span>
+          </span>
+        </span>
+      </span>
+      {pill}
+    </span>
+  );
+}
+
+/* Sticky "back to top" button — fixed bottom-right, appears once the page
+   is scrolled past `showAfter` px. Shared by the homepage and the case-study
+   pages so the affordance is identical everywhere. Scrolls through Lenis
+   when it's mounted (matching nav-link momentum), native smooth scroll
+   otherwise; under prefers-reduced-motion it jumps with no easing.
+
+   Collapsed it's just the arrow. It grows leftward to reveal a "Back to Top"
+   label — a spring-ish width transition echoing the nav theme pill —
+   whenever the page footer is in view (you've reached the bottom) OR the
+   pointer is hovering / focus is on the button. All show/hide and
+   expand/collapse is CSS-class driven (no rAF/observer dependency) so it
+   behaves the same regardless of tab-visibility throttling. */
+export function BackToTop({ showAfter = 600 }) {
+  const lenis = useLenis();
+  const reduced = useReducedMotion();
+  const [visible, setVisible] = useState(false);
+  const [footerInView, setFooterInView] = useState(false);
+  const [footerH, setFooterH] = useState(0);
+  const [hovered, setHovered] = useState(false);
+
+  // One scroll handler drives both "is the button shown" (scrolled past
+  // showAfter) and "has the footer been reached" (its top edge is within the
+  // viewport). A plain rect check rather than IntersectionObserver so it's
+  // synchronous and unaffected by tab-visibility throttling. The footer
+  // always renders before <BackToTop> in both routes, so it's queryable here.
+  useEffect(() => {
+    const read = () => {
+      setVisible(window.scrollY > showAfter);
+      const footer = document.querySelector(".site-footer");
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        setFooterInView(rect.top < window.innerHeight);
+        setFooterH(footer.offsetHeight);
+      }
+    };
+    read();
+    window.addEventListener("scroll", read, { passive: true });
+    window.addEventListener("resize", read);
+    return () => {
+      window.removeEventListener("scroll", read);
+      window.removeEventListener("resize", read);
+    };
+  }, [showAfter]);
+
+  const expanded = footerInView || hovered;
+  // Once the footer is in view, park the pill just above it so the expanded
+  // label never covers the footer's own sign-off text; otherwise the CSS
+  // default (bottom-right corner) applies.
+  const style = footerInView
+    ? { bottom: `calc(${footerH}px + 1.25rem)` }
+    : undefined;
+
+  const toTop = () => {
+    if (lenis) lenis.scrollTo(0, { duration: reduced ? 0 : 1.2 });
+    else window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+  };
+
+  return (
+    <button
+      type="button"
+      className={
+        "back-to-top" +
+        (visible ? " is-visible" : "") +
+        (expanded ? " is-expanded" : "")
+      }
+      style={style}
+      onClick={toTop}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
+      aria-label="Back to top"
+      data-testid="back-to-top-button"
+    >
+      <span className="back-to-top-label" aria-hidden={!expanded}>Back to Top</span>
+      <ArrowUp size={18} />
+    </button>
   );
 }
 

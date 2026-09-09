@@ -21,7 +21,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.1rem;
+  gap: 1.4667rem;
 }
 
 /* Each letter is its own overflow-hidden column so it drops out of a mask
@@ -35,7 +35,7 @@
   display: inline-block;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(3rem, 13vw, 9rem);
+  font-size: clamp(4rem, 13vw, 12rem);
   line-height: 0.9;
   letter-spacing: -0.045em;
   will-change: transform;
@@ -46,7 +46,7 @@
 .intro-letter:nth-child(even) { color: var(--accent); }
 
 .intro-rule {
-  width: min(58vw, 26rem);
+  width: min(58vw, 34.6667rem);
   height: 2px;
   background: var(--accent);
   transform-origin: center;
@@ -54,15 +54,15 @@
 
 .intro-sub {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.96rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--inv-muted);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 576px) {
   .intro-letter { letter-spacing: -0.03em; }
-  .intro-sub { font-size: 0.62rem; letter-spacing: 0.18em; }
+  .intro-sub { font-size: 0.8267rem; letter-spacing: 0.18em; }
 }
 
 @media (prefers-reduced-motion: reduce) {

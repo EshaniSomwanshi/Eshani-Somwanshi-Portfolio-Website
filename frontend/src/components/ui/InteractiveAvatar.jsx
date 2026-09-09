@@ -1,5 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { motion, useSpring, useMotionValue, useTransform, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useSpring, useMotionValue, useTransform, useReducedMotion } from "framer-motion";
+
+// Popup lands just outside the avatar's own box (never over the face/body),
+// picked randomly each click from a ring of anchor points around it.
+const BUBBLE_SLOTS = [
+  { top: -9, left: 12 },
+  { top: -9, left: 88 },
+  { top: 30, left: -9 },
+  { top: 30, left: 109 },
+  { top: 68, left: -9 },
+  { top: 68, left: 109 },
+  { top: 100, left: 22 },
+  { top: 100, left: 78 }
+];
 
 /**
  * InteractiveAvatar — Loose, Flowing Hair with Face-Framing Waves
@@ -30,6 +43,7 @@ export default function InteractiveAvatar({
   const [isWinking, setIsWinking] = useState(false);
   const [isHappy, setIsHappy] = useState(false);
   const [speechBubble, setSpeechBubble] = useState("");
+  const [bubblePos, setBubblePos] = useState(BUBBLE_SLOTS[0]);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -38,20 +52,24 @@ export default function InteractiveAvatar({
   const smoothX = useSpring(mouseX, spring);
   const smoothY = useSpring(mouseY, spring);
 
-  // Subtle Head Parallax
-  const headRotateY = useTransform(smoothX, [-1, 1], [-5, 5]);
-  const headRotateX = useTransform(smoothY, [-1, 1], [3.5, -3.5]);
-  const headX = useTransform(smoothX, [-1, 1], [-5, 5]);
-  const headY = useTransform(smoothY, [-1, 1], [-3.5, 3.5]);
+  // Whole-figure parallax — hair, face, and body all move together as one
+  // rigid unit so nothing drifts apart during interaction.
+  const figureRotateY = useTransform(smoothX, [-1, 1], [-5, 5]);
+  const figureRotateX = useTransform(smoothY, [-1, 1], [3.5, -3.5]);
+  const figureX = useTransform(smoothX, [-1, 1], [-5, 5]);
+  const figureY = useTransform(smoothY, [-1, 1], [-3.5, 3.5]);
 
-  // Hair Parallax — back mass drifts opposite the cursor, front locks lead it
-  const hairBackX = useTransform(smoothX, [-1, 1], [2.5, -2.5]);
-  const hairFrontX = useTransform(smoothX, [-1, 1], [-6, 6]);
-
-  // Jhumka Reactive Physics
+  // Jhumka Reactive Physics — swing is layered on top of the whole-figure motion
   const earringLeftRotate = useTransform(smoothX, [-1, 1], [-8, 12]);
   const earringRightRotate = useTransform(smoothX, [-1, 1], [-12, 8]);
   const browY = useTransform(smoothY, [-1, 1], [-2, 1.2]);
+
+  // Bharatanatyam-style neck slide — the head glides side to side on a level
+  // plane (pure horizontal translation, no tilt) as the cursor moves left to
+  // right, layered on top of the whole-figure motion. Kept within the neck's
+  // visible width (~194–246 at the jaw line) so the head never slides past
+  // the neck shape underneath it.
+  const headSlideX = useTransform(smoothX, [-1, 1], [-11, 11]);
 
   const [leftPupil, setLeftPupil] = useState({ x: 0, y: 0 });
   const [rightPupil, setRightPupil] = useState({ x: 0, y: 0 });
@@ -150,6 +168,7 @@ export default function InteractiveAvatar({
       "Designing with clarity & craft 💡",
       "Let's build something great 🚀"
     ];
+    setBubblePos(BUBBLE_SLOTS[Math.floor(Math.random() * BUBBLE_SLOTS.length)]);
     setSpeechBubble(lines[Math.floor(Math.random() * lines.length)]);
     setTimeout(() => {
       setIsWinking(false);
@@ -163,64 +182,51 @@ export default function InteractiveAvatar({
     <div
       ref={containerRef}
       className={`interactive-avatar-wrap ${className}`}
-      onClick={handleClick}
-      onMouseEnter={() => setIsHappy(true)}
-      onMouseLeave={() => setIsHappy(false)}
       style={{
         position: "relative",
         width: "100%",
         maxWidth: `${size}px`,
         aspectRatio: "440 / 520",
         margin: "0 auto",
-        cursor: "pointer",
         userSelect: "none",
         perspective: "1100px"
       }}
-      title="Click me!"
       data-testid="interactive-avatar"
     >
-      {/* Speech bubble */}
-      {speechBubble && (
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -6, scale: 0.95 }}
-          className="avatar-speech-bubble"
-          style={{
-            position: "absolute",
-            top: "-34px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "var(--card, #FFFFFF)",
-            color: "var(--ink, #14130F)",
-            padding: "8px 16px",
-            borderRadius: "20px",
-            fontFamily: "var(--font-mono, monospace)",
-            fontSize: "0.78rem",
-            fontWeight: 600,
-            boxShadow: "0 12px 30px rgba(0,0,0,0.16)",
-            border: "1px solid var(--line, #E5E7EB)",
-            zIndex: 30,
-            whiteSpace: "nowrap",
-            pointerEvents: "none"
-          }}
-        >
-          {speechBubble}
-          <div
+      {/* Speech bubble — pops up just outside the avatar's box (never over
+          the face/body) at a random anchor point around it each click. */}
+      <AnimatePresence>
+        {speechBubble && (
+          <motion.div
+            key={speechBubble}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            className="avatar-speech-bubble"
             style={{
               position: "absolute",
-              bottom: "-6px",
-              left: "50%",
-              transform: "translateX(-50%) rotate(45deg)",
-              width: "12px",
-              height: "12px",
+              top: `${bubblePos.top}%`,
+              left: `${bubblePos.left}%`,
+              transform: "translate(-50%, -50%)",
               background: "var(--card, #FFFFFF)",
-              borderRight: "1px solid var(--line, #E5E7EB)",
-              borderBottom: "1px solid var(--line, #E5E7EB)"
+              color: "var(--ink, #14130F)",
+              padding: "7px 14px",
+              borderRadius: "16px",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "0.76rem",
+              fontWeight: 600,
+              boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+              border: "1px solid var(--line, #E5E7EB)",
+              zIndex: 30,
+              whiteSpace: "nowrap",
+              pointerEvents: "none"
             }}
-          />
-        </motion.div>
-      )}
+          >
+            {speechBubble}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.svg
         viewBox="0 0 440 520"
@@ -309,30 +315,79 @@ export default function InteractiveAvatar({
           </clipPath>
         </defs>
 
+        {/* ---------- WHOLE FIGURE — hair, body, head, and jewelry share one
+             transform so they move as a single rigid figure and never drift
+             apart from each other; only the details nested inside (hair-lock
+             sway, eye tracking, jhumka swing) move independently. ---------- */}
+        {/* Interactive handlers live here, not on the wrapping <div> — an
+            SVG <g> has no paint of its own, so it only receives hover/click
+            when the pointer actually lands on a child shape (visiblePainted
+            default). Putting them on the outer div instead made the whole
+            rectangular bounding box hoverable, including transparent
+            padding around the figure, which read as "hover works outside
+            her" — this fixes it to the drawn silhouette only. */}
+        <motion.g
+          onClick={handleClick}
+          onMouseEnter={() => setIsHappy(true)}
+          onMouseLeave={() => setIsHappy(false)}
+          onFocus={() => setIsHappy(true)}
+          onBlur={() => setIsHappy(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleClick();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Say hello"
+          data-cursor="Click me"
+          style={
+            reduced
+              ? { cursor: "pointer" }
+              : {
+                  rotateY: figureRotateY,
+                  rotateX: figureRotateX,
+                  x: figureX,
+                  y: figureY,
+                  transformOrigin: "220px 270px",
+                  cursor: "pointer"
+                }
+          }
+        >
         {/* ---------- LAYER 1 — LOOSE HAIR FALLING BEHIND THE SHOULDERS ----------
              Two mirrored locks (not one symmetric blob) so each can sway on
              its own timing — real hair never moves as a single rigid mass.
              Each lock is a base-tone shape plus a lighter highlight stroke
              traced just inside its outer edge, the same base → highlight
-             layering used for painted hair. */}
-        <motion.g style={reduced ? {} : { x: hairBackX }}>
+             layering used for painted hair. Hair is attached to the head, not
+             the shoulders, so it rides along with the neck-slide (headSlideX)
+             — otherwise the head glides out from under a stationary hairline
+             and covers/uncovers the face at the wrong spot. */}
+        <motion.g style={reduced ? {} : { x: headSlideX }}>
           <motion.g
             style={{ transformOrigin: "222px 78px" }}
             animate={reduced ? undefined : { rotate: [-1.6, 1.4, -1.6] }}
             transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut" }}
           >
+            {/* Outer edge widens once, smoothly, then rounds into a blunt
+                full end (per the reference's rounded outline) instead of
+                pinching in and out to a tapered point. */}
             <path
-              d="M220 70 C250 68 280 78 298 108 C316 138 318 178 306 214
-                 C296 244 310 268 322 300 C332 328 328 358 314 384
-                 C320 410 332 434 322 460 C316 478 296 486 284 470
-                 C274 456 280 434 270 410 C260 384 254 356 258 326
-                 C246 296 232 268 240 238 C226 206 224 172 222 140
-                 C220 116 218 92 220 70 Z"
+              d="M220 70 C252 68 282 80 300 112
+                 C316 144 316 184 308 222
+                 C302 256 314 288 322 322
+                 C330 354 324 388 306 416
+                 C294 434 278 446 260 442
+                 C268 424 262 398 266 368
+                 C270 334 256 302 262 270
+                 C248 238 236 206 240 174
+                 C226 140 222 106 220 70 Z"
               fill="url(#ia-bun)"
             />
             <path
-              d="M232 84 C266 96 288 128 288 168 C288 202 274 228 280 258
-                 C286 292 302 320 300 352 C298 378 288 402 292 426"
+              d="M234 84 C268 98 290 130 290 170 C290 204 276 230 282 260
+                 C288 292 304 318 300 348 C296 374 284 396 288 418"
               stroke="url(#ia-hairLite)"
               strokeWidth="2.6"
               strokeLinecap="round"
@@ -346,17 +401,20 @@ export default function InteractiveAvatar({
             transition={{ duration: 8.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
           >
             <path
-              d="M220 70 C190 68 160 78 142 108 C124 138 122 178 134 214
-                 C144 244 130 268 118 300 C108 328 112 358 126 384
-                 C120 410 108 434 118 460 C124 478 144 486 156 470
-                 C166 456 160 434 170 410 C180 384 186 356 182 326
-                 C194 296 208 268 200 238 C214 206 216 172 218 140
-                 C220 116 222 92 220 70 Z"
+              d="M220 70 C188 68 158 80 140 112
+                 C124 144 124 184 132 222
+                 C138 256 126 288 118 322
+                 C110 354 116 388 134 416
+                 C146 434 162 446 180 442
+                 C172 424 178 398 174 368
+                 C170 334 184 302 178 270
+                 C192 238 204 206 200 174
+                 C214 140 218 106 220 70 Z"
               fill="url(#ia-bun)"
             />
             <path
-              d="M208 84 C174 96 152 128 152 168 C152 202 166 228 160 258
-                 C154 292 138 320 140 352 C142 378 152 402 148 426"
+              d="M206 84 C172 98 150 130 150 170 C150 204 164 230 158 260
+                 C152 292 136 318 140 348 C144 374 156 396 152 418"
               stroke="url(#ia-hairLite)"
               strokeWidth="2.6"
               strokeLinecap="round"
@@ -366,6 +424,21 @@ export default function InteractiveAvatar({
           </motion.g>
         </motion.g>
 
+        {/* Fixed hair backing behind the neck — deliberately NOT attached to
+            headSlideX. Layers 1/3/4/5 all ride the head-slide together, but
+            the neck below is stationary, so on every slide the moving hair
+            pulls away from one side of the (fixed) neck and opens a bare
+            gap. This static panel sits behind the neck at all times, wider
+            than the neck on both sides by more than the slide's max travel,
+            so hair always shows there regardless of head position — as if
+            the hair falls straight down behind her, not just from the head. */}
+        <path
+          d="M220 185 C165 185 148 220 148 270 L148 410
+             C148 440 175 455 220 455 C265 455 292 440 292 410
+             L292 270 C292 220 275 185 220 185 Z"
+          fill="url(#ia-bun)"
+        />
+
         {/* ---------- LAYER 2 — NECK, SHOULDERS, KURTA ---------- */}
         <g id="ia-body">
           <path
@@ -374,8 +447,13 @@ export default function InteractiveAvatar({
           />
           <path d="M192 270 C204 295 236 295 248 270 C242 298 198 298 192 270 Z" fill="#A9673C" opacity="0.38" />
 
+          {/* Collar's opening edge now retraces the neck's own boundary
+              exactly — (180,360) to (260,360) via the same C194 374 246 374
+              curve the neck path uses — so collar and neck share one line
+              with no gap and no independent seam. The neck path itself is
+              untouched. */}
           <path
-            d="M60 520 C68 446 104 398 158 378 C176 371 190 365 196 354 L244 354 C250 365 264 371 282 378 C336 398 372 446 380 520 Z"
+            d="M60 520 C68 446 104 398 158 378 C167 371 174 365 180 360 C194 374 246 374 260 360 C266 365 273 371 282 378 C336 398 372 446 380 520 Z"
             fill="url(#ia-kurta)"
           />
           <path d="M60 520 C68 452 98 408 146 386 C126 424 116 470 112 520 Z" fill="#C9CFDC" opacity="0.22" />
@@ -410,20 +488,7 @@ export default function InteractiveAvatar({
         </g>
 
         {/* ---------- LAYER 3 — HEAD, FEATURES, EYES ---------- */}
-        <motion.g
-          id="ia-head"
-          style={
-            reduced
-              ? {}
-              : {
-                  rotateY: headRotateY,
-                  rotateX: headRotateX,
-                  x: headX,
-                  y: headY,
-                  transformOrigin: "220px 270px"
-                }
-          }
-        >
+        <motion.g id="ia-head" style={reduced ? {} : { x: headSlideX }}>
           {/* Ears */}
           <path d="M150 208 C138 206 133 220 137 234 C140 244 147 250 153 248 Z" fill="url(#ia-skin)" />
           <path
@@ -572,7 +637,7 @@ export default function InteractiveAvatar({
                 fill="none"
                 opacity="0.8"
               />
-              {isBlinking && !isWinking && (
+              {eyesClosed && (
                 <>
                   <ellipse cx="253" cy="211" rx="24" ry="18" fill="url(#ia-skin)" />
                   <path
@@ -650,31 +715,72 @@ export default function InteractiveAvatar({
           </g>
         </motion.g>
 
-        {/* ---------- LAYER 4 — SWEPT-BACK CROWN + FOUR FACE-FRAMING WAVES ---------- */}
-        <motion.g style={reduced ? {} : { x: hairFrontX }}>
-          {/* Swept-Back Front Hair Crown Framing Face */}
+        {/* ---------- LAYER 4 — SWEPT-BACK CROWN + FOUR FACE-FRAMING WAVES ----------
+             Also head-attached — rides along with headSlideX so the crown
+             and face-framing locks stay put relative to the face instead of
+             covering it as the head glides past. ---------- */}
+        <motion.g style={reduced ? {} : { x: headSlideX }}>
+          {/* Curtain-bangs crown, per the reference photo — replaced with
+              two big rounded lobes per side (real chunky curl pieces, not
+              a rippled line). The deep dip of each lobe sits out at the
+              temple (x>270 / x<170), clear of the eyes below; only the
+              shallower second bump passes over the brow. Outer silhouette
+              (head width / top) is unchanged. */}
           <path
             d="M148 192
                C140 110 172 72 220 72
                C268 72 300 110 292 192
-               C278 152 254 135 220 135
-               C186 135 162 152 148 192 Z"
+               C294 208 282 212 272 194
+               C262 178 254 184 246 168
+               C234 156 228 152 220 148
+               C212 152 206 156 194 168
+               C186 184 178 178 168 194
+               C158 212 146 208 148 192 Z"
             fill="url(#ia-hairFront)"
           />
-
-          {/* Hairline Sleek Flow Strokes */}
+          {/* Mid-tone patch under each lobe for depth, same layering the
+              rest of the hair uses (base tone → lighter under-layer). */}
           <path
-            d="M162 142 C180 110 205 88 220 85"
+            d="M272 194 C282 206 268 216 254 204 C246 196 248 182 258 176 Z"
+            fill="url(#ia-hairLite)"
+            opacity="0.3"
+          />
+          <path
+            d="M168 194 C158 206 172 216 186 204 C194 196 192 182 182 176 Z"
+            fill="url(#ia-hairLite)"
+            opacity="0.3"
+          />
+
+          {/* Bold curl strands tracing each lobe's edge — visible loops
+              instead of faint lines, so the wave reads clearly. */}
+          <path
+            d="M284 202 C292 188 286 170 270 158 C282 172 280 190 268 200"
             stroke="url(#ia-hairLite)"
             strokeWidth="3"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.65"
+          />
+          <path
+            d="M250 172 C256 160 250 148 236 140"
+            stroke="url(#ia-hairLite)"
+            strokeWidth="2.4"
             strokeLinecap="round"
             fill="none"
             opacity="0.55"
           />
           <path
-            d="M278 142 C260 110 235 88 220 85"
+            d="M156 202 C148 188 154 170 170 158 C158 172 160 190 172 200"
             stroke="url(#ia-hairLite)"
             strokeWidth="3"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.65"
+          />
+          <path
+            d="M190 172 C184 160 190 148 204 140"
+            stroke="url(#ia-hairLite)"
+            strokeWidth="2.4"
             strokeLinecap="round"
             fill="none"
             opacity="0.55"
@@ -697,20 +803,42 @@ export default function InteractiveAvatar({
             animate={reduced ? undefined : { rotate: [-2.2, 1.8, -2.2] }}
             transition={{ duration: 6.4, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
           >
+            {/* Widened well past the old thin-lock silhouette into a full
+                panel of hair — outer edge (away from the face) pushed far
+                out for real volume, inner edge (bordering the jaw) and the
+                crown attachment left as they were, so this reads as hair
+                covering that whole side, not a rope-like strand. */}
             <path
-              d="M172 136 C152 160 138 200 140 244 C142 284 122 312 116 352
-                 C112 380 128 404 118 432 C112 452 128 466 140 452
-                 C150 440 144 414 152 388 C160 358 172 322 166 284
-                 C160 248 172 208 184 176 C190 160 182 146 172 136 Z"
+              d="M172 136 C152 160 128 200 120 248
+                 C112 288 82 314 68 356
+                 C58 390 68 416 64 442
+                 C60 462 92 470 122 456
+                 C126 440 138 414 148 388
+                 C158 358 170 322 165 284
+                 C160 248 172 208 184 176
+                 C190 160 182 146 172 136 Z"
               fill="url(#ia-hairFront)"
             />
             <path
-              d="M164 150 C148 182 138 220 142 258 C146 292 128 316 122 350"
+              d="M164 150 C144 186 128 226 118 264
+                 C108 296 84 320 72 352"
               stroke="url(#ia-hairLite)"
               strokeWidth="2.3"
               strokeLinecap="round"
               fill="none"
               opacity="0.6"
+            />
+            {/* Seam line — traces this lock's own outer edge so it reads as
+                a visibly separate section (the curtain bangs) laid over the
+                back hair mass, running from the part down to the shoulder. */}
+            <path
+              d="M172 136 C152 160 128 200 120 248
+                 C112 288 82 314 68 356"
+              stroke="#15161D"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.5"
             />
           </motion.g>
 
@@ -721,26 +849,43 @@ export default function InteractiveAvatar({
             transition={{ duration: 6.9, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
           >
             <path
-              d="M268 136 C288 160 302 200 300 244 C298 284 318 312 324 352
-                 C328 380 312 404 322 432 C328 452 312 466 300 452
-                 C290 440 296 414 288 388 C280 358 268 322 274 284
-                 C280 248 268 208 256 176 C250 160 258 146 268 136 Z"
+              d="M268 136 C288 160 312 200 320 248
+                 C328 288 358 314 372 356
+                 C382 390 372 416 376 442
+                 C380 462 348 470 318 456
+                 C314 440 302 414 292 388
+                 C282 358 270 322 275 284
+                 C280 248 268 208 256 176
+                 C250 160 258 146 268 136 Z"
               fill="url(#ia-hairFront)"
             />
             <path
-              d="M276 150 C292 182 302 220 298 258 C294 292 312 316 318 350"
+              d="M276 150 C296 186 312 226 322 264
+                 C332 296 356 320 368 352"
               stroke="url(#ia-hairLite)"
               strokeWidth="2.3"
               strokeLinecap="round"
               fill="none"
               opacity="0.6"
             />
+            <path
+              d="M268 136 C288 160 312 200 320 248
+                 C328 288 358 314 372 356"
+              stroke="#15161D"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.5"
+            />
           </motion.g>
 
         </motion.g>
 
         {/* ---------- LAYER 5 — JHUMKAS ---------- */}
-        <g id="ia-jhumkas">
+        {/* Dangle from the earlobes, which are part of the head group — ride
+            along with headSlideX so they stay attached to the ears instead
+            of floating away from them as the head glides. */}
+        <motion.g style={reduced ? {} : { x: headSlideX }} id="ia-jhumkas">
           <motion.g style={reduced ? {} : { rotate: earringLeftRotate, transformOrigin: "152px 252px" }}>
             <circle cx="152" cy="252" r="3.4" fill="url(#ia-silver)" stroke="#5F6675" strokeWidth="0.7" />
             <line x1="152" y1="255" x2="152" y2="261" stroke="#98A0B0" strokeWidth="1.8" />
@@ -764,7 +909,8 @@ export default function InteractiveAvatar({
             <circle cx="292.5" cy="277.5" r="1.4" fill="#FFF" stroke="#98A0B0" strokeWidth="0.5" />
             <circle cx="297" cy="276.5" r="1.4" fill="#FFF" stroke="#98A0B0" strokeWidth="0.5" />
           </motion.g>
-        </g>
+        </motion.g>
+        </motion.g>
       </motion.svg>
     </div>
   );

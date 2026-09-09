@@ -2,6 +2,27 @@
    Eshani Somwanshi — portfolio design system
    Fonts are loaded from public/index.html (a <link>, not an @import here:
    @import inside CSS is render-blocking and delays first paint).
+
+   ---------------------------------------------------------------------------
+   BREAKPOINTS — four tiers, three dividing lines. Desktop is the base, with no
+   media query of its own; each query steps down from it.
+
+       Phone   <= 576        @media (max-width:  576px)
+       Tablet   577 - 1024   @media (max-width: 1024px)
+       Laptop  1025 - 1280   @media (max-width: 1280px)
+       Desktop >= 1281       (plain rules, no query)
+
+   These three widths are the whole set — there are no others, and none should
+   be added. Anything that only grows or shrinks belongs in clamp() instead of
+   a breakpoint; a query is for structural changes a fluid value cannot express
+   (hamburger vs inline nav, column counts, reordering).
+
+   The same width may appear as several separate blocks. That is deliberate:
+   each one sits beside the component it styles, because in this file the
+   cascade depends on position — several base rules are declared *after* the
+   media query that modifies them, and gathering the queries into three blocks
+   would silently switch some rules on and others off.
+   ---------------------------------------------------------------------------
    ========================================================================= */
 
 
@@ -16,6 +37,10 @@
   --muted: #6B6459;
   --line: #DCD3C4;
   --line-soft: #E8E1D5;
+  /* --line/--inv-line are decorative-divider strength only (~1.3:1) — too
+     faint for a border that's the sole visible boundary of a control.
+     These pass the 3:1 non-text minimum for that use (A11Y_AUDIT.md #9). */
+  --line-strong: #8D877D;
   --accent: #D9512C;
   --accent-strong: #B23F1E;
   --secondary: #4F6259;
@@ -25,7 +50,13 @@
   --inv-ink: #F2EEE7;
   --inv-muted: #A8A197;
   --inv-line: #2E2C26;
+  --inv-line-strong: #64635E;
   --inv-faint: #46433B;
+  /* --secondary/--accent as TEXT on --inv-bg fail contrast in Carbon/Petrol
+     (A11Y_AUDIT.md #6-8) — these are the same colors elsewhere, adjusted
+     only for that specific usage so nothing else changes. */
+  --secondary-on-inv: #72817A;
+  --accent-on-inv: #D9512C;
 
   --header-rgb: 242, 238, 231;
   --shadow-rgb: 20, 19, 15;
@@ -42,9 +73,18 @@
   --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --nav-h: 78px;
+  /* Fluid rather than a step at 576. The header used to snap from 78px to
+     64px on crossing the phone breakpoint, taking every sticky offset and
+     scroll-margin that reads this with it.
+
+     The floor is deliberately below where the curve is still moving: it keeps
+     easing right through phone widths (60px at 390, 59px at 320) instead of
+     flattening at 576 and sitting at one size for every phone. 56px is a
+     safety net that only engages under ~172px, not a design step. Same idea
+     for .stack-item and .avatar-hero-stage. */
+  --nav-h: clamp(56px, calc(52.56px + 1.9858vw), 78px);
   --container: 1320px;
-  --edge: clamp(1.25rem, 5vw, 4rem);
+  --edge: clamp(1.6667rem, 5vw, 5.3333rem);
   --radius-btn: 8px;
 
   --ease-enter: cubic-bezier(.22, .61, .36, 1);
@@ -62,6 +102,7 @@
   --muted: #8F8B84;
   --line: #242424;
   --line-soft: #1C1C1C;
+  --line-strong: #616161;
   --accent: #E5825F;
   --accent-strong: #F0A183;
   --secondary: #93A89B;
@@ -71,7 +112,10 @@
   --inv-ink: #0B0B0B;
   --inv-muted: #57544E;
   --inv-line: #D6D3CC;
+  --inv-line-strong: #8D8B87;
   --inv-faint: #C2BEB6;
+  --secondary-on-inv: #647269;
+  --accent-on-inv: #A05B42;
 
   --header-rgb: 11, 11, 11;
   --shadow-rgb: 0, 0, 0;
@@ -87,6 +131,7 @@
   --muted: #8CB0B5;
   --line: #0F5261;
   --line-soft: #0B4450;
+  --line-strong: #50818C;
   --accent: #CBF24E;
   --accent-strong: #DDFA80;
   --secondary: #7FBFB2;
@@ -96,7 +141,10 @@
   --inv-ink: #052A31;
   --inv-muted: #4A6067;
   --inv-line: #C2D4D6;
+  --inv-line-strong: #808C8D;
   --inv-faint: #AEC5C7;
+  --secondary-on-inv: #4C736B;
+  --accent-on-inv: #5F7225;
 
   --header-rgb: 5, 42, 49;
   --shadow-rgb: 0, 0, 0;
@@ -107,19 +155,29 @@
 /* ---------- reset / base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* Type scale base: 12px root, 1.125 (major second) ratio, matching
+   typescale.com's own convention so its rem values (h1 2.027rem, h2
+   1.802rem, h3 1.602rem, h4 1.424rem, h5 1.266rem, h6 1.125rem, p 1rem,
+   small .889rem, .79rem) can be used verbatim everywhere on this site
+   without recalculating for a 16px root. 75% is relative to the user's
+   own browser default (usually 16px) rather than a hard 12px, so it
+   still respects a changed default browser font-size setting.
+   Every pre-existing rem value elsewhere in this file (and the other
+   stylesheets) was rescaled by 16/12 at the same time this landed, so
+   current sizes/spacing are visually unchanged — only new rem values
+   written from here on should use the type-scale numbers directly. */
+html { font-size: 75%; -webkit-text-size-adjust: 100%; }
 
-/* Native scrolling. Lenis was removed — its momentum curve desynced from the
-   macOS trackpad, which is the machine most of this audience is on. */
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+/* Lenis (index.js) owns smooth scrolling — CSS scroll-behavior:smooth is
+   deliberately left off here so the two don't double-smooth against each
+   other on the rare raw scroll call that bypasses Lenis's own API. */
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 1.02rem;
+  font-size: 1.36rem;
   line-height: 1.62;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -127,7 +185,15 @@ body {
   transition: background-color var(--dur-mid) var(--ease-state),
               color var(--dur-mid) var(--ease-state);
 }
-body.menu-open { overflow: hidden; }
+/* Pinned rather than just overflow-hidden: see the menu scroll-lock effect in
+   App.js. The inline `top` App.js sets holds the page visually in place. */
+body.menu-open {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
 
 /* film grain */
 body::after {
@@ -172,16 +238,31 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   z-index: 999;
   background: var(--ink);
   color: var(--bg);
-  padding: .8rem 1.2rem;
+  padding: 1.0667rem 1.6rem;
   font-family: var(--font-mono);
-  font-size: .8rem;
+  font-size: 1.0667rem;
 }
-.skip-link:focus { left: 1rem; top: 1rem; }
+.skip-link:focus { left: 1.3333rem; top: 1.3333rem; }
+
+/* Visually hides content while keeping it in the accessibility tree —
+   standard clip-based technique (not display:none/visibility:hidden,
+   which would remove it for screen readers too). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* ---------- shared type ---------- */
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: .72rem;
+  font-size: 0.96rem;
   text-transform: uppercase;
   letter-spacing: .14em;
   color: var(--secondary);
@@ -198,20 +279,14 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 }
 
 .section-label {
-  font-family: var(--font-mono);
-  font-size: .72rem;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 3.6vw, 4.1333rem);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ink);
 }
 
 /* serif italic accent — the editorial voice inside the grotesque */
-.serif {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -.005em;
-}
 
 /* split-text word masks */
 .split { display: block; }
@@ -222,7 +297,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   padding-bottom: .14em;
   margin-bottom: -.14em;
 }
-.split-i { display: inline-block; will-change: transform; }
+.split-i { display: inline-block; }
 
 /* ---------- preloader ---------- */
 /* Preloader styles now live in components/site/preloader.css */
@@ -233,9 +308,13 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   top: 0; left: 0; right: 0;
   z-index: 100;
   --p: 0;
+  /* Only the background opacity tracks scroll (`--p`, set from App.js). The
+     blur radius is a constant — animating a backdrop-filter blur re-blurs
+     the whole area behind the header every scroll frame and is a major
+     source of scroll jank. */
   background: rgba(var(--header-rgb), calc(.72 + .26 * var(--p)));
-  backdrop-filter: blur(calc(4px + 12px * var(--p))) saturate(1.4);
-  -webkit-backdrop-filter: blur(calc(4px + 12px * var(--p))) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
 }
 .site-header::after {
   content: "";
@@ -258,24 +337,45 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 2rem;
   height: calc(var(--nav-h) - 16px * var(--p));
   transition: height .1s linear;
 }
 .wordmark {
   font-family: var(--font-mono);
-  font-size: .8rem;
+  font-size: 1.0667rem;
   letter-spacing: .06em;
   font-weight: 500;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: .5rem;
+  gap: 0.6667rem;
+  /* The mark itself is 22px tall, under the 24px minimum target size, and it
+     is the hardest thing on the page to hit with a thumb. Grow the hit area
+     with a pseudo-element instead of padding so the header layout is
+     untouched. */
+  position: relative;
 }
-.wordmark b { color: var(--accent); font-weight: 500; margin-right: .5rem; }
+.wordmark::after {
+  content: "";
+  position: absolute;
+  inset: -7px -10px;
+}
+.wordmark b { color: var(--accent); font-weight: 500; margin-right: 0.6667rem; }
 .wordmark-logo { height: 22px; width: auto; display: block; }
 
-.nav-links { display: flex; gap: 2.1rem; font-family: var(--font-mono); font-size: .78rem; }
+/* The gap is fluid so the links can survive down to the phone tier, which is
+   what lets the hamburger live at 576 instead of needing a breakpoint of its
+   own. It resolves to 2.8rem (33.6px) — the previous fixed value — at 1344px
+   and wider, so desktop and laptop are unchanged; below that it closes up.
+   Measured: at the old fixed gap the links collided with the theme pill at
+   ~590px; at 20px they clear it by ~50px. */
+.nav-links {
+  display: flex;
+  gap: clamp(20px, 2.5vw, 2.8rem);
+  font-family: var(--font-mono);
+  font-size: 1.04rem;
+}
 .nav-links a {
   position: relative;
   display: inline-flex;
@@ -306,7 +406,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   border-radius: 4px;
   padding: .5em 1.05em;
   color: var(--ink) !important;
-  font-size: .72rem;
+  font-size: 0.96rem;
   background-image: linear-gradient(var(--ink), var(--ink));
   background-repeat: no-repeat;
   background-size: 100% 0%;
@@ -325,30 +425,56 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
               color var(--dur-fast) var(--ease-state);
 }
 
-.header-right { display: flex; align-items: center; gap: 1.2rem; }
+.header-right { display: flex; align-items: center; gap: 1.6rem; }
 
 /* theme switch */
-.theme-switch { display: flex; align-items: center; gap: 2px; border: 1px solid var(--line); padding: 2px; }
+/* Reserves the collapsed pill's real footprint in the flex layout so the
+   floating pill below can expand/collapse without ever reflowing sibling
+   nav items (wordmark, links). */
+.theme-switch-anchor { position: relative; display: inline-flex; align-items: center; }
+.theme-switch-spacer { visibility: hidden; pointer-events: none; }
+.theme-switch-floating {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 5;
+}
+
+.theme-switch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 3px;
+  background: var(--surface);
+  overflow: hidden;
+}
 .theme-dot {
   display: flex;
   align-items: center;
-  gap: .42rem;
-  padding: .38rem .5rem;
+  gap: 0.56rem;
+  padding: 0.5067rem 1rem;
   min-height: 32px;
+  border-radius: 999px;
   font-family: var(--font-mono);
-  font-size: .64rem;
+  font-size: 0.8533rem;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--muted);
+  white-space: nowrap;
   transition: color var(--dur-fast) var(--ease-state), background var(--dur-fast) var(--ease-state);
 }
 .theme-dot:hover { color: var(--ink); }
 .theme-dot[aria-pressed="true"] { color: var(--ink); background: var(--card); }
+.theme-switch:not(.is-expanded) .theme-dot[aria-pressed="true"] { background: transparent; }
 .theme-swatch {
-  width: 13px; height: 13px;
+  width: 15px; height: 15px;
+  border-radius: 50%;
   flex: none;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   position: relative;
+  overflow: hidden;
   background: linear-gradient(120deg, var(--sw-bg) 0 52%, var(--sw-text) 52% 100%);
   transition: transform var(--dur-fast) var(--ease-state);
 }
@@ -363,7 +489,8 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .theme-dot[data-theme-value="paper"]  .theme-swatch { --sw-bg: #F2EEE7; --sw-text: #14130F; --sw-accent: #D9512C; }
 .theme-dot[data-theme-value="carbon"] .theme-swatch { --sw-bg: #0B0B0B; --sw-text: #F4F2ED; --sw-accent: #E5825F; }
 .theme-dot[data-theme-value="petrol"] .theme-swatch { --sw-bg: #052A31; --sw-text: #E4F1F2; --sw-accent: #CBF24E; }
-@media (max-width: 1100px) {
+/* Laptop and below — see the tier table at the top of this file. */
+@media (max-width: 1280px) {
   .site-header .theme-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 }
 
@@ -384,43 +511,44 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   transition: clip-path .55s var(--ease-curtain), visibility 0s linear .55s;
 }
 .mobile-menu.open { clip-path: inset(0 0 0 0); visibility: visible; transition-delay: 0s; }
-.mobile-menu ul { display: flex; flex-direction: column; gap: 1rem; }
+.mobile-menu ul { display: flex; flex-direction: column; gap: 1.3333rem; }
 .mobile-menu ul a {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 9vw, 2.8rem);
+  font-size: clamp(2.6667rem, 9vw, 3.7333rem);
   font-weight: 600;
   letter-spacing: -.03em;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: .2rem 0;
+  padding: 0.2667rem 0;
   border-bottom: 1px solid var(--inv-line);
   transition: color var(--dur-fast) var(--ease-state), padding-left .3s var(--ease-state);
 }
-.mobile-menu ul a:hover { color: var(--accent); padding-left: .4rem; }
+.mobile-menu ul a:hover { color: var(--accent); padding-left: 0.5333rem; }
 .mobile-menu-close {
   position: absolute;
   top: var(--edge); right: var(--edge);
   font-family: var(--font-mono);
-  font-size: .82rem;
+  font-size: 1.0933rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   min-width: 44px; min-height: 44px;
 }
 .theme-switch-mobile {
   display: none;
-  margin-top: 2.4rem;
+  margin-top: 3.2rem;
   align-self: flex-start;
-  border-color: var(--inv-line);
+  border-color: var(--inv-line-strong);
+  background: var(--inv-bg);
 }
-.theme-switch-mobile .theme-dot { color: var(--inv-muted); min-height: 44px; padding: .6rem .8rem; font-size: .7rem; }
+.theme-switch-mobile .theme-dot { color: var(--inv-muted); min-height: 44px; padding: 0.8rem 1.0667rem; font-size: 0.9333rem; }
 .theme-switch-mobile .theme-dot[aria-pressed="true"] { color: var(--inv-ink); background: transparent; box-shadow: inset 0 -1px 0 var(--accent); }
-.theme-switch-mobile .theme-swatch { width: 15px; height: 15px; border-color: var(--inv-line); }
+.theme-switch-mobile .theme-swatch { width: 15px; height: 15px; border-color: var(--inv-line-strong); }
 
 /* ---------- buttons ---------- */
 .btn {
   font-family: var(--font-mono);
-  font-size: .8rem;
+  font-size: 1.0667rem;
   letter-spacing: .03em;
   padding: .95em 1.5em;
   display: inline-flex;
@@ -461,215 +589,46 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .btn svg { transition: transform .3s var(--ease-state); position: relative; }
 .btn:hover svg { transform: translate(2px, -2px); }
 
-/* ---------- name band ---------- */
-.name-band {
-  overflow: hidden;
-  padding: calc(var(--nav-h) + clamp(2rem, 6vw, 4.5rem)) 0 clamp(1.5rem, 3vw, 2.5rem);
-  position: relative;
-}
-.name-band .line { display: block; overflow: hidden; padding-bottom: .06em; }
-.name-band .line > span { display: block; will-change: transform; }
-.name-line {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(3.4rem, 13.2vw, 12.5rem);
-  /* Tight tracking only pays off at display sizes. */
-  letter-spacing: -.025em;
-  line-height: .92;
-  white-space: nowrap;
-  padding-left: var(--edge);
-}
-.name-solid { color: var(--ink); }
-.name-outline {
-  color: transparent;
-  -webkit-text-stroke: 2px var(--ink);
-}
-.line-indent { margin-top: .04em; }
-.name-band .name-sub {
-  margin: 2rem var(--edge) 0;
-  font-family: var(--font-mono);
-  font-size: .78rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: .8rem;
-  flex-wrap: wrap;
-}
-
 /* availability dot */
-.avail { display: inline-flex; align-items: center; gap: .5rem; color: var(--secondary); }
-.avail::before {
-  content: "";
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0 var(--accent);
-  animation: pulse 2.4s var(--ease-state) infinite;
-}
 @keyframes pulse {
   0%   { box-shadow: 0 0 0 0 rgba(217, 81, 44, .5); }
   70%  { box-shadow: 0 0 0 9px rgba(217, 81, 44, 0); }
   100% { box-shadow: 0 0 0 0 rgba(217, 81, 44, 0); }
 }
 
-@media (max-width: 700px) {
-  .name-outline { -webkit-text-stroke-width: 1.2px; }
-  .name-line { font-size: 12.4vw; }
-  .line-indent { margin-left: 0; }
-}
-
-/* ---------- hero ---------- */
-.hero {
-  overflow: hidden;
-  padding-top: clamp(1rem, 3vw, 2.5rem);
-  padding-bottom: clamp(3rem, 7vw, 6rem);
-  position: relative;
-}
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1.28fr .72fr;
-  gap: clamp(2rem, 4vw, 4rem);
-  align-items: center;
-}
-.hero h1 {
-  font-family: var(--font-display);
-  font-size: clamp(2.4rem, 5.4vw, 4.8rem);
-  font-weight: 600;
-  letter-spacing: -.038em;
-  line-height: .99;
-  margin-top: 1.5rem;
-}
-.hero h1 .line { display: block; overflow: hidden; padding-bottom: .09em; }
-.hero h1 .line > span { display: block; will-change: transform; }
-.hero h1 em {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  color: var(--accent-strong);
-  letter-spacing: -.01em;
-}
-.hero .lede {
-  margin-top: 1.8rem;
-  font-size: clamp(1.02rem, 1.4vw, 1.18rem);
-  color: var(--muted);
-  max-width: 46ch;
-  line-height: 1.62;
-}
-.hero-actions { margin-top: 2.3rem; display: flex; gap: .9rem; flex-wrap: wrap; align-items: center; }
-
-.hero-stage { position: relative; aspect-ratio: 1 / 1; min-height: 400px; }
-.frag {
-  position: absolute;
-  background: transparent;
-  border: 1px solid var(--line);
-  overflow: hidden;
-  will-change: transform;
-  transition: box-shadow .4s var(--ease-state);
-}
-.frag img { width: 100%; height: 100%; object-fit: cover; }
-.frag-eyeai { width: 104%; top: 0; right: -22%; aspect-ratio: 485/400; z-index: 1; box-shadow: 0 24px 60px -34px rgba(var(--shadow-rgb), .32); }
-.frag-myo   { width: 60%; top: 44%; left: -12%; aspect-ratio: 505/420; z-index: 3; box-shadow: 0 30px 70px -30px rgba(var(--shadow-rgb), .4); }
-.frag-tvl   { width: 34%; bottom: -4%; right: 0; aspect-ratio: 505/420; z-index: 4; box-shadow: 0 26px 50px -26px rgba(var(--shadow-rgb), .45); }
-.hero-stage-note {
-  position: absolute;
-  left: 0; bottom: -2.4rem;
-  font-family: var(--font-mono);
-  font-size: .72rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.scroll-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: .55rem;
-  font-family: var(--font-mono);
-  font-size: .68rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-left: .5rem;
-}
-.scroll-cue span.rule {
-  display: block;
-  width: 40px; height: 1px;
-  background: var(--line);
-  position: relative;
-  overflow: hidden;
-}
-.scroll-cue span.rule::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  transform-origin: left;
-  animation: sweep 2.6s var(--ease-state) infinite;
-}
-@keyframes sweep {
-  0%   { transform: scaleX(0); transform-origin: left; }
-  45%  { transform: scaleX(1); transform-origin: left; }
-  55%  { transform: scaleX(1); transform-origin: right; }
-  100% { transform: scaleX(0); transform-origin: right; }
-}
-
-/* ---------- proof strip ---------- */
-.proof-strip {
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  padding: 2.4rem 0;
-  background: var(--bg);
-}
-.proof-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
-.proof-item { border-left: 1px solid var(--line); padding-left: 1.3rem; }
-.proof-item:first-child { border-left: none; padding-left: 0; }
-.proof-value {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.6rem);
-  font-weight: 600;
-  letter-spacing: -.028em;
-  color: var(--accent-strong);
-}
-.proof-label { margin-top: .35rem; font-size: .88rem; line-height: 1.45; }
-.proof-method {
-  margin-top: .5rem;
-  font-family: var(--font-mono);
-  font-size: .6rem;
-  letter-spacing: .04em;
-  line-height: 1.5;
-  color: var(--muted);
-  opacity: .7;
-}
-.proof-context {
-  margin-top: .2rem;
-  font-family: var(--font-mono);
-  font-size: .72rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
 
 /* ---------- section scaffold ---------- */
-.section { padding: clamp(4.5rem, 9vw, 7.5rem) 0; position: relative; }
+.section {
+  padding: clamp(6rem, 9vw, 10rem) 0;
+  position: relative;
+  /* svh, not dvh. dvh tracks the *current* viewport, so on mobile it grows and
+     shrinks by the height of the URL bar as that bar hides and shows during
+     scroll — which re-ran this min-height on every section at once and shifted
+     the whole document under the reader's finger. svh is the stable small
+     value (bar shown), so the layout never moves. vh first as the fallback. */
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .section-bright { background: var(--surface); }
 .section-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 2rem;
-  margin-bottom: clamp(2.2rem, 4vw, 3.4rem);
+  gap: 2.6667rem;
+  margin-bottom: clamp(2.9333rem, 4vw, 4.5333rem);
   flex-wrap: wrap;
 }
 .section-head h2 {
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 3.6vw, 3.1rem);
+  font-size: clamp(1.3333rem, 1.6vw, 1.6667rem);
   font-weight: 600;
   letter-spacing: -.028em;
-  margin-top: .6rem;
-  max-width: 20ch;
+  color: var(--muted);
+  margin-top: 0.8rem;
+  max-width: 40ch;
   line-height: 1.05;
 }
 .section-head h2 em {
@@ -678,12 +637,12 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   font-weight: 400;
   color: var(--accent-strong);
 }
-.section-head .desc { max-width: 36ch; color: var(--muted); font-size: .96rem; }
+.section-head .desc { max-width: 36ch; color: var(--muted); font-size: 1.28rem; }
 
-.tag-row { display: flex; flex-wrap: wrap; gap: .45rem; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .tag {
   font-family: var(--font-mono);
-  font-size: .68rem;
+  font-size: 0.9067rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-btn);
   padding: .35em .75em;
@@ -696,17 +655,17 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 
 .m-value {
   font-family: var(--font-display);
-  font-size: 1.55rem;
+  font-size: 2.0667rem;
   font-weight: 600;
   color: var(--accent-strong);
   letter-spacing: -.02em;
 }
-.m-label { font-size: .8rem; color: var(--muted); line-height: 1.4; }
+.m-label { font-size: 1.0667rem; color: var(--muted); line-height: 1.4; }
 /* Method line under a metric. A number without a method reads as decoration. */
 .m-method {
-  margin-top: .3rem;
+  margin-top: 0.4rem;
   font-family: var(--font-mono);
-  font-size: .62rem;
+  font-size: 0.8267rem;
   letter-spacing: .04em;
   line-height: 1.45;
   color: var(--muted);
@@ -715,14 +674,14 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 
 /* ---------- image frames ----------
    Border + background live here so nothing double-frames. */
-.wipe { overflow: hidden; background: transparent; will-change: clip-path; }
+.wipe { overflow: hidden; background: transparent; }
 .wipe img { width: 100%; height: 100%; display: block; }
 .wipe-zoom img { transition: transform .7s var(--ease-state); }
 figcaption {
   display: block;
-  margin-top: .6rem;
+  margin-top: 0.8rem;
   font-family: var(--font-mono);
-  font-size: .72rem;
+  font-size: 0.96rem;
   color: var(--muted);
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -731,10 +690,34 @@ figcaption {
 /* ---------- 01 lead panel ---------- */
 .lead-panel {
   border: 1px solid var(--ink);
+  /* Was 4px, then 15px. At 60px the curve reaches further in than the
+     card's own padding (~16-19px), so check the top-row content (index
+     label, CTA pill) isn't visually crowded/clipped near the corners
+     before shipping -- pad/adjust only if it actually looks wrong. */
+  border-radius: 60px;
   background: var(--card);
-  padding: clamp(1.75rem, 4.5vw, 4rem);
+  padding: clamp(1.3333rem, 1.8vw, 1.6rem);
   position: relative;
   overflow: hidden;
+  /* Near-viewport-height, full-width cards for the sticky stack —
+     min-height so shorter cards (no image, fewer metrics) still fill the
+     same footprint as the fullest one, content centered rather than
+     pinned to the top with dead space below. */
+  min-height: min(86vh, 900px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Depth-of-stack: scale only, driven per-card from JS (see useCardDepth
+     in App.js) as a card gets covered by the next one in the sticky
+     stack — no opacity/blur/shadow, the narrowing width against the next
+     (undimmed, flush) card is what reads as receding. transform-origin:
+     top matches how it actually disappears on scroll — its top edge
+     stays pinned (sticky) while the next card rises to cover it, so
+     shrinking should read as receding away from that fixed top edge, not
+     from the card's center. border-radius is untouched by the scale
+     transform, so it stays visually consistent throughout. */
+  transform-origin: top center;
+  will-change: transform;
 }
 .lead-panel::after {
   content: "";
@@ -750,22 +733,22 @@ figcaption {
 .lead-top {
   display: flex;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 2rem;
   flex-wrap: wrap;
   align-items: baseline;
-  padding-bottom: 1.6rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--line);
 }
 .lead-index {
   font-family: var(--font-mono);
-  font-size: .72rem;
+  font-size: 0.96rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--muted);
 }
 .status-pill {
   font-family: var(--font-mono);
-  font-size: .72rem;
+  font-size: 0.96rem;
   background: var(--pill);
   color: var(--secondary);
   padding: .45em .85em;
@@ -773,47 +756,95 @@ figcaption {
   text-transform: uppercase;
   border-radius: var(--radius-btn);
 }
+/* Scoped to this card only — the same status-pill class is reused
+   elsewhere ("Under NDA") and must keep its original look there. */
+.lead-panel .status-pill,
+.lead-panel .read-case {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  background: transparent;
+  border: 1px solid var(--accent-strong);
+  border-radius: var(--radius-btn);
+  padding: .5em .9em;
+  color: var(--accent-strong);
+  transition: background-color var(--dur-fast) var(--ease-state), color var(--dur-fast) var(--ease-state);
+}
+.lead-panel .read-case { padding-bottom: .5em; width: fit-content; }
+.lead-panel .read-case::after { display: none; }
+.lead-panel .status-pill:hover,
+.lead-panel .read-case:hover,
+.lead-panel .read-case:focus-visible {
+  background: var(--accent-strong);
+  color: var(--card);
+}
 .lead-panel h3 {
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 3.9vw, 3.1rem);
+  /* Type scale: base 12px, 1.125 (major second) ratio, from typescale.com
+     — used verbatim now that the site root is 12px (see html rule above). */
+  font-size: 2.027rem; /* h1 step — 24.33px */
   font-weight: 600;
-  letter-spacing: -.035em;
-  line-height: 1.04;
-  margin: .7rem 0 0;
-  max-width: 20ch;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  margin: 0.4rem 0 0;
 }
 .lead-panel h3 .quiet { color: var(--muted); }
 .lead-role {
   font-family: var(--font-mono);
-  font-size: .78rem;
+  font-size: 1.04rem;
   color: var(--secondary);
   text-transform: uppercase;
   letter-spacing: .06em;
-  margin-bottom: .9rem;
+  margin-bottom: 0.5333rem;
 }
-.lead-body {
+/* Type-scale steps for this card's smaller/utility text — all scoped to
+   .lead-panel since .lead-role/.lead-index/.tag/.read-case are reused by
+   other cards elsewhere on the page. "small" step (10.67px). */
+.lead-panel .lead-role,
+.lead-panel .lead-index,
+.lead-panel .status-pill,
+.lead-panel .read-case,
+.lead-panel .tag {
+  font-size: .889rem;
+}
+/* Text on the left, image on the right — the row's height is set by the
+   text column (its natural content height); the image column has no
+   intrinsic height of its own (height:100% only resolves once the row
+   height is known) so grid's default stretch makes it match exactly,
+   no aspect-ratio guessing needed. */
+.lead-columns {
   display: grid;
-  grid-template-columns: 1.25fr .75fr;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
-  margin-top: 2.2rem;
-  align-items: end;
+  grid-template-columns: 35fr 65fr;
+  gap: clamp(2rem, 4vw, 3.3333rem);
+  margin-top: 1.2rem;
+  align-items: start;
 }
-.lead-body p { color: var(--muted); max-width: 52ch; }
-.lead-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
-.lead-metrics .m-value { font-size: clamp(1.6rem, 2.6vw, 2.3rem); }
-.lead-tags { margin-top: 2.2rem; padding-top: 1.6rem; border-top: 1px solid var(--line); }
+/* Cards with no image (Rebecca, DAB) — text takes the full width instead
+   of being stuck in the narrow 35% column. */
+.lead-panel.no-image .lead-columns { grid-template-columns: 1fr; }
+.lead-col-text { display: flex; flex-direction: column; }
+/* "p" step = 1rem (12px) — the body-copy tier of the scale. */
+.lead-desc { color: var(--muted); margin-top: 1.2rem; font-size: 1rem; max-width: 70ch; }
+/* auto-fit so 2, 3, or 4 metrics (varies per project) all lay out
+   cleanly instead of a fixed 3-column grid leaving gaps or overflowing. */
+.lead-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 1.0667rem; margin-top: 1.3333rem; max-width: 56rem; }
+.lead-metrics .m-value { font-size: 1.802rem; } /* h2 step — 21.62px */
+.lead-metrics .m-label { font-size: 1rem; } /* p step — 12px */
+.lead-metrics .m-method { font-size: .79rem; } /* smaller step — 9.48px */
+.lead-tags { margin-top: 1.2rem; padding-top: 0.6667rem; border-top: 1px solid var(--line); }
+.lead-panel .read-case { margin-top: 1.2rem; }
 
 /* ---------- read-case link ---------- */
 .read-case {
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
+  gap: 0.6rem;
   font-family: var(--font-mono);
-  font-size: .74rem;
+  font-size: 0.9867rem;
   letter-spacing: .05em;
   text-transform: uppercase;
   color: var(--accent-strong);
-  padding-bottom: .2rem;
+  padding-bottom: 0.2667rem;
   width: fit-content;
   position: relative;
   transition: color var(--dur-fast) var(--ease-state);
@@ -832,140 +863,42 @@ figcaption {
 .read-case:hover svg { transform: translate(3px, -3px); }
 
 /* ---------- 02 chaptered case study ---------- */
-.case { display: grid; grid-template-columns: .82fr 1.18fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: start; }
-.case-rail { position: sticky; top: calc(var(--nav-h) + 2.5rem); }
-.case-rail h3 {
-  font-family: var(--font-display);
-  font-size: clamp(1.45rem, 2.5vw, 2.3rem);
-  font-weight: 600;
-  letter-spacing: -.028em;
-  line-height: 1.09;
-  margin-top: .8rem;
-}
-.case-rail .lead-role { margin-top: .9rem; margin-bottom: 0; }
-.case-metrics {
-  display: flex;
-  gap: 1.6rem;
-  flex-wrap: wrap;
-  margin-top: 1.8rem;
-  padding-top: 1.6rem;
-  border-top: 1px solid var(--line);
-}
-.chapter-nav { margin-top: 1.9rem; display: flex; flex-direction: column; }
-.chapter-nav a {
-  display: flex;
-  align-items: baseline;
-  gap: .85rem;
-  padding: .62rem 0 .62rem 1.1rem;
-  font-family: var(--font-mono);
-  font-size: .78rem;
-  letter-spacing: .04em;
-  color: var(--muted);
-  border-left: 1px solid var(--line);
-  transition: color var(--dur-fast) var(--ease-state),
-              border-color var(--dur-fast) var(--ease-state),
-              padding-left .3s var(--ease-state);
-  min-height: 44px;
-}
-.chapter-nav a:hover { color: var(--ink); padding-left: 1.4rem; }
-.chapter-nav a .n { color: var(--muted); transition: color var(--dur-fast) var(--ease-state); }
-.chapter-nav a[aria-current="true"] { color: var(--ink); border-left-color: var(--accent); border-left-width: 2px; }
-.chapter-nav a[aria-current="true"] .n { color: var(--accent-strong); }
+.case { display: grid; grid-template-columns: .82fr 1.18fr; gap: clamp(2.6667rem, 5vw, 6rem); align-items: start; }
 
-.chapter-flow { display: flex; flex-direction: column; gap: clamp(3rem, 7vw, 6rem); }
 .chapter h4 {
   font-family: var(--font-display);
-  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  font-size: clamp(1.6667rem, 2vw, 2.2667rem);
   font-weight: 600;
   letter-spacing: -.022em;
-  margin: .7rem 0 .9rem;
+  margin: 0.9333rem 0 1.2rem;
 }
-.chapter p { color: var(--muted); max-width: 58ch; font-size: .96rem; }
-.chapter-art { margin-top: 1.6rem; display: grid; gap: 1.4rem; }
-.chapter-art figure { max-width: 640px; }
-.chapter-art figure:nth-of-type(2) { margin-left: auto; max-width: 485px; }
+.chapter p { color: var(--muted); max-width: 58ch; font-size: 1.28rem; }
 
 /* ---------- 03-05 supporting projects: real sticky stack ----------
    Sticky lives on the wrapper (a direct child of .stack), not on the card
    itself. In the old version each card sat alone inside its own reveal
    wrapper of identical height, so sticky had nothing to travel against and
-   the stacking effect never fired. */
+   the stacking effect never fired. `top` is one fixed value, the same for
+   every card — the "home" position each incoming card's translateY (see
+   useCardDepth in App.js) animates up to and each receding card's
+   translateY animates down from. It used to add `var(--i, 0) * 2rem` on
+   top of this per card, staggering each one's resting spot a little lower
+   than the last — a leftover from before the JS depth/recede transform
+   existed. Now that the recede/arrive motion is fully driven by that
+   transform, this offset must be identical across cards, not
+   index-dependent, or every card lands progressively lower than home. */
 .stack { display: block; }
 .stack-item {
   position: sticky;
-  top: calc(var(--nav-h) + 1.2rem + var(--i, 0) * 1.5rem);
-  margin-top: 1.6rem;
+  top: calc(var(--nav-h) + 1.6rem);
+  /* Eases the whole way rather than stepping at 1024, and keeps easing below
+     576 rather than flattening — the floor is a safety net, not a step. */
+  margin-top: clamp(1rem, calc(13.97px + 0.9078vw), 2.1333rem);
 }
 .stack-item:first-child { margin-top: 0; }
 
-.proj {
-  background: var(--card);
-  border: 1px solid var(--line);
-  padding: clamp(1.5rem, 3.5vw, 2.8rem);
-  box-shadow: 0 26px 70px -46px rgba(var(--shadow-rgb), .5);
-  transition: border-color .35s var(--ease-state);
-}
-.proj:hover { border-color: var(--ink); }
-.proj-wide { display: grid; grid-template-columns: .82fr 1.18fr; gap: clamp(1.5rem, 3.5vw, 3.2rem); align-items: center; }
-.proj-media { border: 1px solid var(--line); overflow: hidden; background: transparent; }
-.proj-media .wipe { aspect-ratio: 4 / 3; }
-.proj:hover .proj-media .wipe img { transform: scale(1.045); }
-.proj-wide .proj-body { display: flex; flex-direction: column; gap: 1rem; }
-.proj-wide .proj-metrics { flex-direction: row; gap: 2rem; flex-wrap: wrap; margin-top: .4rem; }
-.proj-compact .proj-body { display: grid; grid-template-columns: .45fr 1fr .55fr; gap: clamp(1.5rem, 3vw, 3rem); align-items: start; }
-.proj h3 {
-  font-family: var(--font-display);
-  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
-  font-weight: 600;
-  letter-spacing: -.022em;
-}
-.proj .lead-role { margin-top: .4rem; margin-bottom: 0; }
-.proj p.summary { color: var(--muted); font-size: .95rem; max-width: 56ch; }
-.proj .tag-row { margin-top: 1.1rem; }
-.proj-metrics { display: flex; flex-direction: column; gap: 1.1rem; }
 
 /* ---------- impact index ---------- */
-.impact-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-}
-.impact-cell {
-  background: var(--surface);
-  padding: 2rem 1.5rem;
-  position: relative;
-  transition: background-color .3s var(--ease-state);
-}
-.impact-cell::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--accent);
-  transform: scaleY(0);
-  transform-origin: bottom;
-  transition: transform .35s var(--ease-state);
-}
-.impact-cell:hover { background: var(--card); }
-.impact-cell:hover::before { transform: scaleY(1); transform-origin: top; }
-.impact-value {
-  font-family: var(--font-display);
-  font-size: clamp(1.7rem, 2.7vw, 2.4rem);
-  font-weight: 600;
-  letter-spacing: -.032em;
-  color: var(--ink);
-}
-.impact-label { margin-top: .4rem; font-size: .86rem; line-height: 1.4; }
-.impact-context {
-  margin-top: .5rem;
-  font-family: var(--font-mono);
-  font-size: .68rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
 
 /* ---------- what I offer (accordion) ---------- */
 .offer-list { border-bottom: 1px solid var(--line); }
@@ -975,14 +908,14 @@ figcaption {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1.7rem 0;
+  gap: 2rem;
+  padding: 2.2667rem 0;
   text-align: left;
   min-height: 44px;
 }
 .offer-head h3 {
   font-family: var(--font-display);
-  font-size: clamp(1.25rem, 2.6vw, 1.7rem);
+  font-size: clamp(1.6667rem, 2.6vw, 2.2667rem);
   font-weight: 600;
   letter-spacing: -.02em;
 }
@@ -990,111 +923,164 @@ figcaption {
 .offer-head[aria-expanded="true"] svg,
 .offer-head:hover svg { color: var(--accent-strong); }
 .offer-detail { overflow: hidden; }
-.offer-detail ul { display: flex; flex-direction: column; gap: .6rem; padding: 0 0 1.7rem; }
-.offer-detail li { font-size: .9rem; color: var(--muted); position: relative; padding-left: 1.1em; }
+.offer-detail ul { display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0 2.2667rem; }
+.offer-detail li { font-size: 1.2rem; color: var(--muted); position: relative; padding-left: 1.1em; }
 .offer-detail li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
-.offer-empty { padding: 0 0 1.7rem; font-size: .85rem; color: var(--muted); font-style: italic; }
+.offer-empty { padding: 0 0 2.2667rem; font-size: 1.1333rem; color: var(--muted); font-style: italic; }
 
 /* ---------- tool marquee ---------- */
-.tool-marquee {
-  margin-top: clamp(3rem, 6vw, 4.5rem);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  padding: 1.4rem 0;
-  overflow: hidden;
-  white-space: nowrap;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+/* `.section` is a full-height flex column that vertically centres its
+   content, which pushed this section's heading into the middle of the
+   viewport. Pin it to the top instead, with a flat 60px above — that's
+   padding (space inside the section, above the heading), not margin. */
+#tools {
+  justify-content: flex-start;
+  padding-top: 60px;
 }
-.tool-track { display: inline-flex; gap: 3.2rem; animation: slide 34s linear infinite; }
-.tool-marquee:hover .tool-track { animation-play-state: paused; }
+/* Wall view: the physics container is the section. Drop the bottom padding
+   so the wall's floor sits on the section's own edge rather than leaving a
+   dead strip below it. */
+#tools[data-tools-view="wall"] { padding-bottom: 0; }
+
+/* Logo on top, label centred beneath it. Logos keep their own brand colours
+   in every theme — no grayscale, no tint (see ToolLogo in App.js). Used by
+   the Grid view; the Wall view has its own sticker styling in
+   components/site/stickerwall.css. */
 .tool-tile {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: .7rem;
+  justify-content: center;
+  gap: 0.6667rem;
   font-family: var(--font-mono);
-  font-size: .8rem;
-  letter-spacing: .1em;
+  font-size: .889rem;
+  line-height: 1;
+  letter-spacing: .08em;
   text-transform: uppercase;
+  text-align: center;
   color: var(--muted);
   transition: color var(--dur-fast) var(--ease-state);
 }
+/* Size is set per view below — the scrolling strip and the grid run at
+   different scales. object-fit: contain keeps non-square marks (Figma,
+   Axure) at their true proportions inside the square box. */
 .tool-tile img {
-  width: 19px; height: 19px;
-  filter: grayscale(1);
-  opacity: .6;
-  transition: filter var(--dur-fast) var(--ease-state), opacity var(--dur-fast) var(--ease-state), transform .25s var(--ease-state);
+  display: block;
+  object-fit: contain;
+  /* The tile is a shrink-to-fit column, so its width comes from whichever
+     child is widest. Without this, the global `img { max-width: 100% }`
+     reset clamps the logo to the *label's* width once the logo is set
+     larger than the text — it stays full height but squeezes narrow. */
+  max-width: none;
+  transition: transform .25s var(--ease-state);
 }
+.tool-tile-label { display: block; }
 .tool-tile:hover { color: var(--ink); }
-.tool-tile:hover img { filter: grayscale(0); opacity: 1; transform: scale(1.2); }
+.tool-tile:hover img { transform: scale(1.08); }
+
+/* ---------- design tools: layout switch + grid view ---------- */
+/* Matches the case-study read-mode switch: hairline box, the active option
+   filled with --ink/--bg (the highest-contrast pair in every theme). */
+.tools-switch {
+  display: flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.tools-switch-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: .889rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 0.8267rem 1.4rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6667rem;
+  transition:
+    background var(--dur-fast) var(--ease-state),
+    color var(--dur-fast) var(--ease-state);
+}
+.tools-switch-btn + .tools-switch-btn { border-left: 1px solid var(--line-strong); }
+.tools-switch-btn:hover { color: var(--ink); }
+.tools-switch-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* Four across, centred on the page. Wrapping flex (not CSS grid) so the
+   last short row centres — 17 tools don't divide evenly by 4. */
+.tool-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(2.9333rem, 4vw, 4rem) clamp(2.1333rem, 3vw, 3.2rem);
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: clamp(1.6rem, 3vw, 2.6667rem) 0;
+}
+.tool-grid .tool-tile { flex: 0 0 auto; width: 12.5rem; }
+.tool-grid .tool-tile img { width: 77px; height: 77px; }
+/* Phones and small tablets: an explicit 3-across grid rather than letting the
+   flex wrap decide, which gave 2 columns and a 9-row column of a list. 18
+   tools divide evenly by 3, so there is no short last row to centre and none
+   of the reason the wider layout uses flex applies. Order is untouched — the
+   tiles render in the prominence order they are declared in, so the grid
+   still reads left to right, most-used first, at every width. */
+@media (max-width: 576px) {
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 34rem;
+    gap: clamp(2rem, 5vw, 2.9333rem) clamp(0.6667rem, 2vw, 1.3333rem);
+  }
+  /* Only the arrangement changes. A third of a 350px phone is 111px against
+     the 120px the wrapped tiles used to get — 7% narrower — so the marks and
+     labels are left exactly as they are, and the longest of them ("After
+     Effects", ~90px) still sits on one line. */
+  .tool-grid .tool-tile { width: auto; min-width: 0; }
+}
 
 @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* ---------- experience ---------- */
-.exp-item {
-  border-top: 1px solid var(--line);
-  padding: 2.4rem 0;
-  display: grid;
-  grid-template-columns: .9fr 1.5fr .7fr;
-  gap: 2rem;
-  transition: background-color .3s var(--ease-state);
-}
-.exp-item:last-child { border-bottom: 1px solid var(--line); }
-.exp-role { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; letter-spacing: -.018em; }
-.exp-company { margin-top: .3rem; color: var(--secondary); font-family: var(--font-mono); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
-.exp-summary { color: var(--muted); font-size: .95rem; }
-.exp-dates { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); text-align: right; }
-.exp-toggle {
-  margin-top: 1rem;
-  font-family: var(--font-mono);
-  font-size: .78rem;
-  color: var(--accent-strong);
-  letter-spacing: .03em;
-  border-bottom: 1px solid currentColor;
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  min-height: 44px;
-  padding-top: .6rem;
-}
-.exp-detail { overflow: hidden; }
-.exp-detail ul { display: flex; flex-direction: column; gap: .6rem; padding-top: 1rem; }
-.exp-detail li { font-size: .9rem; color: var(--muted); position: relative; padding-left: 1.1em; }
-.exp-detail li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
-
 /* ---------- lead subtitle + checklist highlights (work section) ---------- */
-.lead-subtitle { color: var(--muted); font-size: 1.02rem; max-width: 46ch; margin-top: .5rem; }
-.case-highlights { display: flex; flex-direction: column; gap: .7rem; margin-top: 1.6rem; }
-.case-highlights li { display: flex; align-items: flex-start; gap: .6rem; font-size: .88rem; line-height: 1.5; color: var(--muted); }
-.case-highlights svg { flex: none; margin-top: .2rem; color: var(--accent-strong); }
-.case-cover-preview { margin: 2.2rem 0 1.8rem; border: 1px solid var(--line); overflow: hidden; }
-.case-cover-preview .wipe { aspect-ratio: 16 / 10; }
+.lead-subtitle { color: var(--muted); font-size: 1.36rem; max-width: 46ch; margin-top: 0.6667rem; }
+/* Scoped override — .lead-subtitle is shared with the EYE AI case-study
+   rail, which should keep its original size. h3 step (19.22px). */
+.lead-panel .lead-subtitle { font-size: 1.602rem; max-width: none; }
 
 /* ---------- about ---------- */
-.about-grid { display: grid; grid-template-columns: .72fr 1.28fr; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+.about-grid { display: grid; grid-template-columns: .72fr 1.28fr; gap: clamp(2.6667rem, 4vw, 4.6667rem); align-items: start; }
+/* Photo spans both rows on the left; the "About" label and the copy stack in
+   the right-hand column, so the label reads with the text it introduces. */
+.about-figure { grid-column: 1; grid-row: 1 / span 2; }
+.about-lead { grid-column: 2; grid-row: 1; margin-bottom: -1.6rem; }
+.about-copy { grid-column: 2; grid-row: 2; }
 .about-photo { border: 1px solid var(--line); overflow: hidden; background: transparent; }
 .about-photo .wipe { aspect-ratio: 4 / 5; }
 .about-photo .wipe img { object-position: center 20%; }
 .about-photo:hover .wipe img { transform: scale(1.035); }
 .about-photo figcaption {
   margin: 0;
-  padding: .7rem .9rem;
+  padding: 0.9333rem 1.2rem;
   background: var(--card);
   border-top: 1px solid var(--line);
-  font-size: .68rem;
+  font-size: 0.9067rem;
 }
-.about-copy p { font-size: 1.02rem; margin-bottom: 1.1rem; max-width: 62ch; }
+.about-copy p { font-size: 1.36rem; margin-bottom: 1.4667rem; max-width: 62ch; }
 .about-copy p.muted { color: var(--muted); }
 .about-facts {
-  margin-top: 1.8rem;
+  margin-top: 2.4rem;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.4rem;
+  gap: 1.8667rem;
   border-top: 1px solid var(--line);
-  padding-top: 1.4rem;
+  padding-top: 1.8667rem;
 }
-.about-facts dt { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.about-facts dd { margin: .3rem 0 0; font-size: .94rem; }
+.about-facts dt { font-family: var(--font-mono); font-size: 0.96rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.about-facts dd { margin: 0.4rem 0 0; font-size: 1.2533rem; }
 
 /* ---------- contact ---------- */
 .contact {
@@ -1106,8 +1092,8 @@ figcaption {
 .marquee {
   border-top: 1px solid var(--inv-line);
   border-bottom: 1px solid var(--inv-line);
-  padding: 1.1rem 0;
-  margin-bottom: clamp(3rem, 6vw, 5rem);
+  padding: 1.4667rem 0;
+  margin-bottom: clamp(4rem, 6vw, 6.6667rem);
   overflow: hidden;
   white-space: nowrap;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
@@ -1116,7 +1102,7 @@ figcaption {
 .marquee-track { display: inline-flex; animation: slide 34s linear infinite; }
 .marquee span {
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3.4vw, 2.8rem);
+  font-size: clamp(2.1333rem, 3.4vw, 3.7333rem);
   font-weight: 600;
   letter-spacing: -.02em;
   color: var(--inv-faint);
@@ -1124,20 +1110,23 @@ figcaption {
 }
 .marquee span em { font-family: var(--font-serif); font-style: italic; color: var(--accent); }
 
-.contact-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(2rem, 4vw, 3rem); align-items: end; }
+/* The floor is 3.3333rem rather than 2.6667rem so this covers the tablet case
+   on its own — that is exactly what the tablet block used to set, so the gap
+   below 1024 is unchanged and the override could go. */
+.contact-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(3.3333rem, 4vw, 4rem); align-items: center; }
 .contact h2 {
   font-family: var(--font-display);
-  font-size: clamp(2.1rem, 4.3vw, 3.7rem);
+  font-size: clamp(2.8rem, 4.3vw, 4.9333rem);
   font-weight: 600;
   letter-spacing: -.032em;
   max-width: 16ch;
   line-height: 1.03;
-  margin-top: 1rem;
+  margin-top: 1.3333rem;
 }
-.contact h2 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent); }
-.contact-eyebrow { color: var(--secondary); }
-.contact p.lede { margin-top: 1.3rem; max-width: 50ch; color: var(--inv-muted); font-size: 1.02rem; }
-.contact-actions { margin-top: 2.4rem; display: flex; gap: .9rem; flex-wrap: wrap; }
+.contact h2 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent-on-inv); }
+.contact-eyebrow { color: var(--secondary-on-inv); }
+.contact p.lede { margin-top: 1.7333rem; max-width: 50ch; color: var(--inv-muted); font-size: 1.36rem; }
+.contact-actions { margin-top: 3.2rem; display: flex; gap: 1.2rem; flex-wrap: wrap; }
 .contact .btn-primary {
   background-color: var(--accent);
   color: var(--inv-ink);
@@ -1151,75 +1140,105 @@ figcaption {
 }
 .contact .btn-secondary:hover, .contact .btn-secondary:focus-visible { color: var(--inv-bg); }
 
-.contact-side { display: flex; flex-direction: column; gap: 2.2rem; }
-.contact-form { display: flex; flex-direction: column; gap: 1.1rem; }
+.contact-side { display: flex; flex-direction: column; gap: 2.9333rem; }
+.contact-form { display: flex; flex-direction: column; gap: 1.4667rem; }
 .form-field label {
   display: block;
   font-family: var(--font-mono);
-  font-size: .68rem;
+  font-size: 0.9067rem;
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--inv-muted);
-  margin-bottom: .35rem;
+  margin-bottom: 0.4667rem;
 }
 .form-field input, .form-field textarea {
   width: 100%;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--inv-line);
+  border-bottom: 1px solid var(--inv-line-strong);
   border-radius: 0;
   color: var(--inv-ink);
   font-family: var(--font-body);
-  font-size: .95rem;
-  padding: .55rem 0;
-  outline: none;
+  font-size: 1.2667rem;
+  padding: 0.7333rem 0;
   resize: vertical;
   transition: border-color var(--dur-fast) var(--ease-state);
 }
+/* iOS Safari zooms the whole page in when a focused field's text is under
+   16px, and it does not zoom back out afterwards. 1.2667rem is 15.2px at this
+   site's 12px root, so tapping any contact field threw the layout off. Only
+   touch pointers are affected, so only they get the bump — the desktop size is
+   unchanged. */
+@media (pointer: coarse) {
+  .form-field input, .form-field textarea { font-size: 16px; }
+}
+
 .form-field input:focus, .form-field textarea:focus { border-bottom-color: var(--accent); }
+.form-field input[aria-invalid="true"], .form-field textarea[aria-invalid="true"] { border-bottom-color: var(--accent-on-inv); }
+.form-error {
+  margin: 0.5333rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.9867rem;
+  color: var(--accent-on-inv);
+}
+/* The global :focus-visible ring uses --accent, which fails 3:1 contrast
+   against this section's --inv-bg in the Carbon/Petrol themes (see
+   A11Y_AUDIT.md #2) — scoped here to --inv-ink instead, which is the
+   section's own high-contrast foreground color (13–18:1 in all themes). */
+.form-field input:focus-visible, .form-field textarea:focus-visible { outline-color: var(--inv-ink); }
 .form-field textarea { min-height: 96px; }
 .form-sent {
   border: 1px solid var(--inv-line);
-  padding: 2rem;
+  padding: 2.6667rem;
   font-family: var(--font-mono);
-  font-size: .85rem;
+  font-size: 1.1333rem;
   color: var(--inv-muted);
   line-height: 1.7;
 }
-.form-sent b { color: var(--accent); display: block; margin-bottom: .6rem; font-weight: 500; }
+.form-sent b { color: var(--accent-on-inv); display: block; margin-bottom: 0.8rem; font-weight: 500; }
 
-.contact-links { display: flex; flex-direction: column; gap: .9rem; font-family: var(--font-mono); font-size: .88rem; }
-.contact-links a {
-  border-bottom: 1px solid var(--inv-line);
-  padding-bottom: .85rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 44px;
-  align-items: center;
-  transition: color var(--dur-fast) var(--ease-state), border-color var(--dur-fast) var(--ease-state);
-}
-.contact-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ---------- footer ---------- */
 .site-footer {
   background: var(--inv-bg);
   color: var(--inv-muted);
-  padding: 2rem 0 2.2rem;
+  padding: 2.6667rem 0 2.9333rem;
   border-top: 1px solid var(--inv-line);
   transition: background-color var(--dur-mid) var(--ease-state);
 }
 .footer-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: .76rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  font-size: 1.0133rem;
+  gap: 1.3333rem;
 }
+.footer-location { justify-self: start; }
+.footer-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 1.35em;
+  line-height: 1;
+  vertical-align: middle;
+  display: inline-block;
+}
+.footer-copyright { justify-self: center; text-align: center; }
+.footer-top-link { justify-self: end; }
+.footer-signoff { white-space: nowrap; font-style: italic; color: var(--inv-muted); }
 .footer-row a { transition: color var(--dur-fast) var(--ease-state); }
 .footer-row a:hover { color: var(--accent); }
+
+@media (max-width: 576px) {
+  .footer-row {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 0.8rem;
+  }
+  .footer-location, .footer-copyright, .footer-top-link {
+    justify-self: center;
+  }
+}
 
 /* ---------- custom cursor: dot + ring ---------- */
 .cursor-dot, .cursor-ring {
@@ -1243,7 +1262,7 @@ figcaption {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: .5rem;
+  gap: 0.6667rem;
   transition: width .3s var(--ease-state), height .3s var(--ease-state),
               border-radius .3s var(--ease-state),
               background-color .3s var(--ease-state), border-color .3s var(--ease-state);
@@ -1259,7 +1278,7 @@ figcaption {
 .cursor-ring[data-state="media"][data-has-img="true"] {
   width: 132px; height: 132px;
   border-radius: 10px;
-  padding: .5rem;
+  padding: 0.6667rem;
 }
 .cursor-preview-img {
   width: 100%;
@@ -1269,7 +1288,7 @@ figcaption {
 }
 .cursor-label {
   font-family: var(--font-mono);
-  font-size: .6rem;
+  font-size: 0.8rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--bg);
@@ -1290,143 +1309,140 @@ figcaption {
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   border-bottom: 1px solid var(--line);
 }
-.cs-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; height: 64px; }
+.cs-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 2rem; height: 64px; }
 .cs-back {
   display: inline-flex;
   align-items: center;
-  gap: .5rem;
+  gap: 0.6667rem;
   font-family: var(--font-mono);
-  font-size: .74rem;
+  font-size: 0.9867rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--muted);
   transition: color var(--dur-fast) var(--ease-state), gap .3s var(--ease-state);
+  /* 19px tall on its own, under the 24px minimum target size, and on a case
+     study it is the only way back. Grown with a pseudo-element so the header
+     layout is untouched — same treatment as .wordmark. */
+  position: relative;
 }
-.cs-back:hover { color: var(--ink); gap: .8rem; }
+.cs-back::after {
+  content: "";
+  position: absolute;
+  inset: -8px -10px;
+}
+.cs-back:hover { color: var(--ink); gap: 1.0667rem; }
 
-.cs-hero { padding-top: clamp(3.5rem, 8vw, 7rem); padding-bottom: clamp(2.5rem, 5vw, 4rem); }
+.cs-hero { padding-top: clamp(4.6667rem, 8vw, 9.3333rem); padding-bottom: clamp(3.3333rem, 5vw, 5.3333rem); }
 .cs-title {
   font-family: var(--font-display);
-  font-size: clamp(2.3rem, 5.4vw, 4.6rem);
+  font-size: clamp(3.0667rem, 5.4vw, 6.1333rem);
   font-weight: 600;
   letter-spacing: -.038em;
   line-height: 1.01;
   max-width: 18ch;
-  margin-top: 1.4rem;
+  margin-top: 1.8667rem;
 }
 .cs-title .line { display: block; overflow: hidden; padding-bottom: .09em; }
 .cs-title .line > span { display: block; }
-.cs-meta { display: flex; flex-wrap: wrap; gap: 1rem 2.4rem; align-items: center; margin-top: 2rem; }
+.cs-meta { display: flex; flex-wrap: wrap; gap: 1.3333rem 3.2rem; align-items: center; margin-top: 2.6667rem; }
 
-.cs-metrics-band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 2rem 0; background: var(--surface); }
-.cs-metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6rem; }
+.cs-metrics-band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 2.6667rem 0; background: var(--surface); }
+.cs-metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.1333rem; }
 
-.cs-overview { padding: clamp(3rem, 6vw, 5rem) 0 0; }
+.cs-overview { padding: clamp(4rem, 6vw, 6.6667rem) 0 0; }
 .cs-overview .lede {
-  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-size: clamp(1.5333rem, 2vw, 2rem);
   line-height: 1.5;
   max-width: 56ch;
   font-family: var(--font-display);
   letter-spacing: -.012em;
 }
 .note-strip {
-  margin: 2rem 0 0;
+  margin: 2.6667rem 0 0;
   border-left: 2px solid var(--accent);
   background: var(--pill);
   color: var(--secondary);
   font-family: var(--font-mono);
-  font-size: .78rem;
+  font-size: 1.04rem;
   letter-spacing: .03em;
   line-height: 1.7;
-  padding: 1rem 1.2rem;
+  padding: 1.3333rem 1.6rem;
   max-width: 56ch;
 }
 
-.cs-cover-section { padding-top: clamp(2.5rem, 5vw, 4rem); }
+.cs-cover-section { padding-top: clamp(3.3333rem, 5vw, 5.3333rem); }
 .cs-cover { border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
 .cs-cover .wipe { aspect-ratio: 4 / 3; }
 .cs-cover .wipe img { object-fit: cover; }
 
-.cs-chapter { padding-top: clamp(3.5rem, 7vw, 6rem); }
+.cs-chapter { padding-top: clamp(4.6667rem, 7vw, 8rem); }
 .cs-chapter h2 {
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-size: clamp(2.1333rem, 3vw, 3.2rem);
   font-weight: 600;
   letter-spacing: -.028em;
-  margin: .7rem 0 1rem;
+  margin: 0.9333rem 0 1.3333rem;
   max-width: 24ch;
 }
-.cs-body { color: var(--muted); max-width: 62ch; font-size: 1.02rem; line-height: 1.72; }
-.cs-art { margin-top: 2rem; display: grid; gap: 1.4rem; max-width: 760px; }
+.cs-body { color: var(--muted); max-width: 62ch; font-size: 1.36rem; line-height: 1.72; }
+.cs-art { margin-top: 2.6667rem; display: grid; gap: 1.8667rem; max-width: 760px; }
 .cs-shot { border: 1px solid var(--line); background: transparent; overflow: hidden; }
-.cs-shot figcaption { margin: 0; padding: .7rem .9rem; background: var(--card); border-top: 1px solid var(--line); }
-.phone-row { margin-top: 2rem; display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: flex-start; }
+.cs-shot figcaption { margin: 0; padding: 0.9333rem 1.2rem; background: var(--card); border-top: 1px solid var(--line); }
+.phone-row { margin-top: 2.6667rem; display: flex; gap: 2.1333rem; flex-wrap: wrap; align-items: flex-start; }
 .phone-row .phone { flex: 0 1 250px; }
 
-.cs-next { margin-top: clamp(4rem, 8vw, 7rem); border-top: 1px solid var(--line); padding: clamp(3rem, 6vw, 5rem) 0; }
+.cs-next { margin-top: clamp(5.3333rem, 8vw, 9.3333rem); border-top: 1px solid var(--line); padding: clamp(4rem, 6vw, 6.6667rem) 0; }
 .cs-next-link {
   display: inline-flex;
   align-items: flex-start;
-  gap: .8rem;
+  gap: 1.0667rem;
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 3.1rem);
+  font-size: clamp(2.4rem, 4vw, 4.1333rem);
   font-weight: 600;
   letter-spacing: -.032em;
   line-height: 1.06;
-  margin-top: 1rem;
+  margin-top: 1.3333rem;
   max-width: 24ch;
   transition: color var(--dur-fast) var(--ease-state), gap .35s var(--ease-state);
 }
-.cs-next-link:hover { color: var(--accent-strong); gap: 1.4rem; }
+.cs-next-link:hover { color: var(--accent-strong); gap: 1.8667rem; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 1024px) {
-  .hero-grid { grid-template-columns: 1fr; gap: 4.5rem; }
-  .hero-stage { max-width: 560px; aspect-ratio: 16/11; min-height: 0; }
-  .frag-eyeai { width: 78%; right: -6%; top: 0; }
-  .frag-myo { width: 46%; left: -4%; top: 30%; }
-  .frag-tvl { width: 26%; right: 2%; top: auto; bottom: -2%; }
-  .proof-grid { grid-template-columns: repeat(2, 1fr); row-gap: 2rem; }
-  .proof-item:nth-child(3) { border-left: none; padding-left: 0; }
-  .lead-body { grid-template-columns: 1fr; align-items: start; }
+  .lead-columns { grid-template-columns: 1fr; }
   .case { grid-template-columns: 1fr; }
-  .case-rail { position: static; }
-  .chapter-nav { display: none; }
-  .stack-item { position: static; margin-top: 1.6rem; }
-  .proj-wide { grid-template-columns: 1fr; }
-  .proj-compact .proj-body { grid-template-columns: 1fr; gap: 1.4rem; }
-  .proj-metrics { flex-direction: row; flex-wrap: wrap; gap: 1.6rem 2.2rem; }
-  .impact-grid { grid-template-columns: repeat(3, 1fr); }
-  .exp-item { grid-template-columns: 1fr; gap: .8rem; }
-  .exp-dates { text-align: left; }
+  /* The sticky stack stays on at tablet/mobile — it's the section's whole
+     behaviour, and flattening it here made the cards a plain list. The spacing
+     itself is fluid now and lives on the base rule; only the behaviour note
+     belongs here. */
+  /* Heading first, then the portrait, then the rest of the copy. .about-lead
+     is the "About" label lifted out of .about-copy so it can be ordered
+     independently of it. */
   .about-grid { grid-template-columns: 1fr; }
+  .about-figure, .about-lead, .about-copy { grid-column: 1; grid-row: auto; }
+  .about-lead { margin-bottom: 0; }
   .about-photo { max-width: 520px; }
-  .contact-grid { grid-template-columns: 1fr; gap: 2.5rem; align-items: start; }
-  .cs-metrics-row { grid-template-columns: repeat(2, 1fr); row-gap: 2rem; }
+  .contact-grid { grid-template-columns: 1fr; align-items: start; }
+  .cs-metrics-row { grid-template-columns: repeat(2, 1fr); row-gap: 2.6667rem; }
   .cs-header .wordmark { display: none; }
-  .chapter-art figure:nth-of-type(2) { margin-left: 0; max-width: 100%; }
 }
 
-@media (max-width: 700px) {
-  :root { --nav-h: 64px; }
+@media (max-width: 576px) {
   .nav-links { display: none; }
   .site-header .theme-switch { display: none; }
   .theme-switch-mobile { display: flex; }
   .nav-toggle { display: grid; }
-  .hero-stage { aspect-ratio: 5/4; min-height: 0; }
-  .frag-eyeai { width: 94%; right: -8%; top: 2%; }
-  .frag-myo { width: 58%; left: -6%; top: auto; bottom: 4%; }
-  .frag-tvl { width: 30%; right: 0; top: auto; bottom: -2%; }
-  .proof-grid { grid-template-columns: 1fr 1fr; }
-  .impact-grid { grid-template-columns: 1fr 1fr; }
   .about-facts { grid-template-columns: 1fr; }
-  .chapter-art figure { max-width: 100%; }
   .lead-metrics { grid-template-columns: 1fr 1fr; }
   .section-head h2 { max-width: none; }
   .cs-header .theme-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .phone-row .phone { flex: 1 1 100%; }
-  .intro { flex-direction: column; align-items: flex-start; justify-content: flex-end; }
-  .scroll-cue { display: none; }
+  /* NB: no `.intro` rule here. There used to be one — a leftover from the
+     flexbox preloader that preloader.css replaced — and because it set
+     `justify-content: flex-end`, a property the new grid-based `.intro` never
+     sets and so could not override, the whole name block was pushed to the
+     right edge below 700px. Desktop was unaffected only because the rule was
+     inside this breakpoint. */
 }
 
 /* ---------- reduced motion ---------- */
@@ -1438,9 +1454,7 @@ figcaption {
     scroll-behavior: auto !important;
   }
   html { scroll-behavior: auto; }
-  .marquee-track, .tool-track { animation: none; }
-  .avail::before { animation: none; }
-  .scroll-cue span.rule::after { animation: none; transform: scaleX(1); }
+  .marquee-track { animation: none; }
 }
 
 /* =========================================================================
@@ -1450,24 +1464,32 @@ figcaption {
 .avatar-hero-section {
   position: relative;
   width: 100%;
+  padding-bottom: clamp(2.6667rem, 4vw, 4.6667rem);
+}
+
+.avatar-hero-top {
+  position: relative;
+  width: 100%;
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh; /* stable across the mobile URL-bar collapse — see .section */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-top: calc(var(--nav-h) + 1rem);
-  padding-bottom: clamp(2rem, 4vw, 3.5rem);
+  padding-top: calc(var(--nav-h) + 1.3333rem);
 }
 
 .hero-availability-row {
   text-align: center;
+  padding-bottom: 1.3333rem;
 }
 
 .avatar-hero-stage {
   position: relative;
   width: 100%;
   flex: 1;
-  min-height: 420px;
+  /* Eases the whole way rather than stepping at 1024, and keeps shrinking
+     below 576 so a small phone gets a shorter stage than a large one. */
+  min-height: clamp(320px, calc(347.32px + 5.6738vw), 420px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1508,7 +1530,7 @@ figcaption {
 
 .backdrop-name {
   font-family: var(--font-display);
-  font-size: clamp(5rem, 19vw, 18rem);
+  font-size: clamp(6.6667rem, 19vw, 24rem);
   font-weight: 900;
   line-height: 0.85;
   letter-spacing: -0.04em;
@@ -1521,47 +1543,60 @@ figcaption {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
 }
 .backdrop-sub-line {
   font-family: var(--font-mono);
-  font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+  font-size: clamp(0.9333rem, 1.2vw, 1.2667rem);
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--muted);
   opacity: 0.7;
 }
 
-/* Cloud Layers */
+/* Cloud Layers.
+   Each layer is drawn a small fixed `--cloud-bleed` past .avatar-hero-stage
+   on every edge and the stage's `overflow: hidden` clips the surplus, so the
+   cursor-driven parallax translate (see AvatarHero.jsx) only ever slides
+   more of an already-overflowing shape into view and can't pull a painted
+   edge off the stage border — at any viewport. The bleed is deliberately
+   small so the clouds still read at their original size/position; every
+   parallax maximum stays comfortably under it. */
 .hero-cloud-layer {
+  --cloud-bleed: 64px;
   position: absolute;
-  left: 0;
-  right: 0;
-  width: 100%;
+  left: calc(-1 * var(--cloud-bleed));
+  right: calc(-1 * var(--cloud-bleed));
   pointer-events: none;
   user-select: none;
 }
 
 .hero-cloud-back {
-  top: 0;
-  height: 100%;
+  top: calc(-1 * var(--cloud-bleed));
+  height: calc(100% + var(--cloud-bleed) * 2);
   z-index: 2;
 }
 
 .cloud-svg-back {
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 .hero-cloud-front {
-  bottom: -2px;
-  height: 38%;
+  /* Top edge stays put (~38% of stage height); only the bottom is nudged
+     past the stage since that's the only vertical edge the front layer can
+     detach from. Small extension = negligible vertical stretch. */
+  top: auto;
+  bottom: -36px;
+  height: calc(38% + 34px);
   z-index: 5;
 }
 
 .cloud-svg-front {
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 /* Theme Adaptive Cloud Fills */
@@ -1602,57 +1637,12 @@ figcaption {
 }
 
 /* Floating Organic Bubbles */
-.hero-bubble-group {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.bubble-cluster {
-  position: absolute;
-}
-
-.bubble-left {
-  top: 35%;
-  left: 6%;
-}
-
-.bubble-right {
-  top: 40%;
-  right: 8%;
-}
-
-.cloud-bubble {
-  position: absolute;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--line-soft);
-  animation: floatBubble 6s ease-in-out infinite alternate;
-}
-
-.b-1 { width: 52px; height: 52px; top: 0; left: 0; animation-duration: 5.5s; }
-.b-2 { width: 34px; height: 34px; top: 44px; left: 30px; animation-duration: 7s; animation-delay: -1.5s; }
-.b-3 { width: 22px; height: 22px; top: -18px; left: 40px; animation-duration: 6.2s; animation-delay: -3s; }
-.b-4 { width: 14px; height: 14px; top: 30px; left: -18px; animation-duration: 4.8s; }
-
-.b-5 { width: 48px; height: 48px; top: 0; right: 0; animation-duration: 6.5s; animation-delay: -2s; }
-.b-6 { width: 30px; height: 30px; top: 38px; right: 34px; animation-duration: 5s; animation-delay: -0.5s; }
-.b-7 { width: 18px; height: 18px; top: -14px; right: 28px; animation-duration: 7.5s; animation-delay: -4s; }
-
-@keyframes floatBubble {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-14px) rotate(3deg); }
-  100% { transform: translateY(6px) rotate(-3deg); }
-}
-
 /* Avatar Container in Stage */
 .hero-avatar-container {
   position: relative;
   z-index: 4;
   width: 100%;
-  max-width: min(620px, 50vh);
+  max-width: min(744px, 60vh);
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -1661,7 +1651,7 @@ figcaption {
 
 /* Bottom Content & Copy */
 .hero-content-bottom {
-  margin-top: clamp(2rem, 4vw, 3.5rem);
+  margin-top: clamp(2.6667rem, 4vw, 4.6667rem);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -1671,23 +1661,28 @@ figcaption {
 .hero-badge-row {
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 1.1333rem;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.6rem;
 }
 
 .avail-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6667rem;
   font-family: var(--font-mono);
-  font-size: 0.76rem;
+  font-size: 1.0133rem;
   letter-spacing: 0.05em;
   color: var(--ink);
-  padding: 0.35rem 0.85rem;
+  padding: 0.4667rem 1.1333rem;
   border-radius: 999px;
   border: 1px solid var(--line);
+  transition: border-color var(--dur-fast) var(--ease-state), background-color var(--dur-fast) var(--ease-state);
+}
+.avail-badge:hover, .avail-badge:focus-visible {
+  border-color: var(--ink);
+  background: var(--pill);
 }
 
 .avail-pulse {
@@ -1707,14 +1702,14 @@ figcaption {
 
 .hero-location-pill {
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: 0.9867rem;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
 
 .hero-main-title {
   font-family: var(--font-display);
-  font-size: clamp(2.4rem, 5.2vw, 4.4rem);
+  font-size: clamp(3.2rem, 5.2vw, 5.8667rem);
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1.05;
@@ -1730,37 +1725,40 @@ figcaption {
   color: var(--accent-strong);
 }
 
+/* Two SplitText fragments compose one heading here — override the
+   default block display so they flow inline and wrap together. */
+.hero-main-title .split { display: inline; }
+
 .hero-lede-text {
-  margin-top: 1.2rem;
-  font-size: clamp(1rem, 1.35vw, 1.15rem);
+  margin-top: 1.6rem;
+  font-size: clamp(1.3333rem, 1.35vw, 1.5333rem);
   color: var(--muted);
   max-width: 52ch;
   line-height: 1.65;
 }
 
 .hero-btn-group {
-  margin-top: 2rem;
+  margin-top: 2.6667rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.3333rem;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
 }
 
-@media (max-width: 768px) {
-  .avatar-hero-stage {
-    min-height: 380px;
-  }
-  .backdrop-name {
-    font-size: 19vw;
-  }
+/* Tablet and below. Deliberately left where it sits rather than merged with
+   the other tablet block above: the .avatar-hero-* base rules are declared
+   immediately before it, so moving this earlier would put those base rules
+   after it and silently switch it off. */
+@media (max-width: 1024px) {
+  /* .backdrop-name had a font-size override here too. It set a bare 19vw,
+     which is the exact middle term of the clamp already on the base rule — so
+     from 576 up the two agree to the pixel, and all it really did was strip
+     the 6.6667rem floor on the narrowest phones. Removed; the base clamp keeps
+     the mark 6px larger there, which is the intent of having a floor. */
   .hero-avatar-container {
     max-width: 320px;
     margin-bottom: -10px;
-  }
-  .bubble-left, .bubble-right {
-    opacity: 0.6;
-    transform: scale(0.75);
   }
 }
 /* ========================================================================
@@ -1769,99 +1767,111 @@ figcaption {
 
 /* ---------- NDA note on the confidential project card ---------- */
 .nda-note {
-  margin: 1rem 0 0;
-  padding: .8rem 1rem;
+  margin: 1.3333rem 0 0;
+  padding: 1.0667rem 1.3333rem;
   border: 1px dashed var(--line);
   border-radius: 3px;
   background: var(--surface);
-  font-size: .86rem;
+  font-size: 1.1467rem;
   line-height: 1.6;
   color: var(--muted);
 }
 
 /* ---------- media inside the lead panel ---------- */
+/* Sized to the image's own natural ratio (1100x535 ≈ 2.056:1) instead of
+   stretching to match the text column — the whole image stays visible,
+   nothing gets cropped. The text column is sized/typeset independently
+   now (see .lead-columns align-items: start below); the two columns are
+   no longer forced to equal heights. */
 .lead-media {
-  margin: 1.8rem 0 .4rem;
   border: 1px solid var(--line);
   border-radius: 4px;
   overflow: hidden;
   background: var(--card);
 }
+.lead-media .wipe { aspect-ratio: 1100 / 535; }
+.lead-media .wipe img { object-fit: contain; }
 
-/* ---------- gallery: a wall of real screens, masonry-style ---------- */
-.shot-grid {
-  margin-top: .6rem;
-  columns: 3 260px;
-  column-gap: 1.3rem;
-}
-/* Assemble wraps each figure in its own .assemble-item motion div — that's
-   the actual column child now, not a .shot-item we render ourselves. */
-.shot-grid .assemble-item { display: block; break-inside: avoid; margin-bottom: 1.3rem; }
-.shot {
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--card);
-}
-.shot .wipe img { height: auto; transform: none !important; }
-.shot:hover .wipe img { transform: scale(1.03) !important; }
-/* One shot (myocircle-level13.png) is a 700x2083 phone composite — nearly
-   3x taller than its neighbours. Left at its native aspect ratio it towered
-   over the whole grid, so it's capped and cropped to the top of the frame
-   (Level 13 / 25% progress — the part worth showing) instead. */
-.shot--tall .wipe { max-height: 420px; }
-.shot--tall .wipe img { height: 100%; object-fit: cover; object-position: top; }
-.shot figcaption {
-  padding: .8rem 1rem .9rem;
-  border-top: 1px solid var(--line);
-}
-.shot figcaption b {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: .66rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--accent, var(--ink));
-  margin-bottom: .3rem;
-}
-@media (max-width: 860px) {
-  .shot-grid { columns: 2 auto; }
-}
-@media (max-width: 560px) {
-  .shot-grid { columns: 1 auto; }
-}
+/* ---------- gallery card — the 6th stack item ---------- */
+/* Overrides .lead-panel's centered content: a grid of unpredictable
+   height should start from the top and scroll internally if it ever
+   runs taller than the card, not float centered. */
 
 /* Two-up metric rows now that the third pseudo-metric is gone. */
 .lead-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-.case-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-.proj-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
 /* Longer leading on the paragraphs recruiters skim. */
-.summary { line-height: 1.68; }
 .lede { line-height: 1.62; }
 
-@media (max-width: 720px) {
-  .proof-grid { grid-template-columns: repeat(2, 1fr); }
-  .proof-item:nth-child(3) { border-left: none; padding-left: 0; }
-}
 
-/* ---------- back to top (sticky) ---------- */
+/* ---------- back to top (sticky) ----------
+   Collapsed = a 46px square with just the arrow (label clipped to 0 width).
+   `.is-visible` fades/rises it in once the page is scrolled; `.is-expanded`
+   grows it leftward to sit a "Back to Top" label beside the arrow when the
+   footer is in view or the button is hovered/focused — the label's max-width
+   transition uses a slight-overshoot curve for the nav theme-pill spring
+   feel, and the inline-flex button reflows to match. All class-driven so it
+   doesn't depend on rAF / IntersectionObserver. */
 .back-to-top {
   position: fixed;
-  right: clamp(1rem, 3vw, 2rem);
-  bottom: clamp(1rem, 3vw, 2rem);
+  right: clamp(1.3333rem, 3vw, 2.6667rem);
+  bottom: clamp(1.3333rem, 3vw, 2.6667rem);
   z-index: 40;
-  width: 46px;
   height: 46px;
+  min-width: 46px;
+  padding: 0 15px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--ink);
   color: var(--bg);
-  border-radius: var(--radius-btn);
-  box-shadow: 0 6px 18px rgba(var(--shadow-rgb), .18);
+  /* Fully rounded: a circle while it's a 46px square, a stadium pill once
+     the label widens it. */
+  border-radius: 999px;
+  /* Accent hairline keeps the pill legible even when it sits over the
+     inverted footer, whose background is the same colour as --ink. */
+  box-shadow: 0 6px 18px rgba(var(--shadow-rgb), .18), 0 0 0 1.5px var(--accent-strong);
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(12px) scale(.92);
+  pointer-events: none;
+  transition:
+    opacity .3s var(--ease-state),
+    transform .3s var(--ease-state),
+    bottom .35s var(--ease-state),
+    background-color var(--dur-fast) var(--ease-state);
+}
+.back-to-top.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.back-to-top-label {
+  display: inline-block;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: .889rem;
+  font-weight: 500;
+  line-height: 1;
+  transition:
+    max-width .42s cubic-bezier(.34, 1.4, .64, 1),
+    margin-right .42s cubic-bezier(.34, 1.4, .64, 1),
+    opacity .24s var(--ease-state);
+}
+.back-to-top.is-expanded .back-to-top-label {
+  max-width: 12rem;
+  margin-right: 7px;
+  opacity: 1;
 }
 .back-to-top:hover, .back-to-top:focus-visible { background: var(--accent-strong); }
-.back-to-top svg { transition: transform .3s var(--ease-state); }
-.back-to-top:hover svg { transform: translateY(-2px); }
+.back-to-top svg { flex: none; transition: transform .3s var(--ease-state); }
+.back-to-top:hover svg, .back-to-top:focus-visible svg { transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top,
+  .back-to-top-label { transition-duration: .01ms; }
+  .back-to-top { transform: none; }
+}
