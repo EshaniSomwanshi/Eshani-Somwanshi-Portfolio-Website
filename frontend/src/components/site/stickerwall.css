@@ -89,7 +89,6 @@
    and edges, and a tight contact shadow underneath.
    ------------------------------------------------------------------------- */
 .sticker {
-  --lift: 0;
   position: absolute;
   top: 0;
   left: 0;
@@ -131,41 +130,31 @@
   will-change: transform;
 }
 
-/* Backing chip behind the icon. Lets the cube stay full brand colour while
-   every mark still sits on a pale ground — including Claude on Claude and
-   Adobe red on red. Reads as an inlay, not a second sticker. */
-.sticker-chip {
-  display: grid;
-  place-items: center;
-  width: 54%;
-  aspect-ratio: 1;
-  border-radius: 28%;
-  background: linear-gradient(168deg, #fff 0%, #f4f1ea 100%);
-  box-shadow:
-    inset 0 -2px 3px -1px rgba(0, 0, 0, .1),
-    0 1px 2px rgba(0, 0, 0, .18);
-}
-.sticker-chip img {
+/* The mark sits directly on the cube's gradient — no backing box. A drop
+   shadow does the separating instead, which keeps the silhouette clean. */
+.sticker img {
   display: block;
-  width: 66%;
-  height: 66%;
+  width: 34%;
+  height: 34%;
   max-width: none;
   object-fit: contain;
   pointer-events: none;
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, .34))
+    drop-shadow(0 0 2px rgba(0, 0, 0, .22));
 }
 
-/* Velocity-driven shadow on its own compositor layer, animated by opacity
-   only. Driving the parent's box-shadow blur from --lift would repaint all
-   18 cubes every frame; this stays on the GPU. */
-.sticker::after {
-  content: "";
-  position: absolute;
-  inset: -4% -4% -12% -4%;
-  border-radius: 30%;
-  box-shadow: 0 16px 26px -10px rgba(var(--shadow-rgb), .55);
-  opacity: var(--lift);
-  pointer-events: none;
-  z-index: -1;
+/* Knockout: a single-colour mark whose hue matches its cube would otherwise
+   disappear into it. brightness(0) flattens the artwork to solid black;
+   invert(1) then lifts it to solid white where the cube is dark. Applied only
+   to the marks listed in KNOCKOUT_LOGOS — never to multi-colour artwork. */
+.sticker[data-knockout="light"] img {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, .3));
+  opacity: .96;
+}
+.sticker[data-knockout="dark"] img {
+  filter: brightness(0) drop-shadow(0 1px 2px rgba(255, 255, 255, .25));
+  opacity: .82;
 }
 
 .sticker-label {
@@ -218,7 +207,6 @@
   transform: rotate(var(--tilt));
   will-change: auto;
 }
-.sticker-wall.is-static .sticker::after { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .sticker { will-change: auto; }

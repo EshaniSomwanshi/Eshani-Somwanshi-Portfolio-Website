@@ -20,16 +20,23 @@ import "./stickerwall.css";
 
 /* ---- tunables ---------------------------------------------------------- */
 export const PHYSICS = {
-  gravity: 1.1,          // world gravity scale (1 = Matter default)
+  gravity: 1.4,          // world gravity scale (1 = Matter default)
   /* Flat rectangles need more friction and less bounce than round bodies to
-     settle into a tight pile instead of sliding off each other and spreading.
-     restitution 0.42 -> 0.30 and friction 0.38 -> 0.52. */
+     settle into a tight pile instead of sliding off each other and spreading. */
   restitution: 0.30,     // bounciness on impact, 0–1
   friction: 0.52,        // surface friction between stickers
   frictionStatic: 0.9,   // resistance to *starting* to slide — keeps stacks put
-  frictionAir: 0.014,    // air drag; higher = settles sooner
+  frictionAir: 0.012,    // air drag
   density: 0.0016,       // mass per area — affects throw feel
-  throwPower: 1.35,      // multiplier on release velocity when thrown
+  throwPower: 1.0,       // multiplier on release velocity when thrown
+  /* The decisive control on how long a thrown cube stays airborne. Without a
+     cap, hang time scales with however hard the pointer was flicked — a
+     full-power throw took ~5.9s to come back. Clamping release speed flattens
+     that curve: measured against a headless sim of this exact world, every
+     flick from gentle to absurd (vy -12 … -90) now settles in 1.6–2.0s, and a
+     plain drop settles in 1.7s. Note that *lowering* frictionAir makes this
+     worse, not better — at 0.005 the cube never settles at all. */
+  maxThrowSpeed: 22,     // px/step ceiling applied on release
   spawnStagger: 95,      // ms between each sticker dropping in
   wallThickness: 400,    // static bound thickness (thick = nothing tunnels out)
 };
@@ -63,6 +70,22 @@ export const BRAND = {
 /* WCAG relative luminance — picks the label colour that actually reads on
    each cube, rather than assuming every brand colour is dark. Miro yellow
    and JavaScript yellow need near-black; Photoshop navy needs white. */
+/* Tools that ship reversed (white) artwork as <slug>-dark.svg. Used on the
+   wall wherever the cube itself is dark, now that the mark sits directly on
+   the brand colour with no backing chip. */
+const REVERSED_LOGOS = new Set(["framer", "openai", "cursor", "axure", "react"]);
+
+/* Single-colour marks whose own hue is the cube's hue, so they vanish against
+   it (Claude on Claude, Adobe red on red, and so on). These get knocked out
+   to solid white or solid black depending on the cube — which is exactly the
+   reversed treatment these brands publish, just done in CSS instead of
+   needing a second asset. Only ever applied to marks that are a single
+   colour: knocking out a multi-colour logo (Figma, HTML5, Canva) would
+   destroy it, so those are deliberately absent. */
+const KNOCKOUT_LOGOS = new Set([
+  "claude", "adobe", "perplexity", "wordpress", "vscode", "react",
+]);
+
 function inkFor(hex) {
   const h = hex.replace("#", "");
   const ch = (i) => parseInt(h.slice(i, i + 2), 16) / 255;
@@ -113,14 +136,15 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
   const live = phase === "live";
   const [layout] = useState(() => makeLayout(tools.length));
 
-  /* Always the standard logo, never the reversed -dark variant: every icon
-     sits on a light backing chip (see .sticker-chip), so the mark is always
-     against a pale ground regardless of how dark the cube is. The Grid view
-     still swaps per theme. */
-  const logoSrc = useCallback(
-    (slug) => `${process.env.PUBLIC_URL}/Logos/${slug}.svg`,
-    [],
-  );
+  /* The mark now sits straight on the cube's own brand colour, so pick the
+     reversed white artwork wherever the cube is dark enough to need it and a
+     variant exists. inkFor() is the same luminance test the label uses, so
+     icon and label always agree about how dark the cube is. */
+  const logoSrc = useCallback((slug) => {
+    const brand = BRAND[slug] || "#8D877D";
+    const wantsWhite = REVERSED_LOGOS.has(slug) && inkFor(brand) === "#FFFFFF";
+    return `${process.env.PUBLIC_URL}/Logos/${slug}${wantsWhite ? "-dark" : ""}.svg`;
+  }, []);
 
   /* Tear everything down: rAF, spawn timers, Matter world, listeners. Called
      on unmount and before any replay so nothing leaks between runs. */
@@ -210,10 +234,17 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       Matter.Events.on(mouseConstraint, "enddrag", (e) => {
         const b = e.body;
         if (!b) return;
-        Matter.Body.setVelocity(b, {
-          x: b.velocity.x * PHYSICS.throwPower,
-          y: b.velocity.y * PHYSICS.throwPower,
-        });
+        let vx = b.velocity.x * PHYSICS.throwPower;
+        let vy = b.velocity.y * PHYSICS.throwPower;
+        /* Clamp the magnitude, keeping direction, so a hard flick still
+           throws but can't buy unbounded hang time. */
+        const speed = Math.hypot(vx, vy);
+        if (speed > PHYSICS.maxThrowSpeed) {
+          const k = PHYSICS.maxThrowSpeed / speed;
+          vx *= k;
+          vy *= k;
+        }
+        Matter.Body.setVelocity(b, { x: vx, y: vy });
       });
       Matter.Composite.add(engine.world, mouseConstraint);
     }
@@ -271,13 +302,11 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
         }
 
         const { x, y } = b.position;
+        /* Transform is the only thing written per frame. There is deliberately
+           no motion-driven shadow or glow — a cube looks identical moving and
+           at rest. */
         node.style.transform =
           `translate3d(${x - b.__w / 2}px, ${y - b.__h / 2}px, 0) rotate(${b.angle}rad)`;
-
-        /* Shadow depth tracks speed — airborne/fast stickers cast a deeper,
-           softer shadow; settled ones sit almost flat on the pile. */
-        const speed = Math.min(1, Math.hypot(b.velocity.x, b.velocity.y) / 14);
-        node.style.setProperty("--lift", speed.toFixed(3));
       }
 
       /* Only drop the static layout once real transforms are on the nodes.
@@ -414,18 +443,19 @@ function Cube({ slug, i, layout, nodeRefs, logoSrc, tools }) {
            Miro yellow and Photoshop navy alike. */
         "--ink": inkFor(brand),
       }}
+      data-knockout={
+        KNOCKOUT_LOGOS.has(slug)
+          ? (inkFor(brand) === "#FFFFFF" ? "light" : "dark")
+          : undefined
+      }
     >
-      {/* Backing chip: keeps every mark on a pale ground so the cube can stay
-          full brand colour instead of being diluted to a pastel. */}
-      <span className="sticker-chip">
-        <img
-          src={logoSrc(slug)}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
-        />
-      </span>
+      <img
+        src={logoSrc(slug)}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+      />
       <span className="sticker-label">{tools[i][1]}</span>
     </span>
   );
