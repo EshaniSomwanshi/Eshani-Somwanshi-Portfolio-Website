@@ -40,15 +40,17 @@ export const PHYSICS = {
 export const BRAND = {
   figma: "#F24E1E",
   claude: "#D97757",
-  vscode: "#007ACC",
+  vscode: "#0065A9",
   html5: "#E34F26",
-  javascript: "#F0DB4F",
+  javascript: "#F7DF1E",
   react: "#61DAFB",
-  cursor: "#4A4A4A",
+  cursor: "#2E2E2E",
   framer: "#0055FF",
-  photoshop: "#31A8FF",
-  illustrator: "#FF9A00",
-  "after-effects": "#9999FF",
+  /* The Adobe apps' real icon grounds are the dark tiles, not the letter
+     colour — that's the colour "behind the logo" the brief asks for. */
+  photoshop: "#001E36",
+  illustrator: "#330000",
+  "after-effects": "#00005B",
   miro: "#FFDD33",
   adobe: "#EB1000",
   canva: "#00C4CC",
@@ -57,6 +59,17 @@ export const BRAND = {
   axure: "#009CD9",
   perplexity: "#20808D",
 };
+
+/* WCAG relative luminance — picks the label colour that actually reads on
+   each cube, rather than assuming every brand colour is dark. Miro yellow
+   and JavaScript yellow need near-black; Photoshop navy needs white. */
+function inkFor(hex) {
+  const h = hex.replace("#", "");
+  const ch = (i) => parseInt(h.slice(i, i + 2), 16) / 255;
+  const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const L = 0.2126 * lin(ch(0)) + 0.7152 * lin(ch(2)) + 0.0722 * lin(ch(4));
+  return L > 0.42 ? "#191712" : "#FFFFFF";
+}
 
 const STICKER = {
   baseWidth: 116,        // px, before per-sticker variance
@@ -89,12 +102,21 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
   const engineRef = useRef(null);
   const rafRef = useRef(0);
   const timersRef = useRef([]);
-  const [live, setLive] = useState(false); // physics actually running
+  /* "static" — flow layout, no engine (also the reduced-motion / narrow case)
+     "arming" — physics layout applied but nothing drawn yet, so the wall has
+                already resized to its real height when we measure it
+     "live"   — engine running, transforms on the nodes
+     The arming step exists because .is-static sets height:auto; measuring in
+     that state built the floor at the flow height, so cubes stopped partway
+     down the section instead of falling its full height. */
+  const [phase, setPhase] = useState("static");
+  const live = phase === "live";
   const [layout] = useState(() => makeLayout(tools.length));
 
-  /* Always the standard logo, never the reversed -dark variant: the cube face
-     is a light tint of the brand colour in every theme, so a white mark would
-     vanish on it. The Grid view still swaps per theme. */
+  /* Always the standard logo, never the reversed -dark variant: every icon
+     sits on a light backing chip (see .sticker-chip), so the mark is always
+     against a pale ground regardless of how dark the cube is. The Grid view
+     still swaps per theme. */
   const logoSrc = useCallback(
     (slug) => `${process.env.PUBLIC_URL}/Logos/${slug}.svg`,
     [],
@@ -108,7 +130,8 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     timersRef.current = [];
     const ctx = engineRef.current;
     if (ctx) {
-      const { Matter, engine, mouseConstraint, mouse } = ctx;
+      const { Matter, engine, mouseConstraint, mouse, onResize } = ctx;
+      if (onResize) window.removeEventListener("resize", onResize);
       if (mouse?.element && mouse.mousewheel) {
         mouse.element.removeEventListener("wheel", mouse.mousewheel);
         mouse.element.removeEventListener("DOMMouseScroll", mouse.mousewheel);
@@ -125,7 +148,9 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
 
   useEffect(() => teardown, [teardown]);
 
-  /* Build the world. Only ever called once the section is in view. */
+
+  /* Build the world. Called from the "arming" phase, so the wall is already
+     laid out at its physics height when we measure it. */
   const start = useCallback(async () => {
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -144,11 +169,10 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       Matter.Bodies.rectangle(x, y, w, h, { isStatic: true, friction: PHYSICS.friction });
     /* Floor + side walls only — no ceiling, so a sticker can be thrown up and
        fall back in. Anything that escapes is respawned in the loop below. */
-    Matter.Composite.add(engine.world, [
-      bound(W / 2, H + t / 2, W + t * 2, t),      // floor
-      bound(-t / 2, H / 2, t, H * 4),             // left
-      bound(W + t / 2, H / 2, t, H * 4),          // right
-    ]);
+    const floor = bound(W / 2, H + t / 2, W + t * 2, t);
+    const leftWall = bound(-t / 2, H / 2, t, H * 4);
+    const rightWall = bound(W + t / 2, H / 2, t, H * 4);
+    Matter.Composite.add(engine.world, [floor, leftWall, rightWall]);
 
     const bodies = layout.map((s, i) =>
       Matter.Bodies.rectangle(
@@ -194,7 +218,26 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       Matter.Composite.add(engine.world, mouseConstraint);
     }
 
-    engineRef.current = { Matter, engine, bodies, mouse, mouseConstraint };
+    engineRef.current = { Matter, engine, bodies, mouse, mouseConstraint, floor, leftWall, rightWall, W, H };
+
+    /* Keep the bounds matched to the wall as it resizes — the floor is a
+       fixed body, so without this it stays at the old height and cubes
+       either hang in mid-air or fall through the visible area. Repositioning
+       rather than rebuilding keeps the pile that's already settled. */
+    const onResize = () => {
+      const ctx = engineRef.current;
+      if (!ctx || !wrapRef.current) return;
+      const nw = wrapRef.current.clientWidth;
+      const nh = wrapRef.current.clientHeight;
+      if (nw === ctx.W && nh === ctx.H) return;
+      ctx.W = nw;
+      ctx.H = nh;
+      Matter.Body.setPosition(ctx.floor, { x: nw / 2, y: nh + t / 2 });
+      Matter.Body.setPosition(ctx.leftWall, { x: -t / 2, y: nh / 2 });
+      Matter.Body.setPosition(ctx.rightWall, { x: nw + t / 2, y: nh / 2 });
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+    engineRef.current.onResize = onResize;
 
     /* Staggered entry so the pile builds rather than dumping all at once. */
     bodies.forEach((body, i) => {
@@ -242,7 +285,7 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
          absolutely positioned but untransformed — all 18 heaped at 0,0. */
       if (!painted) {
         painted = true;
-        setLive(true);
+        setPhase("live");
       }
       rafRef.current = requestAnimationFrame(frame);
     };
@@ -253,6 +296,19 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     });
     rafRef.current = requestAnimationFrame(frame);
   }, [layout]);
+
+  /* Arming -> build. Two rAFs so the browser has committed the layout change
+     (.is-static removed, so height goes from auto to calc(100vh - 60px))
+     before start() measures the wall. Measuring any earlier is exactly the
+     bug that put the floor partway up the section. */
+  useEffect(() => {
+    if (phase !== "arming") return;
+    let id2 = 0;
+    const id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => start());
+    });
+    return () => { cancelAnimationFrame(id1); cancelAnimationFrame(id2); };
+  }, [phase, start]);
 
   /* Mount the engine only when the section reaches the viewport, so nothing
      runs while it's still below the fold.
@@ -273,7 +329,7 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       done = true;
       obs.disconnect();
       window.removeEventListener("scroll", check);
-      start();
+      setPhase("arming");
     };
     const check = () => {
       const r = wrap.getBoundingClientRect();
@@ -299,11 +355,10 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     if (first.current) { first.current = false; return; }
     if (reduced) return;
     teardown();
-    setLive(false);
-    start();
+    setPhase("arming");
   }, [replayKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const staticFallback = reduced || !live;
+  const staticFallback = reduced || phase === "static";
 
   return (
     <div
@@ -345,6 +400,7 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
 
 function Cube({ slug, i, layout, nodeRefs, logoSrc, tools }) {
   const s = layout[i];
+  const brand = BRAND[slug] || "#8D877D";
   return (
     <span
       ref={(n) => { nodeRefs.current[i] = n; }}
@@ -353,17 +409,23 @@ function Cube({ slug, i, layout, nodeRefs, logoSrc, tools }) {
         width: s.width,
         height: s.height,
         "--tilt": `${s.tilt}deg`,
-        "--brand": BRAND[slug] || "#8D877D",
+        "--brand": brand,
+        /* Label colour picked from the cube's own luminance, so it reads on
+           Miro yellow and Photoshop navy alike. */
+        "--ink": inkFor(brand),
       }}
     >
-      <span className="sticker-gloss" aria-hidden="true" />
-      <img
-        src={logoSrc(slug)}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
-      />
+      {/* Backing chip: keeps every mark on a pale ground so the cube can stay
+          full brand colour instead of being diluted to a pastel. */}
+      <span className="sticker-chip">
+        <img
+          src={logoSrc(slug)}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+        />
+      </span>
       <span className="sticker-label">{tools[i][1]}</span>
     </span>
   );
