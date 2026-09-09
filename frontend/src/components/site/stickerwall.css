@@ -40,6 +40,13 @@
 .sticker-layer--back { z-index: 1; }
 .sticker-layer--front { z-index: 3; }
 
+/* Between leaving the static flow layout and the first physics frame landing,
+   the cubes are absolutely positioned with no transform yet — all 18 stacked
+   at 0,0 in the corner. That one-frame heap is the entry "glitch"; hiding the
+   layers until a real transform is on them removes it at the source rather
+   than covering it with the entry delay. */
+.sticker-wall.is-arming .sticker-layer { visibility: hidden; }
+
 /* -------------------------------------------------------------------------
    Static overlay: heading + one-liner + view switch
    ------------------------------------------------------------------------- */

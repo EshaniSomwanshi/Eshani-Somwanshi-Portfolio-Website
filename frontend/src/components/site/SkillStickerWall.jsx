@@ -37,6 +37,10 @@ export const PHYSICS = {
      plain drop settles in 1.7s. Note that *lowering* frictionAir makes this
      worse, not better — at 0.005 the cube never settles at all. */
   maxThrowSpeed: 22,     // px/step ceiling applied on release
+  /* One-time pause after the section scrolls into view before the first cube
+     drops, so the wall doesn't burst into motion the instant it appears.
+     Unrelated to maxThrowSpeed above, which governs post-throw settle time. */
+  entryDelay: 1500,      // ms
   spawnStagger: 95,      // ms between each sticker dropping in
   wallThickness: 400,    // static bound thickness (thick = nothing tunnels out)
 };
@@ -67,9 +71,6 @@ export const BRAND = {
   perplexity: "#20808D",
 };
 
-/* WCAG relative luminance — picks the label colour that actually reads on
-   each cube, rather than assuming every brand colour is dark. Miro yellow
-   and JavaScript yellow need near-black; Photoshop navy needs white. */
 /* Tools that ship reversed (white) artwork as <slug>-dark.svg. Used on the
    wall wherever the cube itself is dark, now that the mark sits directly on
    the brand colour with no backing chip. */
@@ -86,6 +87,9 @@ const KNOCKOUT_LOGOS = new Set([
   "claude", "adobe", "perplexity", "wordpress", "vscode", "react",
 ]);
 
+/* WCAG relative luminance — picks the label colour that actually reads on
+   each cube, rather than assuming every brand colour is dark. Miro yellow
+   and JavaScript yellow need near-black; Photoshop navy needs white. */
 function inkFor(hex) {
   const h = hex.replace("#", "");
   const ch = (i) => parseInt(h.slice(i, i + 2), 16) / 255;
@@ -154,8 +158,15 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     timersRef.current = [];
     const ctx = engineRef.current;
     if (ctx) {
-      const { Matter, engine, mouseConstraint, mouse, onResize } = ctx;
+      const { Matter, engine, mouseConstraint, mouse, onResize, releaseDrag } = ctx;
       if (onResize) window.removeEventListener("resize", onResize);
+      if (releaseDrag) {
+        window.removeEventListener("mouseup", releaseDrag);
+        window.removeEventListener("pointerup", releaseDrag);
+        window.removeEventListener("pointercancel", releaseDrag);
+        window.removeEventListener("blur", releaseDrag);
+        document.removeEventListener("mouseleave", releaseDrag);
+      }
       if (mouse?.element && mouse.mousewheel) {
         mouse.element.removeEventListener("wheel", mouse.mousewheel);
         mouse.element.removeEventListener("DOMMouseScroll", mouse.mousewheel);
@@ -221,6 +232,7 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
        listeners preventDefault on touchmove and would eat page scrolling. */
     let mouse = null;
     let mouseConstraint = null;
+    let releaseDrag = null;
     if (window.matchMedia("(pointer: fine)").matches) {
       mouse = Matter.Mouse.create(wrap);
       /* Matter binds wheel handlers that swallow scroll over the canvas area.
@@ -247,9 +259,30 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
         Matter.Body.setVelocity(b, { x: vx, y: vy });
       });
       Matter.Composite.add(engine.world, mouseConstraint);
+
+      /* Matter only sees mouseup on the element the Mouse is bound to. Release
+         the pointer anywhere else — outside the wall, outside the window, or
+         by tabbing away mid-drag — and it never learns the button came up, so
+         the body stays welded to the cursor. These window-level handlers
+         force the constraint to let go in every one of those cases.
+         mouse.button = -1 matters as much as clearing the body: without it
+         Matter still believes the button is held and re-grabs on the next
+         move. */
+      releaseDrag = () => {
+        if (!mouseConstraint) return;
+        mouseConstraint.constraint.bodyB = null;
+        mouseConstraint.constraint.pointB = null;
+        mouseConstraint.body = null;
+        if (mouse) mouse.button = -1;
+      };
+      window.addEventListener("mouseup", releaseDrag);
+      window.addEventListener("pointerup", releaseDrag);
+      window.addEventListener("pointercancel", releaseDrag);
+      window.addEventListener("blur", releaseDrag);
+      document.addEventListener("mouseleave", releaseDrag);
     }
 
-    engineRef.current = { Matter, engine, bodies, mouse, mouseConstraint, floor, leftWall, rightWall, W, H };
+    engineRef.current = { Matter, engine, bodies, mouse, mouseConstraint, releaseDrag, floor, leftWall, rightWall, W, H };
 
     /* Keep the bounds matched to the wall as it resizes — the floor is a
        fixed body, so without this it stays at the old height and cubes
@@ -270,12 +303,13 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     window.addEventListener("resize", onResize, { passive: true });
     engineRef.current.onResize = onResize;
 
-    /* Staggered entry so the pile builds rather than dumping all at once. */
+    /* Staggered entry after a one-time settle pause, so the pile builds
+       rather than dumping all at once the moment the section appears. */
     bodies.forEach((body, i) => {
       timersRef.current.push(
         setTimeout(() => {
           if (engineRef.current) Matter.Composite.add(engine.world, body);
-        }, i * PHYSICS.spawnStagger),
+        }, PHYSICS.entryDelay + i * PHYSICS.spawnStagger),
       );
     });
 
@@ -392,7 +426,7 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
   return (
     <div
       ref={wrapRef}
-      className={`sticker-wall${staticFallback ? " is-static" : ""}`}
+      className={`sticker-wall${staticFallback ? " is-static" : ""}${phase === "arming" ? " is-arming" : ""}`}
       data-testid="sticker-wall"
     >
       {/* Cubes that pile *behind* the heading. */}
