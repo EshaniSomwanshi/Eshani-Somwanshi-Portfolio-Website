@@ -875,61 +875,68 @@ export default function App() {
         </section>
 
         {/* ---------- design tools ---------- */}
-        <section className="section" id="tools">
-          <div className="container">
-            <div className="section-head">
-              <div>
-                {/* Was "Design tools" / "What the work above was made with."
-                    The list covers the code side too (HTML5, JS, React, VS
-                    Code, Cursor), and those weren't what the case studies
-                    above were made with — this framing covers both honestly. */}
-                <Reveal><p className="section-label">Toolkit</p></Reveal>
-                <SplitText as="h2" text="What I design and build with." testId="tools-heading" delay={0.05} />
-              </div>
-              {/* Layout switch, scoped to this section only — no persistence,
-                  it resets to the wall on reload. Pressing "Wall" while it's
-                  already showing re-drops the stickers, so the button doubles
-                  as a replay without needing a second control. */}
-              <Reveal delay={0.1}>
-                <div className="tools-switch" role="group" aria-label="Tool logo layout">
-                  <button
-                    type="button"
-                    className="tools-switch-btn"
-                    aria-pressed={toolsView === "wall"}
-                    onClick={() => {
-                      if (toolsView === "wall") setWallReplay((n) => n + 1);
-                      else setToolsView("wall");
-                    }}
-                    data-testid="tools-view-wall"
-                  >
-                    <Layers size={14} aria-hidden="true" /> Wall
-                  </button>
-                  <button
-                    type="button"
-                    className="tools-switch-btn"
-                    aria-pressed={toolsView === "grid"}
-                    onClick={() => setToolsView("grid")}
-                    data-testid="tools-view-grid"
-                  >
-                    <LayoutGrid size={14} aria-hidden="true" /> Grid
-                  </button>
+        {/* The heading block is shared by both views. In Wall it's handed to
+            SkillStickerWall as children and rendered as a static overlay
+            *inside* the physics container, with cubes piling behind and in
+            front of it; in Grid it sits in normal flow above the grid. */}
+        {(() => {
+          const toolkitHead = (
+            <div className="container">
+              <div className="section-head">
+                <div>
+                  <Reveal><p className="section-label">Design Tools</p></Reveal>
+                  <SplitText as="h2" text="What I design and build with." testId="tools-heading" delay={0.05} />
                 </div>
-              </Reveal>
+                {/* Layout switch, scoped to this section only — no persistence,
+                    it resets to the wall on reload. Pressing "Wall" while it's
+                    already showing re-drops the cubes, so the button doubles
+                    as a replay without needing a second control. */}
+                <Reveal delay={0.1}>
+                  <div className="tools-switch" role="group" aria-label="Tool logo layout">
+                    <button
+                      type="button"
+                      className="tools-switch-btn"
+                      aria-pressed={toolsView === "wall"}
+                      onClick={() => {
+                        if (toolsView === "wall") setWallReplay((n) => n + 1);
+                        else setToolsView("wall");
+                      }}
+                      data-testid="tools-view-wall"
+                    >
+                      <Layers size={14} aria-hidden="true" /> Wall
+                    </button>
+                    <button
+                      type="button"
+                      className="tools-switch-btn"
+                      aria-pressed={toolsView === "grid"}
+                      onClick={() => setToolsView("grid")}
+                      data-testid="tools-view-grid"
+                    >
+                      <LayoutGrid size={14} aria-hidden="true" /> Grid
+                    </button>
+                  </div>
+                </Reveal>
+              </div>
             </div>
-            <Reveal delay={0.15}>
+          );
+
+          return (
+            <section className="section" id="tools" data-tools-view={toolsView}>
               {toolsView === "grid" ? (
-                <ToolGrid theme={theme} />
+                <>
+                  {toolkitHead}
+                  <div className="container">
+                    <Reveal delay={0.15}><ToolGrid theme={theme} /></Reveal>
+                  </div>
+                </>
               ) : (
-                <SkillStickerWall
-                  tools={tools}
-                  theme={theme}
-                  darkVariants={THEME_VARIANT_LOGOS}
-                  replayKey={wallReplay}
-                />
+                <SkillStickerWall tools={tools} replayKey={wallReplay}>
+                  {toolkitHead}
+                </SkillStickerWall>
               )}
-            </Reveal>
-          </div>
-        </section>
+            </section>
+          );
+        })()}
 
         {/* ---------- about ---------- */}
         <section className="section section-bright" id="about">

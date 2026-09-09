@@ -21,8 +21,12 @@ import "./stickerwall.css";
 /* ---- tunables ---------------------------------------------------------- */
 export const PHYSICS = {
   gravity: 1.1,          // world gravity scale (1 = Matter default)
-  restitution: 0.42,     // bounciness on impact, 0–1
-  friction: 0.38,        // surface friction between stickers
+  /* Flat rectangles need more friction and less bounce than round bodies to
+     settle into a tight pile instead of sliding off each other and spreading.
+     restitution 0.42 -> 0.30 and friction 0.38 -> 0.52. */
+  restitution: 0.30,     // bounciness on impact, 0–1
+  friction: 0.52,        // surface friction between stickers
+  frictionStatic: 0.9,   // resistance to *starting* to slide — keeps stacks put
   frictionAir: 0.014,    // air drag; higher = settles sooner
   density: 0.0016,       // mass per area — affects throw feel
   throwPower: 1.35,      // multiplier on release velocity when thrown
@@ -30,12 +34,37 @@ export const PHYSICS = {
   wallThickness: 400,    // static bound thickness (thick = nothing tunnels out)
 };
 
+/* Dominant brand colour per tool, read off the actual logo artwork. The box
+   is built as a *tint* of this rather than the flat colour: a Claude-coloured
+   mark on a Claude-coloured box would disappear. See stickerwall.css. */
+export const BRAND = {
+  figma: "#F24E1E",
+  claude: "#D97757",
+  vscode: "#007ACC",
+  html5: "#E34F26",
+  javascript: "#F0DB4F",
+  react: "#61DAFB",
+  cursor: "#4A4A4A",
+  framer: "#0055FF",
+  photoshop: "#31A8FF",
+  illustrator: "#FF9A00",
+  "after-effects": "#9999FF",
+  miro: "#FFDD33",
+  adobe: "#EB1000",
+  canva: "#00C4CC",
+  openai: "#10A37F",
+  wordpress: "#21759B",
+  axure: "#009CD9",
+  perplexity: "#20808D",
+};
+
 const STICKER = {
-  baseWidth: 112,        // px, before per-sticker variance
-  baseHeight: 128,
-  sizeVariance: 0.09,    // ±9% — organic, not wildly different
-  maxTilt: 14,           // degrees of random rotation at spawn
+  baseWidth: 116,        // px, before per-sticker variance
+  baseHeight: 116,       // square-ish, so the cubes read as cubes
+  sizeVariance: 0.11,    // ±11% — organic, not wildly different
+  maxTilt: 16,           // degrees of random rotation at spawn
   minWidthForPhysics: 640, // below this container width, fall back to static
+  frontRatio: 0.4,       // share that render *in front* of the static overlay
 };
 
 /* Deterministic-per-mount jitter so React re-renders never reshuffle sizes. */
@@ -46,11 +75,14 @@ function makeLayout(count) {
       width: Math.round(STICKER.baseWidth * scale),
       height: Math.round(STICKER.baseHeight * scale),
       tilt: (Math.random() * 2 - 1) * STICKER.maxTilt,
+      /* Mixed depth: some cubes pile behind the heading, some in front, so
+         the text sits *inside* the pile rather than on top of it. */
+      front: Math.random() < STICKER.frontRatio,
     };
   });
 }
 
-export default function SkillStickerWall({ tools, theme, darkVariants, replayKey = 0 }) {
+export default function SkillStickerWall({ tools, replayKey = 0, children }) {
   const reduced = useReducedMotion();
   const wrapRef = useRef(null);
   const nodeRefs = useRef([]);
@@ -60,12 +92,12 @@ export default function SkillStickerWall({ tools, theme, darkVariants, replayKey
   const [live, setLive] = useState(false); // physics actually running
   const [layout] = useState(() => makeLayout(tools.length));
 
+  /* Always the standard logo, never the reversed -dark variant: the cube face
+     is a light tint of the brand colour in every theme, so a white mark would
+     vanish on it. The Grid view still swaps per theme. */
   const logoSrc = useCallback(
-    (slug) => {
-      const onDark = darkVariants.has(slug) && (theme === "carbon" || theme === "petrol");
-      return `${process.env.PUBLIC_URL}/Logos/${slug}${onDark ? "-dark" : ""}.svg`;
-    },
-    [theme, darkVariants],
+    (slug) => `${process.env.PUBLIC_URL}/Logos/${slug}.svg`,
+    [],
   );
 
   /* Tear everything down: rAF, spawn timers, Matter world, listeners. Called
@@ -127,10 +159,11 @@ export default function SkillStickerWall({ tools, theme, darkVariants, replayKey
         {
           restitution: PHYSICS.restitution,
           friction: PHYSICS.friction,
+          frictionStatic: PHYSICS.frictionStatic,
           frictionAir: PHYSICS.frictionAir,
           density: PHYSICS.density,
           angle: (s.tilt * Math.PI) / 180,
-          chamfer: { radius: 10 },
+          chamfer: { radius: 18 }, // matches the puffy corner radius
         },
       ),
     );
@@ -277,29 +310,61 @@ export default function SkillStickerWall({ tools, theme, darkVariants, replayKey
       ref={wrapRef}
       className={`sticker-wall${staticFallback ? " is-static" : ""}`}
       data-testid="sticker-wall"
-      aria-label="Tools of the trade"
     >
-      {tools.map(([slug, name], i) => (
-        <span
-          key={slug}
-          ref={(n) => { nodeRefs.current[i] = n; }}
-          className="sticker"
-          style={{
-            width: layout[i].width,
-            height: layout[i].height,
-            "--tilt": `${layout[i].tilt}deg`,
-          }}
-        >
-          <img
-            src={logoSrc(slug)}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
-          />
-          <span className="sticker-label">{name}</span>
-        </span>
-      ))}
+      {/* Cubes that pile *behind* the heading. */}
+      <div className="sticker-layer sticker-layer--back" aria-hidden="true">
+        {tools.map(([slug], i) =>
+          layout[i].front ? null : <Cube key={slug} slug={slug} i={i} layout={layout} nodeRefs={nodeRefs} logoSrc={logoSrc} tools={tools} />,
+        )}
+      </div>
+
+      {/* Heading, one-liner and the Wall/Grid switch. Static — never a physics
+          body, never knocked around. The scrim keeps it legible when cubes
+          stack up directly behind it. */}
+      <div className="sticker-overlay">
+        <div className="sticker-overlay-scrim" aria-hidden="true" />
+        <div className="sticker-overlay-inner">{children}</div>
+      </div>
+
+      {/* …and the ones that pile in front, so the text sits inside the pile. */}
+      <div className="sticker-layer sticker-layer--front" aria-hidden="true">
+        {tools.map(([slug], i) =>
+          layout[i].front ? <Cube key={slug} slug={slug} i={i} layout={layout} nodeRefs={nodeRefs} logoSrc={logoSrc} tools={tools} /> : null,
+        )}
+      </div>
+
+      {/* The cubes are decorative here (the Grid view carries the same list as
+          real text), so the accessible name lives on one hidden list instead
+          of 18 aria-hidden nodes. */}
+      <ul className="sr-only">
+        {tools.map(([slug, name]) => <li key={slug}>{name}</li>)}
+      </ul>
     </div>
+  );
+}
+
+function Cube({ slug, i, layout, nodeRefs, logoSrc, tools }) {
+  const s = layout[i];
+  return (
+    <span
+      ref={(n) => { nodeRefs.current[i] = n; }}
+      className="sticker"
+      style={{
+        width: s.width,
+        height: s.height,
+        "--tilt": `${s.tilt}deg`,
+        "--brand": BRAND[slug] || "#8D877D",
+      }}
+    >
+      <span className="sticker-gloss" aria-hidden="true" />
+      <img
+        src={logoSrc(slug)}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+      />
+      <span className="sticker-label">{tools[i][1]}</span>
+    </span>
   );
 }

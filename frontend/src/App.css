@@ -1131,6 +1131,10 @@ figcaption {
   justify-content: flex-start;
   padding-top: 60px;
 }
+/* Wall view: the physics container is the section. Drop the bottom padding
+   so the wall's floor sits on the section's own edge rather than leaving a
+   dead strip below it. */
+#tools[data-tools-view="wall"] { padding-bottom: 0; }
 
 /* Logo on top, label centred beneath it. Logos keep their own brand colours
    in every theme — no grayscale, no tint (see ToolLogo in App.js). Used by
