@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Type scale, colour tokens, breakpoints and motion values for eshanisomwanshi.com — generated from frontend/src/App.css.">
+<title>Eshani Somwanshi Website Design System</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Light = Paper, the site's default theme. Every token is declared here
+     first; the dark blocks below only redefine them. */
+  :root {
+    --bg: #F2EEE7;
+    --surface: #FBF8F3;
+    --card: #FFFFFF;
+    --ink: #14130F;
+    --muted: #6B6459;
+    --line: #DCD3C4;
+    --line-strong: #8D877D;
+    --accent: #D9512C;
+    --accent-strong: #B23F1E;
+    --secondary: #4F6259;
+    --shadow: rgba(20, 19, 15, .08);
+
+    --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  /* System dark, unless the viewer explicitly chose light = Carbon */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B0B0B;
+      --surface: #131313;
+      --card: #191919;
+      --ink: #F4F2ED;
+      --muted: #8F8B84;
+      --line: #242424;
+      --line-strong: #616161;
+      --accent: #E5825F;
+      --accent-strong: #F0A183;
+      --secondary: #93A89B;
+      --shadow: rgba(0, 0, 0, .4);
+    }
+  }
+  /* Explicit dark choice wins in the other direction */
+  :root[data-theme="dark"] {
+    --bg: #0B0B0B;
+    --surface: #131313;
+    --card: #191919;
+    --ink: #F4F2ED;
+    --muted: #8F8B84;
+    --line: #242424;
+    --line-strong: #616161;
+    --accent: #E5825F;
+    --accent-strong: #F0A183;
+    --secondary: #93A89B;
+    --shadow: rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    padding: clamp(28px, 5vw, 72px) clamp(20px, 5vw, 64px) 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet { max-width: 1080px; margin: 0 auto; }
+
+  /* ---- masthead ---- */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 22px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(34px, 5.5vw, 58px);
+    font-weight: 700;
+    letter-spacing: -.03em;
+    line-height: 1.02;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h1 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent-strong); }
+  .standfirst {
+    margin: 18px 0 0;
+    max-width: 62ch;
+    color: var(--muted);
+    font-size: 17px;
+  }
+
+  /* ---- the label rail / specimen structure ---- */
+  section { margin-top: 64px; }
+  .band { display: grid; grid-template-columns: 148px 1fr; gap: 32px; align-items: start; }
+  @media (max-width: 720px) { .band { grid-template-columns: 1fr; gap: 14px; } }
+
+  .rail {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    padding-top: 6px;
+    position: sticky;
+    top: 20px;
+  }
+  @media (max-width: 720px) { .rail { position: static; padding-top: 0; } }
+  .rail small { display: block; color: var(--muted); letter-spacing: .04em; text-transform: none; margin-top: 8px; font-size: 11px; line-height: 1.5; }
+
+  h2 {
+    font-size: 24px; font-weight: 700; letter-spacing: -.02em;
+    margin: 0 0 6px; text-wrap: balance;
+  }
+  .note { color: var(--muted); font-size: 15px; margin: 0 0 26px; max-width: 64ch; }
+  .note code, .inline-code {
+    font-family: var(--font-mono); font-size: .88em;
+    background: var(--surface); border: 1px solid var(--line);
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  /* ---- type scale specimens, rendered at their true size ---- */
+  .scale { border-top: 1px solid var(--line); }
+  .step {
+    display: grid;
+    grid-template-columns: 84px 96px 1fr;
+    gap: 20px;
+    align-items: baseline;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 560px) { .step { grid-template-columns: 64px 1fr; } .step .px { display: none; } }
+  .step .tag {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--accent-strong);
+  }
+  .step .px {
+    font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .specimen { font-family: var(--font-display); font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+
+  /* ---- swatches ---- */
+  .themes { display: grid; gap: 28px; }
+  .theme-block { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .theme-head {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    padding: 13px 18px; border-bottom: 1px solid var(--line); background: var(--surface);
+  }
+  .theme-head strong { font-size: 15px; letter-spacing: -.01em; }
+  .theme-head span { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: .06em; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 1px; background: var(--line); }
+  .sw { background: var(--card); padding: 12px 13px 13px; }
+  .chip { height: 42px; border-radius: 4px; border: 1px solid rgba(128,128,128,.28); margin-bottom: 9px; }
+  .sw .name { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .04em; display: block; }
+  .sw .hex { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); text-transform: uppercase; }
+
+  /* ---- token tables ---- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; min-width: 460px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+    background: var(--surface);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.token, td.val { font-family: var(--font-mono); font-size: 12.5px; }
+  td.token { color: var(--accent-strong); white-space: nowrap; }
+  td.val { font-variant-numeric: tabular-nums; }
+  td.desc { color: var(--muted); font-size: 14px; }
+
+  /* ---- breakpoint ruler ---- */
+  .ruler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  @media (max-width: 620px) { .ruler { grid-template-columns: repeat(2, 1fr); } }
+  .tier { background: var(--card); padding: 15px 16px 17px; }
+  .tier .n { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .tier .w { font-family: var(--font-mono); font-size: 16px; font-weight: 500; margin-top: 7px; font-variant-numeric: tabular-nums; }
+  .tier .q { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-top: 9px; line-height: 1.5; word-break: break-word; }
+
+  /* ---- rules callout ---- */
+  .rules { display: grid; gap: 14px; }
+  .rule {
+    border-left: 3px solid var(--accent);
+    padding: 3px 0 3px 16px;
+  }
+  .rule b { display: block; font-size: 15px; letter-spacing: -.01em; margin-bottom: 3px; }
+  .rule span { color: var(--muted); font-size: 14.5px; }
+
+  footer {
+    margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    display: flex; gap: 18px; flex-wrap: wrap; letter-spacing: .04em;
+  }
+  a { color: var(--accent-strong); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <p class="eyebrow">Style guide · eshanisomwanshi.com</p>
+    <h1>The tokens behind <em>the portfolio</em></h1>
+    <p class="standfirst">Every type step, colour and breakpoint the site actually uses — read from <span class="inline-code">App.css</span>, not from memory. Values here match the live build.</p>
+  </header>
+
+  <!-- TYPE SCALE -->
+  <section>
+    <div class="band">
+      <div class="rail">
+        Type scale
+        <small>Base 12 · ratio 1.125 (major second)</small>
+      </div>
+      <div>
+        <h2>Nine steps, one ratio</h2>
+        <p class="note"><code>html { font-size: 75% }</code> makes <strong>1rem = 12px</strong> everywhere on the site — 75% of the browser default, so a reader who raises their own font size still gets it. Because the root is 12, typescale.com's rem output pastes in verbatim with no recalculation. Each line below is set at its real pixel size.</p>
+
+        <div class="scale">
+          <div class="step"><span class="tag">h1</span><span class="px">2.027rem · 24.33px</span><span class="specimen" style="font-size:24.33px">Selected work</span></div>
+          <div class="step"><span class="tag">h2</span><span class="px">1.802rem · 21.62px</span><span class="specimen" style="font-size:21.62px">Design tools</span></div>
+          <div class="step"><span class="tag">h3</span><span class="px">1.602rem · 19.22px</span><span class="specimen" style="font-size:19.22px">Retinal Diagnostic Platform</span></div>
+          <div class="step"><span class="tag">h4</span><span class="px">1.424rem · 17.09px</span><span class="specimen" style="font-size:17.09px">Companion-guided app</span></div>
+          <div class="step"><span class="tag">h5</span><span class="px">1.266rem · 15.19px</span><span class="specimen" style="font-size:15.19px">Primary designer for Zoe</span></div>
+          <div class="step"><span class="tag">h6</span><span class="px">1.125rem · 13.50px</span><span class="specimen" style="font-size:13.5px">Healthcare · AI · Systems</span></div>
+          <div class="step"><span class="tag">p</span><span class="px">1rem · 12.00px</span><span class="specimen" style="font-size:12px;font-weight:400">Body copy sits here, at the base of the scale.</span></div>
+          <div class="step"><span class="tag">small</span><span class="px">.889rem · 10.67px</span><span class="specimen" style="font-size:10.67px;font-family:var(--font-mono);letter-spacing:.1em;font-weight:500">01 · OPTRAHEALTH</span></div>
+          <div class="step"><span class="tag">smaller</span><span class="px">.79rem · 9.48px</span><span class="specimen" style="font-size:9.48px;font-family:var(--font-mono);letter-spacing:.06em">Post-launch vs. prior release</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPEFACES -->
+  <section>
+    <div class="band">
+      <div class="rail">
+        Typefaces
+        <small>Three families, four roles</small>
+      </div>
+      <div>
+        <h2>What sets what</h2>
+        <p class="note">Bricolage Grotesque is variable with an optical-size axis, so it carries display <em>and</em> body on its own — which is why there are three families here, not four.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Family</th><th>Used for</th></tr></thead>
+            <tbody>
+              <tr><td class="token">--font-display</td><td class="val">Bricolage Grotesque</td><td class="desc">Headings, the hero wordmark, project titles</td></tr>
+              <tr><td class="token">--font-body</td><td class="val">Bricolage Grotesque</td><td class="desc">Running copy — same family, lighter weights</td></tr>
+              <tr><td class="token">--font-serif</td><td class="val">Instrument Serif</td><td class="desc">Italic accents inside headings, the editorial voice</td></tr>
+              <tr><td class="token">--font-mono</td><td class="val">JetBrains Mono</td><td class="desc">Labels, metrics, nav, tool names, all small caps-y text</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOUR -->
+  <section>
+    <div class="band">
+      <div class="rail">
+        Colour
+        <small>Three themes, one token set</small>
+      </div>
+      <div>
+        <h2>Paper, Carbon, Petrol</h2>
+        <p class="note">The theme id is written to <code>document.documentElement.dataset.theme</code> and saved to <code>localStorage</code> under <code>portfolio-theme</code>. Every theme redefines the same token names, so components never reference a hex directly.</p>
+
+        <div class="themes">
+
+          <div class="theme-block">
+            <div class="theme-head"><strong>Paper</strong> <span>default · light</span></div>
+            <div class="swatches">
+              <div class="sw"><div class="chip" style="background:#F2EEE7"></div><span class="name">--bg</span><span class="hex">#F2EEE7</span></div>
+              <div class="sw"><div class="chip" style="background:#FBF8F3"></div><span class="name">--surface</span><span class="hex">#FBF8F3</span></div>
+              <div class="sw"><div class="chip" style="background:#FFFFFF"></div><span class="name">--card</span><span class="hex">#FFFFFF</span></div>
+              <div class="sw"><div class="chip" style="background:#14130F"></div><span class="name">--ink</span><span class="hex">#14130F</span></div>
+              <div class="sw"><div class="chip" style="background:#6B6459"></div><span class="name">--muted</span><span class="hex">#6B6459</span></div>
+              <div class="sw"><div class="chip" style="background:#DCD3C4"></div><span class="name">--line</span><span class="hex">#DCD3C4</span></div>
+              <div class="sw"><div class="chip" style="background:#8D877D"></div><span class="name">--line-strong</span><span class="hex">#8D877D</span></div>
+              <div class="sw"><div class="chip" style="background:#D9512C"></div><span class="name">--accent</span><span class="hex">#D9512C</span></div>
+              <div class="sw"><div class="chip" style="background:#B23F1E"></div><span class="name">--accent-strong</span><span class="hex">#B23F1E</span></div>
+              <div class="sw"><div class="chip" style="background:#4F6259"></div><span class="name">--secondary</span><span class="hex">#4F6259</span></div>
+              <div class="sw"><div class="chip" style="background:#E8E0D2"></div><span class="name">--pill</span><span class="hex">#E8E0D2</span></div>
+            </div>
+          </div>
+
+          <div class="theme-block">
+            <div class="theme-head"><strong>Carbon</strong> <span>dark</span></div>
+            <div class="swatches">
+              <div class="sw"><div class="chip" style="background:#0B0B0B"></div><span class="name">--bg</span><span class="hex">#0B0B0B</span></div>
+              <div class="sw"><div class="chip" style="background:#131313"></div><span class="name">--surface</span><span class="hex">#131313</span></div>
+              <div class="sw"><div class="chip" style="background:#191919"></div><span class="name">--card</span><span class="hex">#191919</span></div>
+              <div class="sw"><div class="chip" style="background:#F4F2ED"></div><span class="name">--ink</span><span class="hex">#F4F2ED</span></div>
+              <div class="sw"><div class="chip" style="background:#8F8B84"></div><span class="name">--muted</span><span class="hex">#8F8B84</span></div>
+              <div class="sw"><div class="chip" style="background:#242424"></div><span class="name">--line</span><span class="hex">#242424</span></div>
+              <div class="sw"><div class="chip" style="background:#616161"></div><span class="name">--line-strong</span><span class="hex">#616161</span></div>
+              <div class="sw"><div class="chip" style="background:#E5825F"></div><span class="name">--accent</span><span class="hex">#E5825F</span></div>
+              <div class="sw"><div class="chip" style="background:#F0A183"></div><span class="name">--accent-strong</span><span class="hex">#F0A183</span></div>
+              <div class="sw"><div class="chip" style="background:#93A89B"></div><span class="name">--secondary</span><span class="hex">#93A89B</span></div>
+              <div class="sw"><div class="chip" style="background:#1E2622"></div><span class="name">--pill</span><span class="hex">#1E2622</span></div>
+            </div>
+          </div>
+
+          <div class="theme-block">
+            <div class="theme-head"><strong>Petrol</strong> <span>dark · teal</span></div>
+            <div class="swatches">
+              <div class="sw"><div class="chip" style="background:#052A31"></div><span class="name">--bg</span><span class="hex">#052A31</span></div>
+              <div class="sw"><div class="chip" style="background:#083640"></div><span class="name">--surface</span><span class="hex">#083640</span></div>
+              <div class="sw"><div class="chip" style="background:#0C404B"></div><span class="name">--card</span><span class="hex">#0C404B</span></div>
+              <div class="sw"><div class="chip" style="background:#E4F1F2"></div><span class="name">--ink</span><span class="hex">#E4F1F2</span></div>
+              <div class="sw"><div class="chip" style="background:#8CB0B5"></div><span class="name">--muted</span><span class="hex">#8CB0B5</span></div>
+              <div class="sw"><div class="chip" style="background:#0F5261"></div><span class="name">--line</span><span class="hex">#0F5261</span></div>
+              <div class="sw"><div class="chip" style="background:#50818C"></div><span class="name">--line-strong</span><span class="hex">#50818C</span></div>
+              <div class="sw"><div class="chip" style="background:#CBF24E"></div><span class="name">--accent</span><span class="hex">#CBF24E</span></div>
+              <div class="sw"><div class="chip" style="background:#DDFA80"></div><span class="name">--accent-strong</span><span class="hex">#DDFA80</span></div>
+              <div class="sw"><div class="chip" style="background:#7FBFB2"></div><span class="name">--secondary</span><span class="hex">#7FBFB2</span></div>
+              <div class="sw"><div class="chip" style="background:#0E4552"></div><span class="name">--pill</span><span class="hex">#0E4552</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BREAKPOINTS -->
+  <section>
+    <div class="band">
+      <div class="rail">
+        Breakpoints
+        <small>Four tiers, three dividing lines</small>
+      </div>
+      <div>
+        <h2>Desktop is the base</h2>
+        <p class="note">Desktop needs no media query — it's the plain CSS. Each query steps <em>down</em> from it. These three widths are the whole set; anything that only grows or shrinks belongs in <code>clamp()</code> instead of a breakpoint.</p>
+        <div class="ruler">
+          <div class="tier"><div class="n">Phone</div><div class="w">≤ 576</div><div class="q">max-width: 576px</div></div>
+          <div class="tier"><div class="n">Tablet</div><div class="w">577–1024</div><div class="q">max-width: 1024px</div></div>
+          <div class="tier"><div class="n">Laptop</div><div class="w">1025–1280</div><div class="q">max-width: 1280px</div></div>
+          <div class="tier"><div class="n">Desktop</div><div class="w">≥ 1281</div><div class="q">no query — base rules</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAYOUT + MOTION -->
+  <section>
+    <div class="band">
+      <div class="rail">
+        Layout &amp; motion
+        <small>Fluid where it can be</small>
+      </div>
+      <div>
+        <h2>Spacing, easing, duration</h2>
+        <p class="note">The header height and page gutter both ease with the viewport rather than stepping at a breakpoint — <code>--nav-h</code> keeps shrinking below 576 so a small phone gets a shorter header than a large one.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Value</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="token">--container</td><td class="val">1320px</td><td class="desc">Max content width</td></tr>
+              <tr><td class="token">--edge</td><td class="val">clamp(1.6667rem, 5vw, 5.3333rem)</td><td class="desc">Page gutter — 20px → 64px</td></tr>
+              <tr><td class="token">--nav-h</td><td class="val">clamp(56px, calc(52.56px + 1.9858vw), 78px)</td><td class="desc">Header height — 59px at 320, 78px from 1281</td></tr>
+              <tr><td class="token">--radius-btn</td><td class="val">8px</td><td class="desc">Button corner radius</td></tr>
+              <tr><td class="token">--dur-fast</td><td class="val">.18s</td><td class="desc">Hover, colour shifts</td></tr>
+              <tr><td class="token">--dur-mid</td><td class="val">.34s</td><td class="desc">Theme changes, panels</td></tr>
+              <tr><td class="token">--ease-enter</td><td class="val">cubic-bezier(.22, .61, .36, 1)</td><td class="desc">Things arriving</td></tr>
+              <tr><td class="token">--ease-state</td><td class="val">cubic-bezier(.65, 0, .35, 1)</td><td class="desc">State changes both ways</td></tr>
+              <tr><td class="token">--ease-curtain</td><td class="val">cubic-bezier(.76, 0, .24, 1)</td><td class="desc">The preloader lift</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section>
+    <div class="band">
+      <div class="rail">
+        House rules
+        <small>The ones that bite</small>
+      </div>
+      <div>
+        <h2>Before you change a value</h2>
+        <div class="rules">
+          <div class="rule"><b>Don't rescale rem values again.</b><span>Every rem in the codebase was mechanically rescaled by 16/12 when the root moved to 75%, specifically so nothing changed size. Only new values should use the scale table directly.</span></div>
+          <div class="rule"><b>Map to the nearest step, don't invent one.</b><span>Not every step needs to appear in a given component — skip the ones that don't carry a distinct role.</span></div>
+          <div class="rule"><b>Check contrast before adding a colour.</b><span>4.5:1 for text, 3:1 for large text, UI components and borders. <code>--line</code> is divider-strength only (~1.3:1); use <code>--line-strong</code> where a border is a control's only visible boundary.</span></div>
+          <div class="rule"><b>Accent and secondary need inverse variants.</b><span>On inverted backgrounds use <code>--accent-on-inv</code> and <code>--secondary-on-inv</code> — the standard ones fail contrast there in Carbon and Petrol.</span></div>
+          <div class="rule"><b>Three breakpoints, no more.</b><span>Reach for <code>clamp()</code> before adding a fourth. Queries are for structural changes a fluid value can't express — a hamburger, a column count, a reorder.</span></div>
+          <div class="rule"><b>Gate new motion.</b><span>Anything animated respects <code>prefers-reduced-motion</code>, including JS-driven scroll.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Source: frontend/src/App.css</span>
+    <span>Root 12px · ratio 1.125</span>
+    <span><a href="https://www.eshanisomwanshi.com">eshanisomwanshi.com</a></span>
+  </footer>
+
+</div>
+</body>
+</html>
