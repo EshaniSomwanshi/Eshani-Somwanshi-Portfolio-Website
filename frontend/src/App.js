@@ -152,15 +152,27 @@ const DARK_THEMES = new Set(["carbon", "petrol"]);
    misrepresenting the mark. */
 const THEME_VARIANT_LOGOS = new Set(["framer", "openai", "cursor", "axure", "react"]);
 
+/* Where the filename doesn't follow the slug. The grid wants Adobe's own
+   Creative Cloud app icon — the one on its coloured tile — rather than the
+   bare corporate "A": tiles here sit on the page background next to
+   Photoshop, Illustrator and After Effects, which are all app icons on their
+   own tiles, so the tile is what makes it match. (The wall is the opposite
+   case and uses the bare mark, since a tile inside a coloured cube reads as a
+   box in a box.) */
+const GRID_LOGO_FILES = {
+  adobe: "adobe-cc-tile.svg",
+};
+
 /* Logos are the brands' own full-colour marks, served locally from
    public/Logos/ (was cdn.simpleicons.org, which only had monochrome marks
    and cost 17 external requests). */
 function ToolLogo({ slug, name, size, theme }) {
   const onDark = THEME_VARIANT_LOGOS.has(slug) && DARK_THEMES.has(theme);
+  const file = GRID_LOGO_FILES[slug] || `${slug}${onDark ? "-dark" : ""}.svg`;
   return (
     <span className="tool-tile">
       <img
-        src={`${process.env.PUBLIC_URL}/Logos/${slug}${onDark ? "-dark" : ""}.svg`}
+        src={`${process.env.PUBLIC_URL}/Logos/${file}`}
         alt=""
         width={size}
         height={size}
