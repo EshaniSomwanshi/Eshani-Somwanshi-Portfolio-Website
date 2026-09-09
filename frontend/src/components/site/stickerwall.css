@@ -1,0 +1,96 @@
+/* ==========================================================================
+   Skill sticker wall — the "Wall" view of the Toolkit section.
+   Physics writes transforms onto .sticker from JS (see SkillStickerWall.jsx);
+   everything here is the flat, paper-like sticker look: crisp shadow, thin
+   edge, no gloss or bevel. The 3D read comes from shadow + rotation only.
+   ========================================================================== */
+
+.sticker-wall {
+  position: relative;
+  width: 100%;
+  height: clamp(380px, 44vw, 560px);
+  margin-top: clamp(2.6667rem, 4vw, 4rem);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  /* Stickers are dragged, not selected. */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y; /* never swallow vertical page scroll on touch */
+}
+
+.sticker {
+  --lift: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6667rem;
+  padding: 0.9333rem 0.6667rem;
+  box-sizing: border-box;
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  /* Resting shadow is tight and crisp — a sticker sitting just off the
+     surface. --lift (0–1, written per frame from body velocity) deepens and
+     softens it as the sticker moves or gets thrown. */
+  box-shadow:
+    0 calc(2px + 14px * var(--lift)) calc(6px + 26px * var(--lift))
+      rgba(var(--shadow-rgb), calc(.22 + .2 * var(--lift))),
+    0 1px 1px rgba(var(--shadow-rgb), .16);
+  cursor: grab;
+  will-change: transform;
+}
+.sticker:active { cursor: grabbing; }
+
+.sticker img {
+  display: block;
+  width: 46px;
+  height: 46px;
+  max-width: none;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.sticker-label {
+  font-family: var(--font-mono);
+  font-size: .79rem;
+  line-height: 1;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Static fallback — used before the engine starts, under
+   prefers-reduced-motion, and on viewports too narrow for the physics
+   playground. Same sticker styling, laid out as a scattered row with each
+   one's random tilt kept so it still reads hand-placed rather than gridded.
+   -------------------------------------------------------------------------- */
+.sticker-wall.is-static {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.0667rem, 2vw, 1.6rem);
+  height: auto;
+  min-height: clamp(300px, 34vw, 420px);
+  padding: clamp(2rem, 4vw, 3.2rem) clamp(1.0667rem, 2vw, 2rem);
+  touch-action: auto;
+}
+.sticker-wall.is-static .sticker {
+  position: relative;
+  transform: rotate(var(--tilt));
+  cursor: default;
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker { will-change: auto; }
+}

@@ -10,7 +10,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ArrowDown, ArrowLeftRight, ArrowUpRight, LayoutGrid, Menu, Minus, Plus, Send } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Layers, LayoutGrid, Menu, Minus, Plus, Send } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
 import {
@@ -27,6 +27,7 @@ import {
 } from "./primitives";
 import "./App.css";
 import Preloader from "./components/site/Preloader";
+import SkillStickerWall from "./components/site/SkillStickerWall";
 import AvatarHero from "./components/ui/AvatarHero";
 
 /* ========================================================================
@@ -43,7 +44,8 @@ const offerings = [
   ["Industrial Design", []],
 ];
 
-/* [filename in public/Logos/, visible label] — see ToolMarquee below. Covers
+/* [filename in public/Logos/, visible label]. Feeds both Toolkit views —
+   SkillStickerWall (the physics wall) and ToolGrid below. Covers
    both the design side and the code side, which is what the section heading
    claims.
 
@@ -171,22 +173,8 @@ function ToolLogo({ slug, name, size, theme }) {
   );
 }
 
-/* Horizontal auto-scrolling strip. The list is rendered twice so the
-   translateX(-50%) keyframe loops seamlessly. */
-function ToolMarquee({ theme }) {
-  return (
-    <div className="tool-marquee" aria-label="Tools of the trade" data-testid="tool-marquee">
-      <div className="tool-track">
-        {[...tools, ...tools].map(([slug, name], i) => (
-          <ToolLogo key={`${slug}-${i}`} slug={slug} name={name} size={157} theme={theme} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* Static four-across grid, centred on the page. Laid out with wrapping flex
-   rather than CSS grid so the final short row (17 tools don't divide by 4)
+   rather than CSS grid so the final short row (18 tools don't divide by 4)
    centres itself instead of hanging off the left edge. */
 function ToolGrid({ theme }) {
   return (
@@ -547,7 +535,8 @@ export default function App() {
   const [theme, setTheme] = useTheme();
   const [menu, setMenu] = useState(false);
   const [openOffer, setOpenOffer] = useState(null);
-  const [toolsView, setToolsView] = useState("scroll"); // "scroll" | "grid"
+  const [toolsView, setToolsView] = useState("wall"); // "wall" | "grid"
+  const [wallReplay, setWallReplay] = useState(0);     // bump to re-drop the stickers
   const [activeSection, setActiveSection] = useState("");
   const headerRef = useRef(null);
   const navToggleRef = useRef(null);
@@ -898,17 +887,22 @@ export default function App() {
                 <SplitText as="h2" text="What I design and build with." testId="tools-heading" delay={0.05} />
               </div>
               {/* Layout switch, scoped to this section only — no persistence,
-                  it resets to the scrolling strip on reload. */}
+                  it resets to the wall on reload. Pressing "Wall" while it's
+                  already showing re-drops the stickers, so the button doubles
+                  as a replay without needing a second control. */}
               <Reveal delay={0.1}>
                 <div className="tools-switch" role="group" aria-label="Tool logo layout">
                   <button
                     type="button"
                     className="tools-switch-btn"
-                    aria-pressed={toolsView === "scroll"}
-                    onClick={() => setToolsView("scroll")}
-                    data-testid="tools-view-scroll"
+                    aria-pressed={toolsView === "wall"}
+                    onClick={() => {
+                      if (toolsView === "wall") setWallReplay((n) => n + 1);
+                      else setToolsView("wall");
+                    }}
+                    data-testid="tools-view-wall"
                   >
-                    <ArrowLeftRight size={14} aria-hidden="true" /> Scroll
+                    <Layers size={14} aria-hidden="true" /> Wall
                   </button>
                   <button
                     type="button"
@@ -923,7 +917,16 @@ export default function App() {
               </Reveal>
             </div>
             <Reveal delay={0.15}>
-              {toolsView === "grid" ? <ToolGrid theme={theme} /> : <ToolMarquee theme={theme} />}
+              {toolsView === "grid" ? (
+                <ToolGrid theme={theme} />
+              ) : (
+                <SkillStickerWall
+                  tools={tools}
+                  theme={theme}
+                  darkVariants={THEME_VARIANT_LOGOS}
+                  replayKey={wallReplay}
+                />
+              )}
             </Reveal>
           </div>
         </section>
