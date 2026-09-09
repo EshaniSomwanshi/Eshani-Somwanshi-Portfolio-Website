@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import "./stickerwall.css";
 
@@ -45,31 +45,45 @@ export const PHYSICS = {
   wallThickness: 400,    // static bound thickness (thick = nothing tunnels out)
 };
 
-/* Dominant brand colour per tool, read off the actual logo artwork. The box
-   is built as a *tint* of this rather than the flat colour: a Claude-coloured
-   mark on a Claude-coloured box would disappear. See stickerwall.css. */
-export const BRAND = {
-  figma: "#F24E1E",
-  claude: "#D97757",
-  vscode: "#0065A9",
-  html5: "#E34F26",
-  javascript: "#F7DF1E",
-  react: "#61DAFB",
-  cursor: "#2E2E2E",
-  framer: "#0055FF",
-  /* The Adobe apps' real icon grounds are the dark tiles, not the letter
-     colour — that's the colour "behind the logo" the brief asks for. */
-  photoshop: "#001E36",
-  illustrator: "#330000",
-  "after-effects": "#00005B",
-  miro: "#FFDD33",
-  adobe: "#EB1000",
-  canva: "#00C4CC",
-  openai: "#10A37F",
-  wordpress: "#21759B",
-  axure: "#009CD9",
-  perplexity: "#20808D",
+/* Exact per-tool gradient stops. Rendered at a consistent 135deg (top-left to
+   bottom-right) with stops distributed evenly across the ramp, so the 3- and
+   5-stop gradients (Axure, Adobe CC) read at the same rate as the 2-stop ones
+   rather than being compressed at one end. */
+export const GRADIENTS = {
+  javascript: ["#FFF08D", "#F0CB14"],
+  cursor: ["#EDECEC", "#26251E"],
+  openai: ["#FFFFFF", "#26251E"],
+  react: ["#C0F0FF", "#036483"],
+  claude: ["#FFD8CB", "#DE3600"],
+  html5: ["#FFBB75", "#E33100"],
+  perplexity: ["#FFBBBB", "#208080"],
+  vscode: ["#56CAFF", "#005184"],
+  photoshop: ["#31A8FF", "#001E36"],
+  axure: ["#74BB11", "#009CD9", "#EB2084"],
+  wordpress: ["#FFB586", "#217597"],
+  illustrator: ["#FF9A00", "#330000"],
+  figma: ["#0AD083", "#F24E1E"],
+  framer: ["#FFFFFF", "#000000"],
+  miro: ["#FFDD33", "#BAEC05"],
+  canva: ["#02C2CC", "#7929EB"],
+  "after-effects": ["#9999FF", "#00005B"],
+  adobe: ["#F80800", "#FBC604", "#44E04D", "#2A88FF", "#F81AB4"],
 };
+
+const GRADIENT_ANGLE = "135deg";
+
+function gradientFor(slug) {
+  const stops = GRADIENTS[slug] || ["#8D877D", "#4A4A4A"];
+  const spread = stops
+    .map((c, i) => `${c} ${((i / (stops.length - 1)) * 100).toFixed(2)}%`)
+    .join(", ");
+  return `linear-gradient(${GRADIENT_ANGLE}, ${spread})`;
+}
+
+/* The last stop is the bottom-right end of a 135deg ramp — which is where the
+   label sits and where the edge shading lands — so it, not an average, is what
+   the icon and label have to read against. */
+const deepStopFor = (slug) => (GRADIENTS[slug] || ["#8D877D", "#4A4A4A"]).at(-1);
 
 /* Tools that ship reversed (white) artwork as <slug>-dark.svg. Used on the
    wall wherever the cube itself is dark, now that the mark sits directly on
@@ -103,17 +117,19 @@ const STICKER = {
   baseHeight: 116,       // square-ish, so the cubes read as cubes
   sizeVariance: 0.11,    // ±11% — organic, not wildly different
   maxTilt: 16,           // degrees of random rotation at spawn
-  minWidthForPhysics: 640, // below this container width, fall back to static
+  /* Cube size scales with the container so 18 of them still fit — and still
+     read — on a phone. There is deliberately no minimum width that disables
+     the engine: the drop-in has to work at every breakpoint. */
+  minSize: 62,           // px, floor for the narrowest phones
+  sizePerWidth: 0.098,   // cube edge as a share of container width
   frontRatio: 0.4,       // share that render *in front* of the static overlay
 };
 
 /* Deterministic-per-mount jitter so React re-renders never reshuffle sizes. */
 function makeLayout(count) {
   return Array.from({ length: count }, () => {
-    const scale = 1 + (Math.random() * 2 - 1) * STICKER.sizeVariance;
     return {
-      width: Math.round(STICKER.baseWidth * scale),
-      height: Math.round(STICKER.baseHeight * scale),
+      scale: 1 + (Math.random() * 2 - 1) * STICKER.sizeVariance,
       tilt: (Math.random() * 2 - 1) * STICKER.maxTilt,
       /* Mixed depth: some cubes pile behind the heading, some in front, so
          the text sits *inside* the pile rather than on top of it. */
@@ -145,8 +161,7 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
      variant exists. inkFor() is the same luminance test the label uses, so
      icon and label always agree about how dark the cube is. */
   const logoSrc = useCallback((slug) => {
-    const brand = BRAND[slug] || "#8D877D";
-    const wantsWhite = REVERSED_LOGOS.has(slug) && inkFor(brand) === "#FFFFFF";
+    const wantsWhite = REVERSED_LOGOS.has(slug) && inkFor(deepStopFor(slug)) === "#FFFFFF";
     return `${process.env.PUBLIC_URL}/Logos/${slug}${wantsWhite ? "-dark" : ""}.svg`;
   }, []);
 
@@ -191,7 +206,13 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     if (!wrap) return;
     const W = wrap.clientWidth;
     const H = wrap.clientHeight;
-    if (W < STICKER.minWidthForPhysics) return; // static fallback handles it
+    /* A zero/invalid measurement means the wall isn't laid out yet — drop
+       back to the static layout rather than stranding the component in
+       "arming", where the cube layers are hidden and nothing would render. */
+    if (!W || !H || W < 200) {
+      setPhase("static");
+      return;
+    }
 
     const Matter = await import("matter-js");
     if (!wrapRef.current) return; // unmounted while the chunk loaded
@@ -209,12 +230,21 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
     const rightWall = bound(W + t / 2, H / 2, t, H * 4);
     Matter.Composite.add(engine.world, [floor, leftWall, rightWall]);
 
+    /* Cube edge scales with the container, so the wall works on a phone as
+       well as a desktop instead of being switched off below a breakpoint. */
+    const edge = Math.max(STICKER.minSize, Math.round(W * STICKER.sizePerWidth));
+    const sizes = layout.map((s) => Math.round(edge * s.scale));
+    sizes.forEach((px, i) => {
+      const n = nodeRefs.current[i];
+      if (n) { n.style.width = `${px}px`; n.style.height = `${px}px`; }
+    });
+
     const bodies = layout.map((s, i) =>
       Matter.Bodies.rectangle(
         W * 0.16 + Math.random() * W * 0.68,
         -200 - i * 40,
-        s.width,
-        s.height,
+        sizes[i],
+        sizes[i],
         {
           restitution: PHYSICS.restitution,
           friction: PHYSICS.friction,
@@ -222,7 +252,7 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
           frictionAir: PHYSICS.frictionAir,
           density: PHYSICS.density,
           angle: (s.tilt * Math.PI) / 180,
-          chamfer: { radius: 18 }, // matches the puffy corner radius
+          chamfer: { radius: Math.round(sizes[i] * 0.16) }, // matches the puffy radius
         },
       ),
     );
@@ -353,24 +383,20 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
       rafRef.current = requestAnimationFrame(frame);
     };
 
-    bodies.forEach((b, i) => {
-      b.__w = layout[i].width;
-      b.__h = layout[i].height;
-    });
+    bodies.forEach((b, i) => { b.__w = sizes[i]; b.__h = sizes[i]; });
     rafRef.current = requestAnimationFrame(frame);
   }, [layout]);
 
-  /* Arming -> build. Two rAFs so the browser has committed the layout change
-     (.is-static removed, so height goes from auto to calc(100vh - 60px))
-     before start() measures the wall. Measuring any earlier is exactly the
-     bug that put the floor partway up the section. */
-  useEffect(() => {
+  /* Arming -> build. useLayoutEffect runs after React has committed the class
+     change (.is-static removed, so the wall has grown to its physics height)
+     but before paint, and reading clientHeight there forces a synchronous
+     reflow — so the measurement is already correct without waiting a frame.
+     This previously chained two requestAnimationFrames, which meant the wall
+     never initialised at all if rAF was throttled (background tab, low-power
+     mode): start() simply never ran and the cubes stayed hidden in "arming". */
+  useLayoutEffect(() => {
     if (phase !== "arming") return;
-    let id2 = 0;
-    const id1 = requestAnimationFrame(() => {
-      id2 = requestAnimationFrame(() => start());
-    });
-    return () => { cancelAnimationFrame(id1); cancelAnimationFrame(id2); };
+    start();
   }, [phase, start]);
 
   /* Mount the engine only when the section reaches the viewport, so nothing
@@ -463,23 +489,22 @@ export default function SkillStickerWall({ tools, replayKey = 0, children }) {
 
 function Cube({ slug, i, layout, nodeRefs, logoSrc, tools }) {
   const s = layout[i];
-  const brand = BRAND[slug] || "#8D877D";
+  const deep = deepStopFor(slug);
   return (
     <span
       ref={(n) => { nodeRefs.current[i] = n; }}
       className="sticker"
       style={{
-        width: s.width,
-        height: s.height,
         "--tilt": `${s.tilt}deg`,
-        "--brand": brand,
+        "--grad": gradientFor(slug),
+        "--brand": deep,
         /* Label colour picked from the cube's own luminance, so it reads on
            Miro yellow and Photoshop navy alike. */
-        "--ink": inkFor(brand),
+        "--ink": inkFor(deep),
       }}
       data-knockout={
         KNOCKOUT_LOGOS.has(slug)
-          ? (inkFor(brand) === "#FFFFFF" ? "light" : "dark")
+          ? (inkFor(deep) === "#FFFFFF" ? "light" : "dark")
           : undefined
       }
     >

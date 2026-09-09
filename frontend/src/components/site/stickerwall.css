@@ -96,6 +96,10 @@
    and edges, and a tight contact shadow underneath.
    ------------------------------------------------------------------------- */
 .sticker {
+  /* Physics overwrites these inline with a container-derived px size; this is
+     the static-fallback / pre-arming size. */
+  width: clamp(62px, 9.8vw, 128px);
+  height: clamp(62px, 9.8vw, 128px);
   position: absolute;
   top: 0;
   left: 0;
@@ -123,10 +127,7 @@
     radial-gradient(135% 118% at 46% 2%,
       rgba(0, 0, 0, 0) 46%,
       color-mix(in srgb, var(--brand) 64%, #000) 100%),
-    linear-gradient(168deg,
-      color-mix(in srgb, var(--brand) 84%, #fff) 0%,
-      var(--brand) 46%,
-      color-mix(in srgb, var(--brand) 76%, #000) 100%);
+    var(--grad);
   box-shadow:
     /* interior shading only — all tinted in the cube's own hue, never white,
        so there is no pale halo ringing the silhouette */
