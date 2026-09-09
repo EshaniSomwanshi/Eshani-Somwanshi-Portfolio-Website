@@ -611,8 +611,20 @@ export default function App() {
     scrollLockRef.current = null;
     document.body.classList.remove("menu-open");
     document.body.style.top = "";
-    window.scrollTo(0, lock.y);
-    lock.lenis?.start();
+    /* Restore through Lenis, not window.scrollTo, whenever it is running.
+       Lenis keeps its own idea of the scroll position and ignores scroll
+       events it did not cause while stopped, so a bare window.scrollTo here
+       left it believing the page was still at 0 while the document sat
+       hundreds of pixels down. Every later scrollTo would then animate from
+       that stale origin — and if the stale origin happened to be near the
+       target, Lenis would conclude it had already arrived and do nothing at
+       all. `immediate` moves both the page and Lenis's own state together. */
+    if (lock.lenis) {
+      lock.lenis.start();
+      lock.lenis.scrollTo(lock.y, { immediate: true, force: true });
+    } else {
+      window.scrollTo(0, lock.y);
+    }
   }, []);
 
   /* Nav-link scrolling goes through Lenis (when it's ready) so a click feels
@@ -634,8 +646,40 @@ export default function App() {
       return el ? el.getBoundingClientRect().top + window.scrollY - 90 : null;
     })();
     if (top === null) return;
-    if (lenis) lenis.scrollTo(top, { duration: 1.2 });
-    else window.scrollTo({ top, behavior: "smooth" });
+
+    if (!lenis) {
+      window.scrollTo({ top, behavior: "smooth" });
+      return;
+    }
+
+    lenis.scrollTo(top, { duration: 1.2, force: true });
+
+    /* Safety net. Lenis animates from a requestAnimationFrame loop, so if that
+       loop is not running — or its internal position has drifted far enough
+       that it thinks it has already arrived — scrollTo is dropped in silence
+       and the link does nothing whatsoever, which is the one outcome a nav
+       link must never have. 250ms in, this easing is ~75% of the way, so any
+       real scroll has visibly started by then; if nothing has moved, finish
+       the job natively.
+
+       This is a guard, not a diagnosis: Eshani hit dead nav links on the
+       deployed preview that could not be reproduced here, because Chrome
+       suspends rAF in the backgrounded tab this gets tested from, which makes
+       the frame-driven path unobservable. The check is cheap and cannot fire
+       when the scroll is working.
+
+       The fallback jumps rather than easing on purpose. Whatever stops Lenis
+       animating — a suspended frame loop most likely — stops the browser's own
+       smooth scroll for exactly the same reason, so asking for `smooth` here
+       reproduces the failure instead of escaping it. Verified: with frames
+       suspended, a `smooth` fallback still went nowhere; an instant one
+       arrives. */
+    const from = window.scrollY;
+    window.setTimeout(() => {
+      const movedNothing = Math.abs(window.scrollY - from) < 4;
+      const hadSomewhereToGo = Math.abs(top - from) > 8;
+      if (movedNothing && hadSomewhereToGo) window.scrollTo(0, top);
+    }, 250);
   }, [lenis, releaseScrollLock]);
 
   /* Landing here with #work in the URL (e.g. the case-study page's "←
