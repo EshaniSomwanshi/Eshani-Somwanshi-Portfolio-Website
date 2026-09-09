@@ -118,6 +118,7 @@ const TRANSPARENT_LOGOS = {
      thing this map exists to avoid. */
   adobe: "adobe-cc.svg",
   "after-effects": "AE-transaprent.svg",
+  canva: "Canva-transparent.svg",
   illustrator: "AI-transparent.svg",
   javascript: "Javascript-transparent.svg",
   miro: "Miro-transparent.svg",

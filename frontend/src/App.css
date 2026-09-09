@@ -1240,9 +1240,24 @@ figcaption {
 }
 .tool-grid .tool-tile { flex: 0 0 auto; width: 12.5rem; }
 .tool-grid .tool-tile img { width: 77px; height: 77px; }
+/* Phones and small tablets: an explicit 3-across grid rather than letting the
+   flex wrap decide, which gave 2 columns and a 9-row column of a list. 18
+   tools divide evenly by 3, so there is no short last row to centre and none
+   of the reason the wider layout uses flex applies. Order is untouched — the
+   tiles render in the prominence order they are declared in, so the grid
+   still reads left to right, most-used first, at every width. */
 @media (max-width: 720px) {
-  .tool-grid { max-width: 34rem; }
-  .tool-grid .tool-tile { width: 10rem; }
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 34rem;
+    gap: clamp(2rem, 5vw, 2.9333rem) clamp(0.6667rem, 2vw, 1.3333rem);
+  }
+  /* Only the arrangement changes. A third of a 350px phone is 111px against
+     the 120px the wrapped tiles used to get — 7% narrower — so the marks and
+     labels are left exactly as they are, and the longest of them ("After
+     Effects", ~90px) still sits on one line. */
+  .tool-grid .tool-tile { width: auto; min-width: 0; }
 }
 
 @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
