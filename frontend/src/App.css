@@ -73,7 +73,12 @@
   --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --nav-h: 78px;
+  /* Fluid rather than a step at 576. The header used to snap from 78px to
+     64px on crossing the phone breakpoint, taking every sticky offset and
+     scroll-margin that reads this with it; now it eases between the two across
+     the same span. The formula is the usual fluid one: hold the low value to
+     576, the high value from 1281, interpolate between. */
+  --nav-h: clamp(64px, calc(52.56px + 1.9858vw), 78px);
   --container: 1320px;
   --edge: clamp(1.6667rem, 5vw, 5.3333rem);
   --radius-btn: 8px;
@@ -882,7 +887,9 @@ figcaption {
 .stack-item {
   position: sticky;
   top: calc(var(--nav-h) + 1.6rem);
-  margin-top: 2.1333rem;
+  /* 1.6rem up to 576, 2.1333rem from 1281, easing between — replaces the step
+     the tablet block used to make. */
+  margin-top: clamp(1.6rem, calc(13.97px + 0.9078vw), 2.1333rem);
 }
 .stack-item:first-child { margin-top: 0; }
 
@@ -1099,7 +1106,10 @@ figcaption {
 }
 .marquee span em { font-family: var(--font-serif); font-style: italic; color: var(--accent); }
 
-.contact-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(2.6667rem, 4vw, 4rem); align-items: center; }
+/* The floor is 3.3333rem rather than 2.6667rem so this covers the tablet case
+   on its own — that is exactly what the tablet block used to set, so the gap
+   below 1024 is unchanged and the override could go. */
+.contact-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(3.3333rem, 4vw, 4rem); align-items: center; }
 .contact h2 {
   font-family: var(--font-display);
   font-size: clamp(2.8rem, 4.3vw, 4.9333rem);
@@ -1398,8 +1408,9 @@ figcaption {
   .lead-columns { grid-template-columns: 1fr; }
   .case { grid-template-columns: 1fr; }
   /* The sticky stack stays on at tablet/mobile — it's the section's whole
-     behaviour, and flattening it here made the cards a plain list. */
-  .stack-item { margin-top: 1.6rem; }
+     behaviour, and flattening it here made the cards a plain list. The spacing
+     itself is fluid now and lives on the base rule; only the behaviour note
+     belongs here. */
   /* Heading first, then the portrait, then the rest of the copy. .about-lead
      is the "About" label lifted out of .about-copy so it can be ordered
      independently of it. */
@@ -1407,13 +1418,12 @@ figcaption {
   .about-figure, .about-lead, .about-copy { grid-column: 1; grid-row: auto; }
   .about-lead { margin-bottom: 0; }
   .about-photo { max-width: 520px; }
-  .contact-grid { grid-template-columns: 1fr; gap: 3.3333rem; align-items: start; }
+  .contact-grid { grid-template-columns: 1fr; align-items: start; }
   .cs-metrics-row { grid-template-columns: repeat(2, 1fr); row-gap: 2.6667rem; }
   .cs-header .wordmark { display: none; }
 }
 
 @media (max-width: 576px) {
-  :root { --nav-h: 64px; }
   .nav-links { display: none; }
   .site-header .theme-switch { display: none; }
   .theme-switch-mobile { display: flex; }
@@ -1473,7 +1483,8 @@ figcaption {
   position: relative;
   width: 100%;
   flex: 1;
-  min-height: 420px;
+  /* 380px up to 576, 420px from 1281 — was a step at 1024. */
+  min-height: clamp(380px, calc(347.32px + 5.6738vw), 420px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1735,12 +1746,11 @@ figcaption {
    immediately before it, so moving this earlier would put those base rules
    after it and silently switch it off. */
 @media (max-width: 1024px) {
-  .avatar-hero-stage {
-    min-height: 380px;
-  }
-  .backdrop-name {
-    font-size: 19vw;
-  }
+  /* .backdrop-name had a font-size override here too. It set a bare 19vw,
+     which is the exact middle term of the clamp already on the base rule — so
+     from 576 up the two agree to the pixel, and all it really did was strip
+     the 6.6667rem floor on the narrowest phones. Removed; the base clamp keeps
+     the mark 6px larger there, which is the intent of having a floor. */
   .hero-avatar-container {
     max-width: 320px;
     margin-bottom: -10px;
