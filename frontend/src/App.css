@@ -603,101 +603,6 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 }
 
 
-/* ---------- hero ---------- */
-.hero {
-  overflow: hidden;
-  padding-top: clamp(1.3333rem, 3vw, 3.3333rem);
-  padding-bottom: clamp(4rem, 7vw, 8rem);
-  position: relative;
-}
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1.28fr .72fr;
-  gap: clamp(2.6667rem, 4vw, 5.3333rem);
-  align-items: center;
-}
-.hero h1 {
-  font-family: var(--font-display);
-  font-size: clamp(3.2rem, 5.4vw, 6.4rem);
-  font-weight: 600;
-  letter-spacing: -.038em;
-  line-height: .99;
-  margin-top: 2rem;
-}
-.hero h1 .line { display: block; overflow: hidden; padding-bottom: .09em; }
-.hero h1 .line > span { display: block; }
-.hero h1 em {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  color: var(--accent-strong);
-  letter-spacing: -.01em;
-}
-.hero .lede {
-  margin-top: 2.4rem;
-  font-size: clamp(1.36rem, 1.4vw, 1.5733rem);
-  color: var(--muted);
-  max-width: 46ch;
-  line-height: 1.62;
-}
-.hero-actions { margin-top: 3.0667rem; display: flex; gap: 1.2rem; flex-wrap: wrap; align-items: center; }
-
-.hero-stage { position: relative; aspect-ratio: 1 / 1; min-height: 400px; }
-.frag {
-  position: absolute;
-  background: transparent;
-  border: 1px solid var(--line);
-  overflow: hidden;
-  will-change: transform;
-  transition: box-shadow .4s var(--ease-state);
-}
-.frag img { width: 100%; height: 100%; object-fit: cover; }
-.frag-eyeai { width: 104%; top: 0; right: -22%; aspect-ratio: 485/400; z-index: 1; box-shadow: 0 24px 60px -34px rgba(var(--shadow-rgb), .32); }
-.frag-myo   { width: 60%; top: 44%; left: -12%; aspect-ratio: 505/420; z-index: 3; box-shadow: 0 30px 70px -30px rgba(var(--shadow-rgb), .4); }
-.frag-tvl   { width: 34%; bottom: -4%; right: 0; aspect-ratio: 505/420; z-index: 4; box-shadow: 0 26px 50px -26px rgba(var(--shadow-rgb), .45); }
-.hero-stage-note {
-  position: absolute;
-  left: 0; bottom: -3.2rem;
-  font-family: var(--font-mono);
-  font-size: 0.96rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.scroll-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7333rem;
-  font-family: var(--font-mono);
-  font-size: 0.9067rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-left: 0.6667rem;
-}
-.scroll-cue span.rule {
-  display: block;
-  width: 40px; height: 1px;
-  background: var(--line);
-  position: relative;
-  overflow: hidden;
-}
-.scroll-cue span.rule::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  transform-origin: left;
-  animation: sweep 2.6s var(--ease-state) infinite;
-}
-@keyframes sweep {
-  0%   { transform: scaleX(0); transform-origin: left; }
-  45%  { transform: scaleX(1); transform-origin: left; }
-  55%  { transform: scaleX(1); transform-origin: right; }
-  100% { transform: scaleX(0); transform-origin: right; }
-}
-
 /* ---------- section scaffold ---------- */
 .section {
   padding: clamp(6rem, 9vw, 10rem) 0;
@@ -1618,11 +1523,6 @@ figcaption {
 
 /* ---------- responsive ---------- */
 @media (max-width: 1024px) {
-  .hero-grid { grid-template-columns: 1fr; gap: 6rem; }
-  .hero-stage { max-width: 560px; aspect-ratio: 16/11; min-height: 0; }
-  .frag-eyeai { width: 78%; right: -6%; top: 0; }
-  .frag-myo { width: 46%; left: -4%; top: 30%; }
-  .frag-tvl { width: 26%; right: 2%; top: auto; bottom: -2%; }
   .lead-columns { grid-template-columns: 1fr; }
   .case { grid-template-columns: 1fr; }
   .case-rail { position: static; }
@@ -1653,10 +1553,6 @@ figcaption {
   .site-header .theme-switch { display: none; }
   .theme-switch-mobile { display: flex; }
   .nav-toggle { display: grid; }
-  .hero-stage { aspect-ratio: 5/4; min-height: 0; }
-  .frag-eyeai { width: 94%; right: -8%; top: 2%; }
-  .frag-myo { width: 58%; left: -6%; top: auto; bottom: 4%; }
-  .frag-tvl { width: 30%; right: 0; top: auto; bottom: -2%; }
   .impact-grid { grid-template-columns: 1fr 1fr; }
   .about-facts { grid-template-columns: 1fr; }
   .chapter-art figure { max-width: 100%; }
@@ -1670,7 +1566,6 @@ figcaption {
      sets and so could not override, the whole name block was pushed to the
      right edge below 700px. Desktop was unaffected only because the rule was
      inside this breakpoint. */
-  .scroll-cue { display: none; }
 }
 
 /* ---------- reduced motion ---------- */
@@ -1684,7 +1579,6 @@ figcaption {
   html { scroll-behavior: auto; }
   .marquee-track { animation: none; }
   .avail::before { animation: none; }
-  .scroll-cue span.rule::after { animation: none; transform: scaleX(1); }
 }
 
 /* =========================================================================
@@ -1865,51 +1759,6 @@ figcaption {
 }
 
 /* Floating Organic Bubbles */
-.hero-bubble-group {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.bubble-cluster {
-  position: absolute;
-}
-
-.bubble-left {
-  top: 35%;
-  left: 6%;
-}
-
-.bubble-right {
-  top: 40%;
-  right: 8%;
-}
-
-.cloud-bubble {
-  position: absolute;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--line-soft);
-  animation: floatBubble 6s ease-in-out infinite alternate;
-}
-
-.b-1 { width: 52px; height: 52px; top: 0; left: 0; animation-duration: 5.5s; }
-.b-2 { width: 34px; height: 34px; top: 44px; left: 30px; animation-duration: 7s; animation-delay: -1.5s; }
-.b-3 { width: 22px; height: 22px; top: -18px; left: 40px; animation-duration: 6.2s; animation-delay: -3s; }
-.b-4 { width: 14px; height: 14px; top: 30px; left: -18px; animation-duration: 4.8s; }
-
-.b-5 { width: 48px; height: 48px; top: 0; right: 0; animation-duration: 6.5s; animation-delay: -2s; }
-.b-6 { width: 30px; height: 30px; top: 38px; right: 34px; animation-duration: 5s; animation-delay: -0.5s; }
-.b-7 { width: 18px; height: 18px; top: -14px; right: 28px; animation-duration: 7.5s; animation-delay: -4s; }
-
-@keyframes floatBubble {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-14px) rotate(3deg); }
-  100% { transform: translateY(6px) rotate(-3deg); }
-}
-
 /* Avatar Container in Stage */
 .hero-avatar-container {
   position: relative;
@@ -2033,10 +1882,6 @@ figcaption {
   .hero-avatar-container {
     max-width: 320px;
     margin-bottom: -10px;
-  }
-  .bubble-left, .bubble-right {
-    opacity: 0.6;
-    transform: scale(0.75);
   }
 }
 /* ========================================================================
