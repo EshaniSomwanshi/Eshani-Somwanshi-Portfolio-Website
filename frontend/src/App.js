@@ -163,19 +163,32 @@ const GRID_LOGO_FILES = {
   adobe: "adobe-cc-tile.svg",
 };
 
+/* Per-logo size correction. Every tile gets the same box, but the artwork
+   inside each file doesn't fill its own viewBox by the same amount — Adobe's
+   CC icon carries noticeably more built-in padding than its neighbours, so at
+   an identical box it reads smaller than Photoshop or Illustrator next to it.
+   This nudges the drawn mark, not the box or the layout. */
+const GRID_LOGO_SCALE = {
+  adobe: 1.05,
+};
+
 /* Logos are the brands' own full-colour marks, served locally from
    public/Logos/ (was cdn.simpleicons.org, which only had monochrome marks
    and cost 17 external requests). */
 function ToolLogo({ slug, name, size, theme }) {
   const onDark = THEME_VARIANT_LOGOS.has(slug) && DARK_THEMES.has(theme);
   const file = GRID_LOGO_FILES[slug] || `${slug}${onDark ? "-dark" : ""}.svg`;
+  /* Inline, because the px size the grid uses lives in CSS and would other-
+     wise win over the width/height attributes. */
+  const px = Math.round(size * (GRID_LOGO_SCALE[slug] || 1));
   return (
     <span className="tool-tile">
       <img
         src={`${process.env.PUBLIC_URL}/Logos/${file}`}
         alt=""
-        width={size}
-        height={size}
+        width={px}
+        height={px}
+        style={px === size ? undefined : { width: px, height: px }}
         loading="lazy"
         decoding="async"
         onError={(e) => { e.currentTarget.style.display = "none"; }}
@@ -587,11 +600,34 @@ export default function App() {
     return () => obs.disconnect();
   }, []);
 
+  /* Undoes the menu's body pin and puts the document scroll back where it
+     was. Held in a ref rather than closed over by the effect so that go() can
+     call it early; a second call does nothing. Declared above go() because
+     go() depends on it. */
+  const scrollLockRef = useRef(null);
+  const releaseScrollLock = useCallback(() => {
+    const lock = scrollLockRef.current;
+    if (!lock) return;
+    scrollLockRef.current = null;
+    document.body.classList.remove("menu-open");
+    document.body.style.top = "";
+    window.scrollTo(0, lock.y);
+    lock.lenis?.start();
+  }, []);
+
   /* Nav-link scrolling goes through Lenis (when it's ready) so a click feels
      like the same momentum as a manual scroll, rather than the browser's
      separate smooth-scroll curve. Falls back to native smooth scroll if
      Lenis hasn't mounted yet. */
   const go = useCallback((id) => {
+    /* Release the menu's scroll lock *before* measuring anything. While the
+       lock is on, <body> is position:fixed at a negative offset and
+       window.scrollY reads 0, so a getBoundingClientRect-based target comes
+       out short by exactly the locked scroll position — and then the lock's
+       own restore-on-close would scroll back over the top of the navigation
+       anyway. Releasing first fixes both: the page is a normal scrolling
+       document again by the time the target is computed. */
+    releaseScrollLock();
     setMenu(false);
     const top = id === "top" ? 0 : (() => {
       const el = document.getElementById(id);
@@ -600,7 +636,7 @@ export default function App() {
     if (top === null) return;
     if (lenis) lenis.scrollTo(top, { duration: 1.2 });
     else window.scrollTo({ top, behavior: "smooth" });
-  }, [lenis]);
+  }, [lenis, releaseScrollLock]);
 
   /* Landing here with #work in the URL (e.g. the case-study page's "←
      Selected work" back button) should scroll to that section, not sit at
@@ -635,21 +671,21 @@ export default function App() {
      negative offset is the lock that actually works there; the offset keeps
      the page looking unmoved, and the scroll position is put back by hand on
      close. Lenis is paused for the duration because on desktop it drives
-     window scroll itself and would fight the pin. */
+     window scroll itself and would fight the pin.
+
+     Releasing is a named function rather than an inline cleanup because a nav
+     link has to be able to release it *early* — see go(). It is idempotent,
+     so the effect cleanup running afterwards is a no-op. */
   useEffect(() => {
     if (!menu) return;
-    const lenis = lenisRef.current;
-    lenis?.stop();
+    const lenisNow = lenisRef.current;
+    lenisNow?.stop();
     const y = window.scrollY;
+    scrollLockRef.current = { y, lenis: lenisNow };
     document.body.classList.add("menu-open");
     document.body.style.top = `-${y}px`;
-    return () => {
-      document.body.classList.remove("menu-open");
-      document.body.style.top = "";
-      window.scrollTo(0, y);
-      lenis?.start();
-    };
-  }, [menu]);
+    return releaseScrollLock;
+  }, [menu, releaseScrollLock]);
 
   /* Menu: close on Escape, manage focus in/out of the panel */
   useEffect(() => {

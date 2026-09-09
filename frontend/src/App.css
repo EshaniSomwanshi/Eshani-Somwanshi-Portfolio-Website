@@ -1539,6 +1539,15 @@ figcaption {
   letter-spacing: .06em;
   color: var(--muted);
   transition: color var(--dur-fast) var(--ease-state), gap .3s var(--ease-state);
+  /* 19px tall on its own, under the 24px minimum target size, and on a case
+     study it is the only way back. Grown with a pseudo-element so the header
+     layout is untouched — same treatment as .wordmark. */
+  position: relative;
+}
+.cs-back::after {
+  content: "";
+  position: absolute;
+  inset: -8px -10px;
 }
 .cs-back:hover { color: var(--ink); gap: 1.0667rem; }
 
