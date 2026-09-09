@@ -334,6 +334,48 @@
     </div>
   </section>
 
+  <!-- COMPOSITE + INVERSE TOKENS -->
+  <section>
+    <div class="band">
+      <div class="rail">
+        Inverse &amp; atmosphere
+        <small>The tokens that aren't plain hex</small>
+      </div>
+      <div>
+        <h2>Every theme defines these too</h2>
+        <p class="note">Two groups the swatch grids above don't cover. The <code>-rgb</code> ones are bare triplets, not colours — they exist so opacity can vary at the call site, e.g. <code>rgba(var(--shadow-rgb), .18)</code>. Writing <code>var(--shadow)</code> will not resolve; there is no such token.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Paper</th><th>Carbon</th><th>Petrol</th></tr></thead>
+            <tbody>
+              <tr><td class="token">--header-rgb</td><td class="val">242, 238, 231</td><td class="val">11, 11, 11</td><td class="val">5, 42, 49</td></tr>
+              <tr><td class="token">--shadow-rgb</td><td class="val">20, 19, 15</td><td class="val">0, 0, 0</td><td class="val">0, 0, 0</td></tr>
+              <tr><td class="token">--grain-blend</td><td class="val">multiply</td><td class="val">screen</td><td class="val">screen</td></tr>
+              <tr><td class="token">--grain-opacity</td><td class="val">.05</td><td class="val">.035</td><td class="val">.04</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="note" style="margin-top:26px">The inverse set paints sections that flip the ground — the contact block, the footer. <code>--accent-on-inv</code> and <code>--secondary-on-inv</code> exist because the standard accent and secondary fail contrast on those grounds in Carbon and Petrol.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Paper</th><th>Carbon</th><th>Petrol</th></tr></thead>
+            <tbody>
+              <tr><td class="token">--inv-bg</td><td class="val">#14130F</td><td class="val">#F4F2ED</td><td class="val">#E4F1F2</td></tr>
+              <tr><td class="token">--inv-ink</td><td class="val">#F2EEE7</td><td class="val">#0B0B0B</td><td class="val">#052A31</td></tr>
+              <tr><td class="token">--inv-muted</td><td class="val">#A8A197</td><td class="val">#57544E</td><td class="val">#4A6067</td></tr>
+              <tr><td class="token">--inv-line</td><td class="val">#2E2C26</td><td class="val">#D6D3CC</td><td class="val">#C2D4D6</td></tr>
+              <tr><td class="token">--inv-line-strong</td><td class="val">#64635E</td><td class="val">#8D8B87</td><td class="val">#808C8D</td></tr>
+              <tr><td class="token">--inv-faint</td><td class="val">#46433B</td><td class="val">#C2BEB6</td><td class="val">#AEC5C7</td></tr>
+              <tr><td class="token">--secondary-on-inv</td><td class="val">#72817A</td><td class="val">#647269</td><td class="val">#4C736B</td></tr>
+              <tr><td class="token">--accent-on-inv</td><td class="val">#D9512C</td><td class="val">#A05B42</td><td class="val">#5F7225</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- BREAKPOINTS -->
   <section>
     <div class="band">
