@@ -155,7 +155,15 @@ body {
   transition: background-color var(--dur-mid) var(--ease-state),
               color var(--dur-mid) var(--ease-state);
 }
-body.menu-open { overflow: hidden; }
+/* Pinned rather than just overflow-hidden: see the menu scroll-lock effect in
+   App.js. The inline `top` App.js sets holds the page visually in place. */
+body.menu-open {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
 
 /* film grain */
 body::after {
@@ -318,6 +326,16 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   display: inline-flex;
   align-items: center;
   gap: 0.6667rem;
+  /* The mark itself is 22px tall, under the 24px minimum target size, and it
+     is the hardest thing on the page to hit with a thumb. Grow the hit area
+     with a pseudo-element instead of padding so the header layout is
+     untouched. */
+  position: relative;
+}
+.wordmark::after {
+  content: "";
+  position: absolute;
+  inset: -7px -10px;
 }
 .wordmark b { color: var(--accent); font-weight: 500; margin-right: 0.6667rem; }
 .wordmark-logo { height: 22px; width: auto; display: block; }
@@ -694,8 +712,13 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .section {
   padding: clamp(6rem, 9vw, 10rem) 0;
   position: relative;
+  /* svh, not dvh. dvh tracks the *current* viewport, so on mobile it grows and
+     shrinks by the height of the URL bar as that bar hides and shows during
+     scroll — which re-ran this min-height on every section at once and shifted
+     the whole document under the reader's finger. svh is the stable small
+     value (bar shown), so the layout never moves. vh first as the fallback. */
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1345,6 +1368,15 @@ figcaption {
   resize: vertical;
   transition: border-color var(--dur-fast) var(--ease-state);
 }
+/* iOS Safari zooms the whole page in when a focused field's text is under
+   16px, and it does not zoom back out afterwards. 1.2667rem is 15.2px at this
+   site's 12px root, so tapping any contact field threw the layout off. Only
+   touch pointers are affected, so only they get the bump — the desktop size is
+   unchanged. */
+@media (pointer: coarse) {
+  .form-field input, .form-field textarea { font-size: 16px; }
+}
+
 .form-field input:focus, .form-field textarea:focus { border-bottom-color: var(--accent); }
 .form-field input[aria-invalid="true"], .form-field textarea[aria-invalid="true"] { border-bottom-color: var(--accent-on-inv); }
 .form-error {
@@ -1650,7 +1682,7 @@ figcaption {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh; /* stable across the mobile URL-bar collapse — see .section */
   overflow: hidden;
   display: flex;
   flex-direction: column;

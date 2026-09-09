@@ -12,10 +12,13 @@
 .sticker-wall {
   position: relative;
   width: 100%;
-  /* Fills the section. #tools is min-height:100vh with 60px of padding-top,
-     so this takes the rest of it. */
+  /* Fills the section. #tools is min-height:100svh with 60px of padding-top,
+     so this takes the rest of it. svh rather than dvh matters more here than
+     anywhere: dvh changes as the mobile URL bar hides, which fired the resize
+     handler and rebuilt the floor and side walls mid-scroll, so the whole pile
+     jumped. svh holds still. */
   height: calc(100vh - 60px);
-  height: calc(100dvh - 60px);
+  height: calc(100svh - 60px);
   min-height: 520px;
   overflow: hidden;
   user-select: none;

@@ -615,10 +615,32 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
-  /* Menu: lock the page, close on Escape, manage focus in/out of the panel */
+  /* Menu scroll lock.
+
+     `overflow: hidden` on <body> alone does not hold on iOS Safari — the page
+     keeps scrolling behind the open panel, so closing the menu dropped the
+     reader somewhere else entirely. Pinning the body with position:fixed at a
+     negative offset is the lock that actually works there; the offset keeps
+     the page looking unmoved, and the scroll position is put back by hand on
+     close. Lenis is paused for the duration because on desktop it drives
+     window scroll itself and would fight the pin. */
   useEffect(() => {
-    if (menu) document.body.classList.add("menu-open");
-    else document.body.classList.remove("menu-open");
+    if (!menu) return;
+    const lenis = lenisRef.current;
+    lenis?.stop();
+    const y = window.scrollY;
+    document.body.classList.add("menu-open");
+    document.body.style.top = `-${y}px`;
+    return () => {
+      document.body.classList.remove("menu-open");
+      document.body.style.top = "";
+      window.scrollTo(0, y);
+      lenis?.start();
+    };
+  }, [menu]);
+
+  /* Menu: close on Escape, manage focus in/out of the panel */
+  useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") setMenu(false); };
     window.addEventListener("keydown", onKey);
 
@@ -632,7 +654,12 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [menu]);
 
-  useEffect(() => () => document.body.classList.remove("menu-open"), []);
+  /* Unmount safety net: never leave the body pinned if the tree goes away
+     with the menu still open. */
+  useEffect(() => () => {
+    document.body.classList.remove("menu-open");
+    document.body.style.top = "";
+  }, []);
 
   return (
     <div className="portfolio-shell">
