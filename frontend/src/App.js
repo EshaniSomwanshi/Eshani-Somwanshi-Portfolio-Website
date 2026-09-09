@@ -43,13 +43,16 @@ const offerings = [
   ["Industrial Design", []],
 ];
 
-/* [filename in public/Logos/, visible label] — see ToolMarquee below. */
+/* [filename in public/Logos/, visible label] — see ToolMarquee below. Covers
+   both the design side and the code side, which is what the section heading
+   claims: design tools first, then what the front end gets built in. */
 const tools = [
   ["figma", "Figma"], ["framer", "Framer"], ["claude", "Claude"], ["openai", "ChatGPT"],
   ["miro", "Miro"], ["photoshop", "Photoshop"], ["illustrator", "Illustrator"],
   ["after-effects", "After Effects"], ["cursor", "Cursor"], ["canva", "Canva"],
   ["adobe", "Adobe CC"], ["wordpress", "WordPress"], ["vscode", "VS Code"],
-  ["axure", "Axure RP"], ["html5", "HTML5"], ["javascript", "JavaScript"], ["perplexity", "Perplexity"],
+  ["axure", "Axure RP"], ["html5", "HTML5"], ["javascript", "JavaScript"],
+  ["react", "React"], ["perplexity", "Perplexity"],
 ];
 
 const navItems = [
@@ -135,22 +138,23 @@ function Cursor() {
 /* Themes whose page background is dark. */
 const DARK_THEMES = new Set(["carbon", "petrol"]);
 
-/* These four marks are black (or near-black) by brand design, so they all
-   but vanish on the dark themes. Each has an official reversed/white
-   variant sitting alongside it as <slug>-dark.svg, swapped in below.
-   Everything else keeps one piece of artwork across all three themes — a
-   multi-colour logo can't be tinted without misrepresenting the mark. */
-const REVERSIBLE_LOGOS = new Set(["framer", "openai", "cursor", "axure"]);
+/* Brands that publish a second mark for dark backgrounds, sitting alongside
+   the default as <slug>-dark.svg. Framer/ChatGPT/Cursor/Axure are black by
+   design and would all but vanish; React's is a lighter blue than its
+   on-light version. Everything else keeps one piece of artwork across all
+   three themes — a multi-colour logo can't be tinted without
+   misrepresenting the mark. */
+const THEME_VARIANT_LOGOS = new Set(["framer", "openai", "cursor", "axure", "react"]);
 
 /* Logos are the brands' own full-colour marks, served locally from
    public/Logos/ (was cdn.simpleicons.org, which only had monochrome marks
    and cost 17 external requests). */
 function ToolLogo({ slug, name, size, theme }) {
-  const reversed = REVERSIBLE_LOGOS.has(slug) && DARK_THEMES.has(theme);
+  const onDark = THEME_VARIANT_LOGOS.has(slug) && DARK_THEMES.has(theme);
   return (
     <span className="tool-tile">
       <img
-        src={`${process.env.PUBLIC_URL}/Logos/${slug}${reversed ? "-dark" : ""}.svg`}
+        src={`${process.env.PUBLIC_URL}/Logos/${slug}${onDark ? "-dark" : ""}.svg`}
         alt=""
         width={size}
         height={size}
@@ -882,8 +886,12 @@ export default function App() {
           <div className="container">
             <div className="section-head">
               <div>
-                <Reveal><p className="section-label">Design tools</p></Reveal>
-                <SplitText as="h2" text="What the work above was made with." testId="tools-heading" delay={0.05} />
+                {/* Was "Design tools" / "What the work above was made with."
+                    The list covers the code side too (HTML5, JS, React, VS
+                    Code, Cursor), and those weren't what the case studies
+                    above were made with — this framing covers both honestly. */}
+                <Reveal><p className="section-label">Toolkit</p></Reveal>
+                <SplitText as="h2" text="What I design and build with." testId="tools-heading" delay={0.05} />
               </div>
               {/* Layout switch, scoped to this section only — no persistence,
                   it resets to the scrolling strip on reload. */}
