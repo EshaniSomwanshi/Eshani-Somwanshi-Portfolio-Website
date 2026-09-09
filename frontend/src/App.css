@@ -278,12 +278,6 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 }
 
 /* serif italic accent — the editorial voice inside the grotesque */
-.serif {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -.005em;
-}
 
 /* split-text word masks */
 .split { display: block; }
@@ -587,15 +581,6 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .btn:hover svg { transform: translate(2px, -2px); }
 
 /* availability dot */
-.avail { display: inline-flex; align-items: center; gap: 0.6667rem; color: var(--secondary); }
-.avail::before {
-  content: "";
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0 var(--accent);
-  animation: pulse 2.4s var(--ease-state) infinite;
-}
 @keyframes pulse {
   0%   { box-shadow: 0 0 0 0 rgba(217, 81, 44, .5); }
   70%  { box-shadow: 0 0 0 9px rgba(217, 81, 44, 0); }
@@ -870,46 +855,7 @@ figcaption {
 
 /* ---------- 02 chaptered case study ---------- */
 .case { display: grid; grid-template-columns: .82fr 1.18fr; gap: clamp(2.6667rem, 5vw, 6rem); align-items: start; }
-.case-rail { position: sticky; top: calc(var(--nav-h) + 3.3333rem); }
-.case-rail h3 {
-  font-family: var(--font-display);
-  font-size: clamp(1.9333rem, 2.5vw, 3.0667rem);
-  font-weight: 600;
-  letter-spacing: -.028em;
-  line-height: 1.09;
-  margin-top: 1.0667rem;
-}
-.case-rail .lead-role { margin-top: 1.2rem; margin-bottom: 0; }
-.case-metrics {
-  display: flex;
-  gap: 2.1333rem;
-  flex-wrap: wrap;
-  margin-top: 2.4rem;
-  padding-top: 2.1333rem;
-  border-top: 1px solid var(--line);
-}
-.chapter-nav { margin-top: 2.5333rem; display: flex; flex-direction: column; }
-.chapter-nav a {
-  display: flex;
-  align-items: baseline;
-  gap: 1.1333rem;
-  padding: 0.8267rem 0 0.8267rem 1.4667rem;
-  font-family: var(--font-mono);
-  font-size: 1.04rem;
-  letter-spacing: .04em;
-  color: var(--muted);
-  border-left: 1px solid var(--line);
-  transition: color var(--dur-fast) var(--ease-state),
-              border-color var(--dur-fast) var(--ease-state),
-              padding-left .3s var(--ease-state);
-  min-height: 44px;
-}
-.chapter-nav a:hover { color: var(--ink); padding-left: 1.8667rem; }
-.chapter-nav a .n { color: var(--muted); transition: color var(--dur-fast) var(--ease-state); }
-.chapter-nav a[aria-current="true"] { color: var(--ink); border-left-color: var(--accent); border-left-width: 2px; }
-.chapter-nav a[aria-current="true"] .n { color: var(--accent-strong); }
 
-.chapter-flow { display: flex; flex-direction: column; gap: clamp(4rem, 7vw, 8rem); }
 .chapter h4 {
   font-family: var(--font-display);
   font-size: clamp(1.6667rem, 2vw, 2.2667rem);
@@ -918,9 +864,6 @@ figcaption {
   margin: 0.9333rem 0 1.2rem;
 }
 .chapter p { color: var(--muted); max-width: 58ch; font-size: 1.28rem; }
-.chapter-art { margin-top: 2.1333rem; display: grid; gap: 1.8667rem; }
-.chapter-art figure { max-width: 640px; }
-.chapter-art figure:nth-of-type(2) { margin-left: auto; max-width: 485px; }
 
 /* ---------- 03-05 supporting projects: real sticky stack ----------
    Sticky lives on the wrapper (a direct child of .stack), not on the card
@@ -943,74 +886,8 @@ figcaption {
 }
 .stack-item:first-child { margin-top: 0; }
 
-.proj {
-  background: var(--card);
-  border: 1px solid var(--line);
-  padding: clamp(2rem, 3.5vw, 3.7333rem);
-  box-shadow: 0 26px 70px -46px rgba(var(--shadow-rgb), .5);
-  transition: border-color .35s var(--ease-state);
-}
-.proj:hover { border-color: var(--ink); }
-.proj-wide { display: grid; grid-template-columns: .82fr 1.18fr; gap: clamp(2rem, 3.5vw, 4.2667rem); align-items: center; }
-.proj-media { border: 1px solid var(--line); overflow: hidden; background: transparent; }
-.proj-media .wipe { aspect-ratio: 4 / 3; }
-.proj:hover .proj-media .wipe img { transform: scale(1.045); }
-.proj-wide .proj-body { display: flex; flex-direction: column; gap: 1.3333rem; }
-.proj-wide .proj-metrics { flex-direction: row; gap: 2.6667rem; flex-wrap: wrap; margin-top: 0.5333rem; }
-.proj-compact .proj-body { display: grid; grid-template-columns: .45fr 1fr .55fr; gap: clamp(2rem, 3vw, 4rem); align-items: start; }
-.proj h3 {
-  font-family: var(--font-display);
-  font-size: clamp(1.8rem, 2.2vw, 2.5333rem);
-  font-weight: 600;
-  letter-spacing: -.022em;
-}
-.proj .lead-role { margin-top: 0.5333rem; margin-bottom: 0; }
-.proj p.summary { color: var(--muted); font-size: 1.2667rem; max-width: 56ch; }
-.proj .tag-row { margin-top: 1.4667rem; }
-.proj-metrics { display: flex; flex-direction: column; gap: 1.4667rem; }
 
 /* ---------- impact index ---------- */
-.impact-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-}
-.impact-cell {
-  background: var(--surface);
-  padding: 2.6667rem 2rem;
-  position: relative;
-  transition: background-color .3s var(--ease-state);
-}
-.impact-cell::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--accent);
-  transform: scaleY(0);
-  transform-origin: bottom;
-  transition: transform .35s var(--ease-state);
-}
-.impact-cell:hover { background: var(--card); }
-.impact-cell:hover::before { transform: scaleY(1); transform-origin: top; }
-.impact-value {
-  font-family: var(--font-display);
-  font-size: clamp(2.2667rem, 2.7vw, 3.2rem);
-  font-weight: 600;
-  letter-spacing: -.032em;
-  color: var(--ink);
-}
-.impact-label { margin-top: 0.5333rem; font-size: 1.1467rem; line-height: 1.4; }
-.impact-context {
-  margin-top: 0.6667rem;
-  font-family: var(--font-mono);
-  font-size: 0.9067rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
 
 /* ---------- what I offer (accordion) ---------- */
 .offer-list { border-bottom: 1px solid var(--line); }
@@ -1162,11 +1039,6 @@ figcaption {
 /* Scoped override — .lead-subtitle is shared with the EYE AI case-study
    rail, which should keep its original size. h3 step (19.22px). */
 .lead-panel .lead-subtitle { font-size: 1.602rem; max-width: none; }
-.case-highlights { display: flex; flex-direction: column; gap: 0.9333rem; margin-top: 2.1333rem; }
-.case-highlights li { display: flex; align-items: flex-start; gap: 0.8rem; font-size: 1.1733rem; line-height: 1.5; color: var(--muted); }
-.case-highlights svg { flex: none; margin-top: 0.2667rem; color: var(--accent-strong); }
-.case-cover-preview { margin: 2.9333rem 0 2.4rem; border: 1px solid var(--line); overflow: hidden; }
-.case-cover-preview .wipe { aspect-ratio: 16 / 10; }
 
 /* ---------- about ---------- */
 .about-grid { display: grid; grid-template-columns: .72fr 1.28fr; gap: clamp(2.6667rem, 4vw, 4.6667rem); align-items: start; }
@@ -1525,15 +1397,9 @@ figcaption {
 @media (max-width: 1024px) {
   .lead-columns { grid-template-columns: 1fr; }
   .case { grid-template-columns: 1fr; }
-  .case-rail { position: static; }
-  .chapter-nav { display: none; }
   /* The sticky stack stays on at tablet/mobile — it's the section's whole
      behaviour, and flattening it here made the cards a plain list. */
   .stack-item { margin-top: 1.6rem; }
-  .proj-wide { grid-template-columns: 1fr; }
-  .proj-compact .proj-body { grid-template-columns: 1fr; gap: 1.8667rem; }
-  .proj-metrics { flex-direction: row; flex-wrap: wrap; gap: 2.1333rem 2.9333rem; }
-  .impact-grid { grid-template-columns: repeat(3, 1fr); }
   /* Heading first, then the portrait, then the rest of the copy. .about-lead
      is the "About" label lifted out of .about-copy so it can be ordered
      independently of it. */
@@ -1544,7 +1410,6 @@ figcaption {
   .contact-grid { grid-template-columns: 1fr; gap: 3.3333rem; align-items: start; }
   .cs-metrics-row { grid-template-columns: repeat(2, 1fr); row-gap: 2.6667rem; }
   .cs-header .wordmark { display: none; }
-  .chapter-art figure:nth-of-type(2) { margin-left: 0; max-width: 100%; }
 }
 
 @media (max-width: 576px) {
@@ -1553,9 +1418,7 @@ figcaption {
   .site-header .theme-switch { display: none; }
   .theme-switch-mobile { display: flex; }
   .nav-toggle { display: grid; }
-  .impact-grid { grid-template-columns: 1fr 1fr; }
   .about-facts { grid-template-columns: 1fr; }
-  .chapter-art figure { max-width: 100%; }
   .lead-metrics { grid-template-columns: 1fr 1fr; }
   .section-head h2 { max-width: none; }
   .cs-header .theme-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -1578,7 +1441,6 @@ figcaption {
   }
   html { scroll-behavior: auto; }
   .marquee-track { animation: none; }
-  .avail::before { animation: none; }
 }
 
 /* =========================================================================
@@ -1919,52 +1781,11 @@ figcaption {
 /* Overrides .lead-panel's centered content: a grid of unpredictable
    height should start from the top and scroll internally if it ever
    runs taller than the card, not float centered. */
-.gallery-card { justify-content: flex-start; }
-.gallery-card-head { margin-top: .4rem; }
-.gallery-card-head h3 {
-  font-family: var(--font-display);
-  font-size: 1.802rem; /* h2 step — matches other cards' second-tier size */
-  font-weight: 600;
-  letter-spacing: -.03em;
-}
-.gallery-card-head .lead-desc { margin-top: .5333rem; }
-.gallery-card-grid {
-  margin-top: 1.3333rem;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  flex: 1;
-  overflow-y: auto;
-}
-.gallery-card-item {
-  position: relative;
-  margin: 0;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--surface);
-}
-.gallery-card-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.gallery-card-item figcaption {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding: .5333rem .8rem;
-  background: linear-gradient(transparent, rgba(0,0,0,.68));
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: .667rem;
-  line-height: 1.4;
-}
-.gallery-card-item figcaption b { display: block; font-weight: 600; }
 
 /* Two-up metric rows now that the third pseudo-metric is gone. */
 .lead-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-.case-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-.proj-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
 /* Longer leading on the paragraphs recruiters skim. */
-.summary { line-height: 1.68; }
 .lede { line-height: 1.62; }
 
 
