@@ -376,20 +376,25 @@ function useCardDepth(progress, i, total) {
      snapping 1:1 to scroll. Damping stays just above 2·√(stiffness·mass)
      (~1.15x critical) so it never overshoots — a lag, not a bounce.
 
-     Stiffness went 50 -> 280, cutting the settle from ~707ms to ~299ms
-     (time constant √(mass/stiffness), ×5 for ~99%). The slow spring was
-     not protecting anything: at 707ms the card could not reach its rest
-     state before scrolling had already carried the trigger into the next
-     card's slice, so it permanently looked mid-transition. That lag was
-     the "unfinished" feel, not a cure for it — the dwell above is what
-     actually holds a card still, and this lets the card arrive in time to
-     use it.
+     Settle time is bounded by the dwell, not chosen freely. The card has to
+     finish moving within the still phase above, or it is still travelling
+     when the next handoff starts — which is the whole fault this section
+     had at stiffness 50 (~707ms), where nothing ever looked settled.
+
+     The dwell is 247-273px, about 415-455ms of scrolling at a leisurely
+     ~600px/s. Stiffness 110 settles in ~477ms, so the card lands right as
+     the dwell ends: enough trailing weight to read as inertia, without
+     going back to never arriving. 280 (~299ms) was inside that budget with
+     room to spare and read as weightless — correct, but characterless.
+
+     If more lag is wanted, widen HOLD in step with it; the two numbers are
+     linked, and dropping stiffness alone re-creates the original fault.
 
      Always called (Rules of Hooks — reduced can change at runtime), but
      it's a no-op under reduced-motion: rawScale/rawY are already flat
      constants there, and a spring only produces motion when its input
      changes, so nothing animates either way. */
-  const springConfig = { stiffness: 280, damping: 38, mass: 1 };
+  const springConfig = { stiffness: 110, damping: 24, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
   /* Same threshold as the scale-down's own end point — unchanged — but a
