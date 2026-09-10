@@ -386,10 +386,21 @@ function useCardDepth(progress, i, total, vh) {
   const springConfig = { stiffness: 90, damping: 22, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
-  /* A hard step, not a fade: full opacity the whole time a card is being
-     covered, then gone the instant it is fully behind the next one. */
-  const opacity = useTransform(progress, (p) => (reduced || isLast || p < end ? 1 : 0));
-  return { scale, y, opacity };
+  /* No opacity handling at all, deliberately.
+
+     There used to be a hard 1 -> 0 step at `end`. Under the old sticky
+     version that was invisible: the covering card was placed straight from
+     scroll, so by `end` it genuinely was in front. Now the covering card is
+     springed and therefore *lags* — at `end` it is still rising, so the card
+     underneath switched itself off while still in plain sight. That snap is
+     the jerk on the way down.
+
+     Nothing has to replace it. .lead-panel is opaque (background: var(--card))
+     and a receding card is scaled to 0.86 about its own top edge and pushed
+     down RECEDE_Y, which insets it on all four sides of the card above — so
+     it is completely occluded the moment that card settles, and visible
+     exactly while it should still be visible. */
+  return { scale, y };
 }
 
 function StackCard({ i, total, progress, card, vh }) {
@@ -397,7 +408,7 @@ function StackCard({ i, total, progress, card, vh }) {
     testId, index, company, role, title, quiet, subtitle, desc,
     confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
   } = card;
-  const { scale, y, opacity } = useCardDepth(progress, i, total, vh);
+  const { scale, y } = useCardDepth(progress, i, total, vh);
 
   /* Plain div, not Reveal. Reveal applies its own scroll-triggered opacity and
      rise, which is a second transform on the same element fighting the one
@@ -408,7 +419,7 @@ function StackCard({ i, total, progress, card, vh }) {
       <motion.article
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
-        style={{ scale, y, opacity, originX: 0.5, originY: 0 }}
+        style={{ scale, y, originX: 0.5, originY: 0 }}
       >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
