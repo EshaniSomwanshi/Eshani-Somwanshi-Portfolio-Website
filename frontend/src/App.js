@@ -328,37 +328,68 @@ function useCardDepth(progress, i, total) {
   const RECEDE_SCALE = 0.8;
   const RECEDE_Y = 48;
 
+  /* HOLD carves a dwell out of the front of each card's slice.
+
+     Without it a card was at rest for no scroll distance at all: it hit
+     scale 1 / y 0 at exactly `start` and was already receding one pixel of
+     scroll later, while the next card arrived across that same window — the
+     two always moving together, so no card was ever simply *there*. That is
+     what read as cards swiping past before they had been seen.
+
+     At 0.35 the card is completely still for the first 35% of its slice and
+     recedes across the remaining 65%. Measured against the section's real
+     scroll length, that dwell is 247-273px depending on breakpoint — roughly
+     two and a half mouse notches at every width, so one value covers all of
+     them and there is no per-breakpoint logic to keep in sync.
+
+     The incoming card now waits at RECEDE_Y through the previous card's
+     dwell and only starts arriving when that card actually begins to recede,
+     which is what keeps the dwell readable rather than merely static. */
+  const HOLD = 0.35;
+  const slice = 1 / total;
+  const hold = start + slice * HOLD;              // rest ends, recede begins
+  const prevHold = start - slice * (1 - HOLD);    // previous card starts receding
+
   const yPoints = [];
   const yVals = [];
   if (i > 0) {
-    yPoints.push((i - 1) / total);
+    yPoints.push(prevHold);
     yVals.push(RECEDE_Y);
   }
   yPoints.push(start);
+  yVals.push(0);
+  yPoints.push(hold);
   yVals.push(0);
   if (!isLast) {
     yPoints.push(end);
     yVals.push(RECEDE_Y);
   }
 
-  const rawScale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : RECEDE_SCALE], { clamp: true });
+  const rawScale = useTransform(
+    progress,
+    [start, hold, end],
+    reduced || isLast ? [1, 1, 1] : [1, 1, RECEDE_SCALE],
+    { clamp: true },
+  );
   const rawY = useTransform(progress, yPoints, reduced ? yPoints.map(() => 0) : yVals, { clamp: true });
-  /* Step 2 — scroll inertia: the target values/breakpoints above are
-     untouched (same trigger points, same home position, same scroll
-     distance); this just smooths the *rendered* number trailing behind
-     them each frame, instead of snapping 1:1 to scroll. Damping stays
-     just above 2·√(stiffness·mass) (~1.15x critical) so it still never
-     overshoots past the target — a lag, not a bounce. Settle time scales
-     with √(mass/stiffness): stiffness 300 (original) settled in ~1-2
-     frames; 120 (previous pass) landed around 300-400ms; this is a
-     further ~2.4x drop in stiffness (~6x off the original 300),
-     targeting a ~600-800ms settle (time constant √(mass/stiffness) ≈
-     141ms, ×5 to reach ~99% ≈ 707ms).
+  /* Smooths the *rendered* number so it trails the target rather than
+     snapping 1:1 to scroll. Damping stays just above 2·√(stiffness·mass)
+     (~1.15x critical) so it never overshoots — a lag, not a bounce.
+
+     Stiffness went 50 -> 280, cutting the settle from ~707ms to ~299ms
+     (time constant √(mass/stiffness), ×5 for ~99%). The slow spring was
+     not protecting anything: at 707ms the card could not reach its rest
+     state before scrolling had already carried the trigger into the next
+     card's slice, so it permanently looked mid-transition. That lag was
+     the "unfinished" feel, not a cure for it — the dwell above is what
+     actually holds a card still, and this lets the card arrive in time to
+     use it.
+
      Always called (Rules of Hooks — reduced can change at runtime), but
      it's a no-op under reduced-motion: rawScale/rawY are already flat
      constants there, and a spring only produces motion when its input
      changes, so nothing animates either way. */
-  const springConfig = { stiffness: 50, damping: 16, mass: 1 };
+  const springConfig = { stiffness: 280, damping: 38, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
   /* Same threshold as the scale-down's own end point — unchanged — but a
