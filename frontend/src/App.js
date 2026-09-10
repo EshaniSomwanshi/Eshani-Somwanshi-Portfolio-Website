@@ -338,10 +338,12 @@ function useCardDepth(progress, i, total, vh) {
      and was already receding one pixel later, while the next card arrived
      across the same window — no card was ever simply *there*.
 
-     At 0.35 the card is still for the first 35% of its slice and hands over
-     across the remaining 65%. The incoming card waits below the frame through
+     At 0.4 the card is still for the first 40% of its slice and hands over
+     across the remaining 60%. It moved up from 0.35 alongside the softer
+     spring below — the two are linked, and a slower spring needs a wider
+     dwell to finish arriving inside. The incoming card waits below the frame through
      that dwell and only begins to rise once the current card starts to go. */
-  const HOLD = 0.35;
+  const HOLD = 0.4;
   const slice = 1 / total;
   const hold = start + slice * HOLD;
   const prevHold = start - slice * (1 - HOLD);
@@ -375,15 +377,19 @@ function useCardDepth(progress, i, total, vh) {
 
      Settle is bounded by the dwell — the card has to stop moving inside the
      still phase or it is still travelling when the next handoff starts, which
-     was the original fault. Stiffness 90 settles in ~527ms against a dwell of
-     roughly 295px (~490ms of scrolling at a leisurely pace), so it lands just
-     as the card comes to rest. Damping 22 keeps the ratio at ~1.16: trailing,
-     never overshooting. Softer than this and cards visibly fail to arrive.
+     was the original fault. Stiffness 70 settles in ~598ms; HOLD 0.4 gives a
+     dwell of ~320px, about 533ms of scrolling at a leisurely pace, so the
+     card is ~98% of the way there as the dwell ends and finishes inside it.
+     Damping 20 holds the ratio at 1.20: trailing, never overshooting.
+
+     This is the far end of the usable range. Going softer without widening
+     HOLD again walks back into cards that never look settled, which is the
+     fault this whole sequence started with.
 
      Always called (Rules of Hooks — reduced can change at runtime) but inert
      under reduced-motion: the inputs are flat constants there, and a spring
      only moves when its input does. */
-  const springConfig = { stiffness: 90, damping: 22, mass: 1 };
+  const springConfig = { stiffness: 70, damping: 20, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
   /* No opacity handling at all, deliberately.
