@@ -699,14 +699,18 @@ figcaption {
   padding: clamp(1.3333rem, 1.8vw, 1.6rem);
   position: relative;
   overflow: hidden;
-  /* Near-viewport-height, full-width cards for the sticky stack —
-     min-height so shorter cards (no image, fewer metrics) still fill the
-     same footprint as the fullest one, content centered rather than
-     pinned to the top with dead space below. */
-  min-height: min(86vh, 900px);
+  /* No min-height any more: that was for the sticky era, when the panel sized
+     itself. .stack-item .lead-panel now sets height:100% of the frame, so a
+     min-height could only ever push it past the frame it has to fit inside.
+
+     `safe center` rather than plain `center`: centred content that outgrows
+     its box overflows equally at both ends, so on a small phone the card was
+     losing its index label and CTA off the top as well as the foot of the
+     media off the bottom. `safe` falls back to start-alignment exactly when
+     that would happen, so anything clipped is clipped from the bottom only. */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: safe center;
   /* Depth-of-stack: scale only, driven per-card from JS (see useCardDepth
      in App.js) as a card gets covered by the next one in the sticky
      stack — no opacity/blur/shadow, the narrowing width against the next
@@ -1434,6 +1438,16 @@ figcaption {
 /* ---------- responsive ---------- */
 @media (max-width: 1024px) {
   .lead-columns { grid-template-columns: 1fr; }
+  /* Stacked, the media sits under the text instead of beside it, so a
+     full-width 4:3 frame is enormous — 738px tall at 1024 — and pushed the
+     card past the frame it now has to fit inside (224px of it at 1024x768,
+     86px at 390x844). Capping the *width* rather than the height is what
+     keeps the frame exactly 4:3 while bounding how tall it can get: the
+     aspect-ratio then derives the height from the capped width. */
+  .lead-media {
+    width: min(100%, calc(clamp(120px, 18svh, 280px) * 4 / 3));
+    margin-inline: auto;
+  }
   .case { grid-template-columns: 1fr; }
   /* The sticky stack stays on at tablet/mobile — it's the section's whole
      behaviour, and flattening it here made the cards a plain list. The spacing
