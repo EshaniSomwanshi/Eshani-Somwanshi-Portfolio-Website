@@ -464,7 +464,19 @@ function StackCard({ i, total, progress, card, vh }) {
           </div>
           {image && (
             <div className="lead-media" data-cursor={cursorLabel}>
-              <Wipe src={IMG(image.src)} alt={image.alt} testId={`project-image-${card.key}`} />
+              {/* fit="contain", overriding Wipe's cover default. The frame is 4:3
+                  for every card, but only travelogue-cover is a 4:3 image —
+                  myocircle is 2.06:1 and onward is 1.2:1, so cover was cropping
+                  35% off myocircle's sides and 10% off onward's top and bottom.
+                  contain shows each image whole and lets the frame letterbox
+                  instead. Re-export those two at 4:3 and they fill it with no
+                  bands and nothing lost. */}
+              <Wipe
+                src={IMG(image.src)}
+                alt={image.alt}
+                fit="contain"
+                testId={`project-image-${card.key}`}
+              />
             </div>
           )}
         </div>

@@ -1831,7 +1831,10 @@ figcaption {
   background: var(--card);
 }
 .lead-media .wipe { aspect-ratio: 4 / 3; }
-.lead-media .wipe img { object-fit: contain; }
+/* object-fit is NOT set here on purpose. Wipe writes it as an inline style
+   from its `fit` prop, which beats any stylesheet rule — a rule here reads as
+   if it works and silently does nothing. The stack cards pass fit="contain";
+   see StackCard. */
 
 /* ---------- gallery card — the 6th stack item ---------- */
 /* Overrides .lead-panel's centered content: a grid of unpredictable
