@@ -887,24 +887,39 @@ figcaption {
    existed. Now that the recede/arrive motion is fully driven by that
    transform, this offset must be identical across cards, not
    index-dependent, or every card lands progressively lower than home. */
-.stack { display: block; }
-.stack-item {
+/* The stack is a tall empty spacer whose only job is to own scroll distance.
+   Nothing in it is positioned by scroll any more — .stack-frame pins once and
+   stays, and the cards move purely by transform (see useCardDepth). That is
+   what lets the motion be springed: while the cards were sticky, the browser
+   placed them straight from scroll and there was no gap for a lag to live in.
+
+   Height is one frame (the part you see) plus one frame per card (the scroll
+   each card consumes), so progress runs 0->1 across exactly `--n` frames. */
+.stack {
+  position: relative;
+  height: calc((var(--n) + 1) * 100svh);
+}
+.stack-frame {
   position: sticky;
   top: calc(var(--nav-h) + 1.6rem);
-  /* This gap is the whole reason a card gets to be seen on its own.
-     Each card pins at `top`; the next one is plain document flow sliding up
-     behind it, so how long the pinned card sits alone is exactly this margin.
-     At the old ~20px the next card's top edge was already at the fold the
-     instant the current one pinned — at 768 it was past it, overlapping
-     before the first card had finished arriving. No amount of transform
-     tuning could fix that; the distance simply was not there.
-
-     30vh gives 251-437px of scrolling with the pinned card alone, depending
-     on viewport — roughly 2.5 to 4.4 mouse notches. The clamp stops it
-     collapsing on short viewports or running away on tall ones. */
-  margin-top: clamp(180px, 30vh, 340px);
+  height: calc(100svh - var(--nav-h) - 3.2rem);
 }
-.stack-item:first-child { margin-top: 0; }
+.stack-item {
+  position: absolute;
+  inset: 0;
+  /* Later cards cover earlier ones. */
+  z-index: calc(var(--i) + 1);
+  /* No margin any more: the gap between cards used to be layout, and it was
+     the only thing deciding how long a card was seen alone. That job now
+     belongs to HOLD in useCardDepth, which is a stretch of scroll where the
+     transform simply does not change — tunable without touching layout. */
+}
+/* The panel fills the frame so a card's travel and the frame are the same
+   distance, and so `dwell` really means the whole card is on screen. */
+.stack-item .lead-panel {
+  height: 100%;
+  overflow: hidden;
+}
 
 
 /* ---------- impact index ---------- */

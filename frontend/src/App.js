@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AnimatePresence,
@@ -306,55 +306,51 @@ const workCards = [
    behind the next one — nothing keeps it partially visible on purpose,
    so there's no multi-tier depth to track, just this card's own single
    handoff to the one right after it. */
-function useCardDepth(progress, i, total) {
+function useCardDepth(progress, i, total, vh) {
   const reduced = useReducedMotion();
   const isLast = i >= total - 1;
   const start = i / total;
   const end = (i + 1) / total;
 
-  /* Two distinct phases, sharing only the "home" position (scale 1, y 0 —
-     at progress = start, the exact spot the previous card recedes FROM
-     and this one arrives AT) as their single handoff point:
+  /* Scroll drives a *number* here, not a position.
 
-     - Incoming (before `start`, i.e. the previous card's own [i-1, i]
-       window): Y only, sliding up from RECEDE_Y to 0. Scale stays flat
-       at 1 for this entire phase — no scale-down while still arriving.
-       That fall-through is automatic: `scale` below is a plain 2-point
-       [start, end] transform, so useTransform just clamps it to its
-       first value (1) for any progress before `start`.
-     - Outgoing (this card's own [start, end] window, unchanged): scale
-       1 -> RECEDE_SCALE and y 0 -> RECEDE_Y together, only once this
-       card is already home and the next one begins entering. */
-  const RECEDE_SCALE = 0.8;
-  const RECEDE_Y = 48;
+     The cards used to be position:sticky, which meant the browser placed the
+     incoming card straight from scroll — the card and the wheel were the same
+     thing, so there was no gap for a lag to live in and a spring could only
+     decorate a 48px nudge on top of ~700px of native travel. That is why the
+     section never felt like it had any weight.
 
-  /* HOLD carves a dwell out of the front of each card's slice.
+     Now every card is absolutely positioned in one sticky viewport-sized
+     frame, and its whole travel is this transform. Nothing moves from scroll
+     directly: progress feeds a target, the target feeds a spring, and the
+     spring's trailing is the inertia.
 
-     Without it a card was at rest for no scroll distance at all: it hit
-     scale 1 / y 0 at exactly `start` and was already receding one pixel of
-     scroll later, while the next card arrived across that same window — the
-     two always moving together, so no card was ever simply *there*. That is
-     what read as cards swiping past before they had been seen.
+     ENTER is a full frame height, so a card starts completely below the frame
+     and rides all the way up. vh is measured rather than assumed (svh in CSS,
+     ResizeObserver in App) because that travel has to match the frame exactly
+     or a card parks partly on screen. */
+  const ENTER = vh || 800;
+  const RECEDE_SCALE = 0.86;
+  const RECEDE_Y = Math.round(ENTER * 0.04);
 
-     At 0.35 the card is completely still for the first 35% of its slice and
-     recedes across the remaining 65%. Measured against the section's real
-     scroll length, that dwell is 247-273px depending on breakpoint — roughly
-     two and a half mouse notches at every width, so one value covers all of
-     them and there is no per-breakpoint logic to keep in sync.
+  /* HOLD is the dwell: the share of a card's slice where it does not move at
+     all. Before it existed a card was at rest for a single instant of scroll
+     and was already receding one pixel later, while the next card arrived
+     across the same window — no card was ever simply *there*.
 
-     The incoming card now waits at RECEDE_Y through the previous card's
-     dwell and only starts arriving when that card actually begins to recede,
-     which is what keeps the dwell readable rather than merely static. */
+     At 0.35 the card is still for the first 35% of its slice and hands over
+     across the remaining 65%. The incoming card waits below the frame through
+     that dwell and only begins to rise once the current card starts to go. */
   const HOLD = 0.35;
   const slice = 1 / total;
-  const hold = start + slice * HOLD;              // rest ends, recede begins
-  const prevHold = start - slice * (1 - HOLD);    // previous card starts receding
+  const hold = start + slice * HOLD;
+  const prevHold = start - slice * (1 - HOLD);
 
   const yPoints = [];
   const yVals = [];
   if (i > 0) {
     yPoints.push(prevHold);
-    yVals.push(RECEDE_Y);
+    yVals.push(ENTER);
   }
   yPoints.push(start);
   yVals.push(0);
@@ -372,48 +368,43 @@ function useCardDepth(progress, i, total) {
     { clamp: true },
   );
   const rawY = useTransform(progress, yPoints, reduced ? yPoints.map(() => 0) : yVals, { clamp: true });
-  /* Smooths the *rendered* number so it trails the target rather than
-     snapping 1:1 to scroll. Damping stays just above 2·√(stiffness·mass)
-     (~1.15x critical) so it never overshoots — a lag, not a bounce.
 
-     Settle time is bounded by the dwell, not chosen freely. The card has to
-     finish moving within the still phase above, or it is still travelling
-     when the next handoff starts — which is the whole fault this section
-     had at stiffness 50 (~707ms), where nothing ever looked settled.
+  /* The spring is the whole point now, not a garnish. It is smoothing a
+     full-frame travel rather than a 48px nudge, so its trailing is what the
+     eye reads as momentum.
 
-     The dwell is 247-273px, about 415-455ms of scrolling at a leisurely
-     ~600px/s. Stiffness 110 settles in ~477ms, so the card lands right as
-     the dwell ends: enough trailing weight to read as inertia, without
-     going back to never arriving. 280 (~299ms) was inside that budget with
-     room to spare and read as weightless — correct, but characterless.
+     Settle is bounded by the dwell — the card has to stop moving inside the
+     still phase or it is still travelling when the next handoff starts, which
+     was the original fault. Stiffness 90 settles in ~527ms against a dwell of
+     roughly 295px (~490ms of scrolling at a leisurely pace), so it lands just
+     as the card comes to rest. Damping 22 keeps the ratio at ~1.16: trailing,
+     never overshooting. Softer than this and cards visibly fail to arrive.
 
-     If more lag is wanted, widen HOLD in step with it; the two numbers are
-     linked, and dropping stiffness alone re-creates the original fault.
-
-     Always called (Rules of Hooks — reduced can change at runtime), but
-     it's a no-op under reduced-motion: rawScale/rawY are already flat
-     constants there, and a spring only produces motion when its input
-     changes, so nothing animates either way. */
-  const springConfig = { stiffness: 110, damping: 24, mass: 1 };
+     Always called (Rules of Hooks — reduced can change at runtime) but inert
+     under reduced-motion: the inputs are flat constants there, and a spring
+     only moves when its input does. */
+  const springConfig = { stiffness: 90, damping: 22, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
-  /* Same threshold as the scale-down's own end point — unchanged — but a
-     hard step instead of an eased fade: full opacity for the entire time
-     the card is shrinking, then it disappears outright the instant it's
-     fully covered, rather than gradually dimming into that state. */
+  /* A hard step, not a fade: full opacity the whole time a card is being
+     covered, then gone the instant it is fully behind the next one. */
   const opacity = useTransform(progress, (p) => (reduced || isLast || p < end ? 1 : 0));
   return { scale, y, opacity };
 }
 
-function StackCard({ i, total, progress, card }) {
+function StackCard({ i, total, progress, card, vh }) {
   const {
     testId, index, company, role, title, quiet, subtitle, desc,
     confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
   } = card;
-  const { scale, y, opacity } = useCardDepth(progress, i, total);
+  const { scale, y, opacity } = useCardDepth(progress, i, total, vh);
 
+  /* Plain div, not Reveal. Reveal applies its own scroll-triggered opacity and
+     rise, which is a second transform on the same element fighting the one
+     below it — harmless while the cards were sticky and barely moved, wrong
+     now that this transform owns the card's whole travel. */
   return (
-    <Reveal className="stack-item" style={{ "--i": i }}>
+    <div className="stack-item" style={{ "--i": i }}>
       <motion.article
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
@@ -461,7 +452,7 @@ function StackCard({ i, total, progress, card }) {
           )}
         </div>
       </motion.article>
-    </Reveal>
+    </div>
   );
 }
 
@@ -610,9 +601,30 @@ export default function App() {
      useCardDepth for how each card reads its own slice of it. Doesn't
      touch the stack's own sticky top-offsets/CSS. */
   const stackRef = useRef(null);
+  const stackFrameRef = useRef(null);
+  /* The cards' travel is a full frame height, so it has to be the *measured*
+     frame, not an assumed viewport: svh, the sticky top offset and the nav
+     height all feed it, and a card that travels the wrong distance parks
+     partly on screen. */
+  const [stackFrameH, setStackFrameH] = useState(0);
+  /* useLayoutEffect, not useEffect: this has to land before first paint. The
+     cards' resting positions are derived from this height, so measuring it
+     after paint means every card renders once at a fallback distance and then
+     springs to the real one — a visible settle on load. */
+  useLayoutEffect(() => {
+    const el = stackFrameRef.current;
+    if (!el) return;
+    setStackFrameH(el.getBoundingClientRect().height);
+    const ro = new ResizeObserver(([entry]) => setStackFrameH(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  /* "end end" rather than "end start": the spacer is taller than the frame by
+     exactly the scroll this section should consume, so progress runs 0->1
+     across that surplus. */
   const { scrollYProgress: stackProgress } = useScroll({
     target: stackRef,
-    offset: ["start start", "end start"],
+    offset: ["start start", "end end"],
   });
   const STACK_TOTAL = workCards.length;
 
@@ -970,10 +982,19 @@ export default function App() {
               </div>
             </div>
 
-            <div className="stack" ref={stackRef}>
-              {workCards.map((card, i) => (
-                <StackCard key={card.key} i={i} total={STACK_TOTAL} progress={stackProgress} card={card} />
-              ))}
+            <div className="stack" ref={stackRef} style={{ "--n": STACK_TOTAL }}>
+              <div className="stack-frame" ref={stackFrameRef}>
+                {workCards.map((card, i) => (
+                  <StackCard
+                    key={card.key}
+                    i={i}
+                    total={STACK_TOTAL}
+                    progress={stackProgress}
+                    card={card}
+                    vh={stackFrameH}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </section>
