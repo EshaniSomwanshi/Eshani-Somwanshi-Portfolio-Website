@@ -891,9 +891,18 @@ figcaption {
 .stack-item {
   position: sticky;
   top: calc(var(--nav-h) + 1.6rem);
-  /* Eases the whole way rather than stepping at 1024, and keeps easing below
-     576 rather than flattening — the floor is a safety net, not a step. */
-  margin-top: clamp(1rem, calc(13.97px + 0.9078vw), 2.1333rem);
+  /* This gap is the whole reason a card gets to be seen on its own.
+     Each card pins at `top`; the next one is plain document flow sliding up
+     behind it, so how long the pinned card sits alone is exactly this margin.
+     At the old ~20px the next card's top edge was already at the fold the
+     instant the current one pinned — at 768 it was past it, overlapping
+     before the first card had finished arriving. No amount of transform
+     tuning could fix that; the distance simply was not there.
+
+     30vh gives 251-437px of scrolling with the pinned card alone, depending
+     on viewport — roughly 2.5 to 4.4 mouse notches. The clamp stops it
+     collapsing on short viewports or running away on tall ones. */
+  margin-top: clamp(180px, 30vh, 340px);
 }
 .stack-item:first-child { margin-top: 0; }
 
@@ -1778,18 +1787,21 @@ figcaption {
 }
 
 /* ---------- media inside the lead panel ---------- */
-/* Sized to the image's own natural ratio (1100x535 ≈ 2.056:1) instead of
-   stretching to match the text column — the whole image stays visible,
-   nothing gets cropped. The text column is sized/typeset independently
-   now (see .lead-columns align-items: start below); the two columns are
-   no longer forced to equal heights. */
+/* One 4:3 enclosure for all three cards, so the frame is consistent from
+   card to card rather than taking whichever ratio the first image happened
+   to have (it was pinned to 1100x535, myocircle's shape).
+
+   Only travelogue-cover.png is actually 4:3 (1600x1200). myocircle is
+   2.06:1 and onward is 1.2:1, so with object-fit: contain those two letter-
+   box inside the frame rather than filling it — nothing is cropped, which
+   is the deliberate trade. Re-export those two at 4:3 and they fill it. */
 .lead-media {
   border: 1px solid var(--line);
   border-radius: 4px;
   overflow: hidden;
   background: var(--card);
 }
-.lead-media .wipe { aspect-ratio: 1100 / 535; }
+.lead-media .wipe { aspect-ratio: 4 / 3; }
 .lead-media .wipe img { object-fit: contain; }
 
 /* ---------- gallery card — the 6th stack item ---------- */
