@@ -1575,7 +1575,7 @@ figcaption {
   font-size: clamp(6.6667rem, 19vw, 24rem);
   font-weight: 400;
   line-height: 0.85;
-  letter-spacing: 0;
+  letter-spacing: 0.03em;
   color: var(--accent);
   opacity: 0.22;
   transition: opacity 0.3s ease;
