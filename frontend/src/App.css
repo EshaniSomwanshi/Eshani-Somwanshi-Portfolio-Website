@@ -1572,7 +1572,7 @@ figcaption {
 
 .backdrop-name {
   font-family: var(--font-wordmark);
-  font-size: clamp(6.6667rem, 19vw, 24rem);
+  font-size: clamp(6.4rem, 18.24vw, 23.04rem);
   font-weight: 400;
   line-height: 0.85;
   letter-spacing: 0.03em;
@@ -1794,9 +1794,9 @@ figcaption {
    after it and silently switch it off. */
 @media (max-width: 1024px) {
   /* .backdrop-name had a font-size override here too. It set a bare 19vw,
-     which is the exact middle term of the clamp already on the base rule — so
+     which was the exact middle term of the clamp then on the base rule — so
      from 576 up the two agree to the pixel, and all it really did was strip
-     the 6.6667rem floor on the narrowest phones. Removed; the base clamp keeps
+     the clamp's floor on the narrowest phones. Removed; the base clamp keeps
      the mark 6px larger there, which is the intent of having a floor. */
   .hero-avatar-container {
     max-width: 320px;
