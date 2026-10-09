@@ -70,6 +70,10 @@
      If you want quieter body text, set --font-body to 'Instrument Sans'. */
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
+  /* Only the ESHANI backdrop behind the hero avatar. Bebas Neue ships in a
+     single weight (400), so don't set font-weight on it — the browser would
+     fake a bold. */
+  --font-wordmark: 'Bebas Neue', 'Bricolage Grotesque', system-ui, sans-serif;
   --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
@@ -1567,11 +1571,11 @@ figcaption {
 }
 
 .backdrop-name {
-  font-family: var(--font-display);
+  font-family: var(--font-wordmark);
   font-size: clamp(6.6667rem, 19vw, 24rem);
-  font-weight: 900;
+  font-weight: 400;
   line-height: 0.85;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   color: var(--accent);
   opacity: 0.22;
   transition: opacity 0.3s ease;
