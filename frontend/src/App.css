@@ -786,6 +786,22 @@ figcaption {
   background: var(--accent-strong);
   color: var(--card);
 }
+/* The whole card is clickable (StackCard's onClick), so hovering anywhere on
+   it shows the pill's hover state and tints the card's border — the cue that
+   the click goes somewhere. Hover-capable pointers only, so a tap on a phone
+   doesn't leave the card stuck looking hovered. Colour only: the card's
+   transform belongs to the scroll spring and must not be touched here. */
+@media (hover: hover) {
+  .lead-panel {
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-state);
+  }
+  .lead-panel:hover { border-color: var(--accent-strong); }
+  .lead-panel:hover .status-pill {
+    background: var(--accent-strong);
+    color: var(--card);
+  }
+}
 .lead-panel h3 {
   font-family: var(--font-display);
   /* Type scale: base 12px, 1.125 (major second) ratio, from typescale.com

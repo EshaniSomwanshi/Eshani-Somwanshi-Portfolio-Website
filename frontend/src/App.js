@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AnimatePresence,
   motion,
@@ -241,7 +241,6 @@ const workCards = [
     image: { src: "myocircle-cover.png", alt: "MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow." },
     cursorLabel: "MyoCircle",
     link: "/work/optrahealth",
-    linkLabel: "Read the case study",
     linkTestId: "read-case-optra",
   },
   {
@@ -262,7 +261,6 @@ const workCards = [
     image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
     cursorLabel: "EYE AI",
     link: "/work/eye-ai",
-    linkLabel: "Open full case study",
     linkTestId: "read-case-eye-ai",
   },
   {
@@ -282,8 +280,6 @@ const workCards = [
     image: { src: "travelogue-cover.png", alt: "Travelogue home feed and a group trip hub shown side by side on two phones." },
     cursorLabel: "Travelogue",
     link: "/work/travelogue",
-    linkLabel: "Read case study",
-    linkSrOnly: "Travelogue",
     linkTestId: "read-case-travelogue",
   },
 ];
@@ -412,9 +408,27 @@ function useCardDepth(progress, i, total, vh) {
 function StackCard({ i, total, progress, card, vh }) {
   const {
     testId, index, company, role, title, quiet, subtitle, desc,
-    confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
+    confidentialNote, metrics, tags, image, cursorLabel, link,
   } = card;
   const { scale, y } = useCardDepth(progress, i, total, vh);
+  const navigate = useNavigate();
+
+  /* The whole card opens the case study, not just the pill. Done as a click
+     handler on the article rather than a "stretched link" (an ::after on the
+     pill covering the card): that overlay would sit on top of the title and
+     image, so the custom cursor's [data-cursor] lookups would never hit them
+     and text in the card couldn't be selected. The pill stays the one real
+     link — the only tab stop, and what keyboard and screen-reader users get —
+     so this handler is a pointer convenience on top of it, not a replacement. */
+  const openFromCard = (e) => {
+    if (e.button !== 0 || e.target.closest("a")) return; // the link handles itself
+    if (window.getSelection()?.toString()) return; // selecting text, not clicking
+    if (e.metaKey || e.ctrlKey || e.shiftKey) {
+      window.open(link, "_blank", "noopener");
+      return;
+    }
+    navigate(link);
+  };
 
   /* Plain div, not Reveal. Reveal applies its own scroll-triggered opacity and
      rise, which is a second transform on the same element fighting the one
@@ -426,6 +440,7 @@ function StackCard({ i, total, progress, card, vh }) {
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
         style={{ scale, y, originX: 0.5, originY: 0 }}
+        onClick={openFromCard}
       >
         <div className="lead-top">
           <span className="lead-index">{index} · {company}</span>
@@ -433,9 +448,11 @@ function StackCard({ i, total, progress, card, vh }) {
               read-case link duplicated below under the tags. Consolidated
               into one clickable CTA here — same pill look (.status-pill),
               now an actual Link — so there's a single, unambiguous way to
-              open the case study instead of two. */}
+              open the case study instead of two. Same visible label on every
+              card, so the sr-only title is what tells them apart in a
+              screen reader's links list (A11Y_AUDIT #11). */}
           <Link to={link} className="status-pill" data-testid={card.linkTestId}>
-            {linkLabel}{linkSrOnly && <span className="sr-only"> — {linkSrOnly}</span>} <ArrowUpRight size={14} />
+            Read Case Study<span className="sr-only"> — {title}</span> <ArrowUpRight size={14} />
           </Link>
         </div>
         <div className="lead-columns">
