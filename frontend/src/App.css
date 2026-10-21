@@ -1325,6 +1325,10 @@ figcaption {
   white-space: nowrap;
 }
 .cursor-ring[data-state="media"] .cursor-label { opacity: 1; }
+/* Paper only: --bg on the 80% --accent fill is 2.67:1, too low for text
+   this small; --ink brings it to 6.03:1. Carbon and petrol keep --bg (their
+   --ink is light), at 5.11:1 and 8.37:1. */
+:root[data-theme="paper"] .cursor-label { color: var(--ink); }
 @media (pointer: coarse) { .cursor-dot, .cursor-ring { display: none; } }
 
 /* ---------- case study page ---------- */
