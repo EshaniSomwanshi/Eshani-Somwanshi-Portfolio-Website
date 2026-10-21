@@ -1601,7 +1601,7 @@ figcaption {
 }
 .backdrop-sub-line {
   font-family: var(--font-wordmark);
-  font-size: clamp(0.9333rem, 1.2vw, 1.2667rem);
+  font-size: clamp(0.98rem, 1.26vw, 1.33rem);
   letter-spacing: 0.25em;
   /* Same trailing-spacing fix as .backdrop-name; keep equal to letter-spacing. */
   margin-right: -0.25em;
