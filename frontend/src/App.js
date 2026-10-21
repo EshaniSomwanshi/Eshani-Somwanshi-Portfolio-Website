@@ -285,7 +285,7 @@ const workCards = [
    behind the next one — nothing keeps it partially visible on purpose,
    so there's no multi-tier depth to track, just this card's own single
    handoff to the one right after it. */
-function useCardDepth(progress, i, total, vh) {
+function useCardDepth(progress, i, total, enter, cardH) {
   const reduced = useReducedMotion();
   const isLast = i >= total - 1;
   const start = i / total;
@@ -304,13 +304,17 @@ function useCardDepth(progress, i, total, vh) {
      directly: progress feeds a target, the target feeds a spring, and the
      spring's trailing is the inertia.
 
-     ENTER is a full frame height, so a card starts completely below the frame
-     and rides all the way up. vh is measured rather than assumed (svh in CSS,
-     ResizeObserver in App) because that travel has to match the frame exactly
-     or a card parks partly on screen. */
-  const ENTER = vh || 800;
+     ENTER is the distance from the frame's pinned top to the bottom of the
+     viewport, so a card starts completely off screen and rides all the way
+     up. The frame is content-sized now, so that is no longer the frame's own
+     height. Both are measured rather than assumed (ResizeObserver in App)
+     because a card that travels the wrong distance parks partly on screen.
+
+     RECEDE_Y is 4% of the card's own height: shrunk to 0.86 about its top and
+     pushed down 4%, a receding card stays inset inside the card covering it. */
+  const ENTER = enter || 800;
   const RECEDE_SCALE = 0.86;
-  const RECEDE_Y = Math.round(ENTER * 0.04);
+  const RECEDE_Y = Math.round((cardH || ENTER) * 0.04);
 
   /* HOLD is the dwell: the share of a card's slice where it does not move at
      all. Before it existed a card was at rest for a single instant of scroll
@@ -388,12 +392,12 @@ function useCardDepth(progress, i, total, vh) {
   return { scale, y };
 }
 
-function StackCard({ i, total, progress, card, vh }) {
+function StackCard({ i, total, progress, card, enter, cardH }) {
   const {
     testId, role, title, quiet, subtitle, desc,
     confidentialNote, tags, image, link,
   } = card;
-  const { scale, y } = useCardDepth(progress, i, total, vh);
+  const { scale, y } = useCardDepth(progress, i, total, enter, cardH);
   const navigate = useNavigate();
 
   /* The whole card opens the case study. There's no visible button: hovering
@@ -613,11 +617,12 @@ export default function App() {
      touch the stack's own sticky top-offsets/CSS. */
   const stackRef = useRef(null);
   const stackFrameRef = useRef(null);
-  /* The cards' travel is a full frame height, so it has to be the *measured*
-     frame, not an assumed viewport: svh, the sticky top offset and the nav
-     height all feed it, and a card that travels the wrong distance parks
-     partly on screen. */
+  /* The frame is sized by the cards' content, so both numbers the motion
+     needs are measured: the frame's height (also written to --stack-frame-h,
+     which centres the frame on screen) and how far its pinned top sits above
+     the viewport's bottom edge (the distance an incoming card travels). */
   const [stackFrameH, setStackFrameH] = useState(0);
+  const [stackEnter, setStackEnter] = useState(0);
   /* useLayoutEffect, not useEffect: this has to land before first paint. The
      cards' resting positions are derived from this height, so measuring it
      after paint means every card renders once at a fallback distance and then
@@ -625,10 +630,21 @@ export default function App() {
   useLayoutEffect(() => {
     const el = stackFrameRef.current;
     if (!el) return;
-    setStackFrameH(el.getBoundingClientRect().height);
-    const ro = new ResizeObserver(([entry]) => setStackFrameH(entry.contentRect.height));
+    const measure = () => {
+      const h = el.getBoundingClientRect().height;
+      stackRef.current?.style.setProperty("--stack-frame-h", `${h}px`);
+      setStackFrameH(h);
+      // Read after --stack-frame-h is set, since the sticky top depends on it.
+      setStackEnter(window.innerHeight - parseFloat(getComputedStyle(el).top));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, []);
   /* "end end" rather than "end start": the spacer is taller than the frame by
      exactly the scroll this section should consume, so progress runs 0->1
@@ -1002,7 +1018,8 @@ export default function App() {
                     total={STACK_TOTAL}
                     progress={stackProgress}
                     card={card}
-                    vh={stackFrameH}
+                    enter={stackEnter}
+                    cardH={stackFrameH}
                   />
                 ))}
               </div>

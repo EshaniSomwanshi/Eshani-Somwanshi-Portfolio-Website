@@ -893,14 +893,22 @@ figcaption {
   position: relative;
   height: calc((var(--n) + 1) * 100svh);
 }
+/* The frame is as tall as the cards' content, not the whole viewport: all
+   three .stack-items share one grid cell, so the row is the tallest card's
+   natural height, capped by --stack-max so a card never outgrows the screen.
+   It pins centred in the space under the header; --stack-frame-h is the
+   measured frame height, written by App (see stackFrameRef). */
 .stack-frame {
+  --stack-max: calc(100svh - var(--nav-h) - 3.2rem);
   position: sticky;
-  top: calc(var(--nav-h) + 1.6rem);
-  height: calc(100svh - var(--nav-h) - 3.2rem);
+  top: max(
+    calc(var(--nav-h) + 1.6rem),
+    calc(var(--nav-h) + (100svh - var(--nav-h) - var(--stack-frame-h, 0px)) / 2)
+  );
+  display: grid;
 }
 .stack-item {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
   /* Later cards cover earlier ones. */
   z-index: calc(var(--i) + 1);
   /* Every .stack-item is a full-frame box, so the last one sat on top of the
@@ -912,10 +920,11 @@ figcaption {
      belongs to HOLD in useCardDepth, which is a stretch of scroll where the
      transform simply does not change — tunable without touching layout. */
 }
-/* The panel fills the frame so a card's travel and the frame are the same
-   distance, and so `dwell` really means the whole card is on screen. */
+/* Every card takes the shared row's height, so all three are the same size
+   and a receding card stays fully covered by the one above it. */
 .stack-item .lead-panel {
   height: 100%;
+  max-height: var(--stack-max);
   pointer-events: auto;
   overflow: hidden;
 }
