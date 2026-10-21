@@ -933,6 +933,10 @@ figcaption {
   inset: 0;
   /* Later cards cover earlier ones. */
   z-index: calc(var(--i) + 1);
+  /* Every .stack-item is a full-frame box, so the last one sat on top of the
+     whole frame — invisible, but catching every click meant for the cards
+     beneath it. The wrapper lets clicks through; the card itself takes them. */
+  pointer-events: none;
   /* No margin any more: the gap between cards used to be layout, and it was
      the only thing deciding how long a card was seen alone. That job now
      belongs to HOLD in useCardDepth, which is a stretch of scroll where the
@@ -942,6 +946,7 @@ figcaption {
    distance, and so `dwell` really means the whole card is on screen. */
 .stack-item .lead-panel {
   height: 100%;
+  pointer-events: auto;
   overflow: hidden;
 }
 
