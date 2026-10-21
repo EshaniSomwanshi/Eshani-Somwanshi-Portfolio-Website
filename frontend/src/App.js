@@ -15,7 +15,6 @@ import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
 import {
   BackToTop,
-  CountUp,
   EASE,
   IMG,
   Magnetic,
@@ -232,11 +231,6 @@ const workCards = [
     quiet: "(Zoe, an AI companion inside a health-tech platform)",
     subtitle: "Companion-guided app connecting patients, parents, and providers.",
     desc: "Primary designer for Zoe, building the interaction layer from the ground up alongside mobile onboarding, a patient management dashboard, and provider monitoring. Validated across 20+ usability and heuristic evaluation sessions with patients, parents, and providers.",
-    metrics: [
-      { value: <CountUp value={30} suffix="%" />, label: "Weekly engagement ↑", method: "Post-launch vs. prior release" },
-      { value: <CountUp value={28} suffix="%" />, label: "Tutorial completion ↑", method: "Across 20+ sessions" },
-      { value: <CountUp value={100} suffix="+" />, label: "Component library", method: "Adopted by PMs and engineers" },
-    ],
     tags: ["AI companion", "Healthcare SaaS", "Design system"],
     image: { src: "myocircle-cover.png", alt: "MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow." },
     link: "/work/optrahealth",
@@ -252,10 +246,6 @@ const workCards = [
     title: "Retinal Diagnostic Platform",
     subtitle: "Streamlining complex diagnostics into a unified, actionable experience.",
     desc: "Streamlining complex diagnostics into one unified, actionable experience for clinicians: a regulated B2B health-tech MVP followed end to end, from heuristic evaluation and stakeholder research through journey mapping, iterative prototyping, and high-fidelity delivery of a diagnostic tool clinicians could trust.",
-    metrics: [
-      { value: <CountUp value={20} suffix="%" />, label: "Faster diagnostic tasks", method: "Timed task testing, pre/post" },
-      { value: "10→7", label: "Week MVP timeline", method: "Against the original delivery plan" },
-    ],
     tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
     image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
     link: "/work/eye-ai",
@@ -270,10 +260,6 @@ const workCards = [
     role: "Product Designer · Personal case study · 2025",
     title: "Travelogue",
     desc: "A self-initiated, research-led concept that consolidates trip planning into one home: upcoming trips, itineraries, documents, and the people coming along, shaped directly by traveler interviews about offline access, group coordination, and expense tracking.",
-    metrics: [
-      { value: "08", label: "Traveler interviews" },
-      { value: "05", label: "Unmet needs mapped" },
-    ],
     tags: ["Personal project", "Mobile UX", "Research-led"],
     image: { src: "travelogue-cover.png", alt: "Travelogue home feed and a group trip hub shown side by side on two phones." },
     link: "/work/travelogue",
@@ -405,7 +391,7 @@ function useCardDepth(progress, i, total, vh) {
 function StackCard({ i, total, progress, card, vh }) {
   const {
     testId, role, title, quiet, subtitle, desc,
-    confidentialNote, metrics, tags, image, link,
+    confidentialNote, tags, image, link,
   } = card;
   const { scale, y } = useCardDepth(progress, i, total, vh);
   const navigate = useNavigate();
@@ -445,6 +431,9 @@ function StackCard({ i, total, progress, card, vh }) {
       >
         <div className="lead-columns">
           <div className="lead-col-text">
+            <div className="lead-tags tag-row">
+              {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
+            </div>
             <p className="lead-role">{role}</p>
             <h3>
               <Link to={link} className="lead-title-link" data-testid={card.linkTestId}>
@@ -454,20 +443,6 @@ function StackCard({ i, total, progress, card, vh }) {
             {subtitle && <p className="lead-subtitle">{subtitle}</p>}
             <p className="lead-desc">{desc}</p>
             {confidentialNote && <p className="nda-note">{confidentialNote}</p>}
-            {metrics?.length > 0 && (
-              <div className="lead-metrics">
-                {metrics.map((m, mi) => (
-                  <div key={mi}>
-                    <div className="m-value">{m.value}</div>
-                    <div className="m-label">{m.label}</div>
-                    {m.method && <div className="m-method">{m.method}</div>}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="lead-tags tag-row">
-              {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
-            </div>
           </div>
           {image && (
             <div className="lead-media">

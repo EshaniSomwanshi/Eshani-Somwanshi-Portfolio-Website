@@ -824,11 +824,8 @@ figcaption {
 .lead-desc { color: var(--muted); margin-top: 1.2rem; font-size: 1rem; max-width: 70ch; }
 /* auto-fit so 2, 3, or 4 metrics (varies per project) all lay out
    cleanly instead of a fixed 3-column grid leaving gaps or overflowing. */
-.lead-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 1.0667rem; margin-top: 1.3333rem; max-width: 56rem; }
-.lead-metrics .m-value { font-size: 1.802rem; } /* h2 step — 21.62px */
-.lead-metrics .m-label { font-size: 1rem; } /* p step — 12px */
-.lead-metrics .m-method { font-size: .79rem; } /* smaller step — 9.48px */
-.lead-tags { margin-top: 1.2rem; padding-top: 0.6667rem; border-top: 1px solid var(--line); }
+/* Tags lead the card now (first thing in the text column), no divider. */
+.lead-tags { margin-bottom: 1.2rem; }
 .lead-panel .read-case { margin-top: 1.2rem; }
 
 /* ---------- read-case link ---------- */
@@ -1474,7 +1471,6 @@ figcaption {
   .theme-switch-mobile { display: flex; }
   .nav-toggle { display: grid; }
   .about-facts { grid-template-columns: 1fr; }
-  .lead-metrics { grid-template-columns: 1fr 1fr; }
   .section-head h2 { max-width: none; }
   .cs-header .theme-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .phone-row .phone { flex: 1 1 100%; }
@@ -1843,9 +1839,6 @@ figcaption {
 /* Overrides .lead-panel's centered content: a grid of unpredictable
    height should start from the top and scroll internally if it ever
    runs taller than the card, not float centered. */
-
-/* Two-up metric rows now that the third pseudo-metric is gone. */
-.lead-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
 /* Longer leading on the paragraphs recruiters skim. */
 .lede { line-height: 1.62; }
