@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AnimatePresence,
   motion,
@@ -15,7 +15,6 @@ import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
 import {
   BackToTop,
-  CountUp,
   EASE,
   IMG,
   Magnetic,
@@ -67,7 +66,7 @@ const navItems = [
   ["about", "About"],
 ];
 
-const RESUME_URL = "https://drive.google.com/file/d/1nMU-IFwWzMEcfJsD9FHLgwEyCda2ZLoo/preview";
+const RESUME_URL = "https://drive.google.com/file/d/1sOELFFUzc0WJkwo07tlgnQlvxnxW0CGZ/preview";
 
 /* ========================================================================
    Cursor — dot + ring, with a contextual label (and optional preview image)
@@ -232,16 +231,9 @@ const workCards = [
     quiet: "(Zoe, an AI companion inside a health-tech platform)",
     subtitle: "Companion-guided app connecting patients, parents, and providers.",
     desc: "Primary designer for Zoe, building the interaction layer from the ground up alongside mobile onboarding, a patient management dashboard, and provider monitoring. Validated across 20+ usability and heuristic evaluation sessions with patients, parents, and providers.",
-    metrics: [
-      { value: <CountUp value={30} suffix="%" />, label: "Weekly engagement ↑", method: "Post-launch vs. prior release" },
-      { value: <CountUp value={28} suffix="%" />, label: "Tutorial completion ↑", method: "Across 20+ sessions" },
-      { value: <CountUp value={100} suffix="+" />, label: "Component library", method: "Adopted by PMs and engineers" },
-    ],
     tags: ["AI companion", "Healthcare SaaS", "Design system"],
     image: { src: "myocircle-cover.png", alt: "MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow." },
-    cursorLabel: "MyoCircle",
     link: "/work/optrahealth",
-    linkLabel: "Read the case study",
     linkTestId: "read-case-optra",
   },
   {
@@ -254,15 +246,9 @@ const workCards = [
     title: "Retinal Diagnostic Platform",
     subtitle: "Streamlining complex diagnostics into a unified, actionable experience.",
     desc: "Streamlining complex diagnostics into one unified, actionable experience for clinicians: a regulated B2B health-tech MVP followed end to end, from heuristic evaluation and stakeholder research through journey mapping, iterative prototyping, and high-fidelity delivery of a diagnostic tool clinicians could trust.",
-    metrics: [
-      { value: <CountUp value={20} suffix="%" />, label: "Faster diagnostic tasks", method: "Timed task testing, pre/post" },
-      { value: "10→7", label: "Week MVP timeline", method: "Against the original delivery plan" },
-    ],
     tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
-    image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
-    cursorLabel: "EYE AI",
+    image: { src: "onward-cover.jpg", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
     link: "/work/eye-ai",
-    linkLabel: "Open full case study",
     linkTestId: "read-case-eye-ai",
   },
   {
@@ -274,16 +260,9 @@ const workCards = [
     role: "Product Designer · Personal case study · 2025",
     title: "Travelogue",
     desc: "A self-initiated, research-led concept that consolidates trip planning into one home: upcoming trips, itineraries, documents, and the people coming along, shaped directly by traveler interviews about offline access, group coordination, and expense tracking.",
-    metrics: [
-      { value: "08", label: "Traveler interviews" },
-      { value: "05", label: "Unmet needs mapped" },
-    ],
     tags: ["Personal project", "Mobile UX", "Research-led"],
     image: { src: "travelogue-cover.png", alt: "Travelogue home feed and a group trip hub shown side by side on two phones." },
-    cursorLabel: "Travelogue",
     link: "/work/travelogue",
-    linkLabel: "Read case study",
-    linkSrOnly: "Travelogue",
     linkTestId: "read-case-travelogue",
   },
 ];
@@ -306,126 +285,187 @@ const workCards = [
    behind the next one — nothing keeps it partially visible on purpose,
    so there's no multi-tier depth to track, just this card's own single
    handoff to the one right after it. */
-function useCardDepth(progress, i, total) {
+function useCardDepth(progress, i, total, enter, cardH) {
   const reduced = useReducedMotion();
   const isLast = i >= total - 1;
   const start = i / total;
   const end = (i + 1) / total;
 
-  /* Two distinct phases, sharing only the "home" position (scale 1, y 0 —
-     at progress = start, the exact spot the previous card recedes FROM
-     and this one arrives AT) as their single handoff point:
+  /* Scroll drives a *number* here, not a position.
 
-     - Incoming (before `start`, i.e. the previous card's own [i-1, i]
-       window): Y only, sliding up from RECEDE_Y to 0. Scale stays flat
-       at 1 for this entire phase — no scale-down while still arriving.
-       That fall-through is automatic: `scale` below is a plain 2-point
-       [start, end] transform, so useTransform just clamps it to its
-       first value (1) for any progress before `start`.
-     - Outgoing (this card's own [start, end] window, unchanged): scale
-       1 -> RECEDE_SCALE and y 0 -> RECEDE_Y together, only once this
-       card is already home and the next one begins entering. */
-  const RECEDE_SCALE = 0.8;
-  const RECEDE_Y = 48;
+     The cards used to be position:sticky, which meant the browser placed the
+     incoming card straight from scroll — the card and the wheel were the same
+     thing, so there was no gap for a lag to live in and a spring could only
+     decorate a 48px nudge on top of ~700px of native travel. That is why the
+     section never felt like it had any weight.
+
+     Now every card is absolutely positioned in one sticky viewport-sized
+     frame, and its whole travel is this transform. Nothing moves from scroll
+     directly: progress feeds a target, the target feeds a spring, and the
+     spring's trailing is the inertia.
+
+     ENTER is the distance from the frame's pinned top to the bottom of the
+     viewport, so a card starts completely off screen and rides all the way
+     up. The frame is content-sized now, so that is no longer the frame's own
+     height. Both are measured rather than assumed (ResizeObserver in App)
+     because a card that travels the wrong distance parks partly on screen.
+
+     RECEDE_Y is 4% of the card's own height: shrunk to 0.86 about its top and
+     pushed down 4%, a receding card stays inset inside the card covering it. */
+  const ENTER = enter || 800;
+  const RECEDE_SCALE = 0.86;
+  const RECEDE_Y = Math.round((cardH || ENTER) * 0.04);
+
+  /* HOLD is the dwell: the share of a card's slice where it does not move at
+     all. Before it existed a card was at rest for a single instant of scroll
+     and was already receding one pixel later, while the next card arrived
+     across the same window — no card was ever simply *there*.
+
+     At 0.4 the card is still for the first 40% of its slice and hands over
+     across the remaining 60%. It moved up from 0.35 alongside the softer
+     spring below — the two are linked, and a slower spring needs a wider
+     dwell to finish arriving inside. The incoming card waits below the frame through
+     that dwell and only begins to rise once the current card starts to go. */
+  const HOLD = 0.4;
+  const slice = 1 / total;
+  const hold = start + slice * HOLD;
+  const prevHold = start - slice * (1 - HOLD);
 
   const yPoints = [];
   const yVals = [];
   if (i > 0) {
-    yPoints.push((i - 1) / total);
-    yVals.push(RECEDE_Y);
+    yPoints.push(prevHold);
+    yVals.push(ENTER);
   }
   yPoints.push(start);
+  yVals.push(0);
+  yPoints.push(hold);
   yVals.push(0);
   if (!isLast) {
     yPoints.push(end);
     yVals.push(RECEDE_Y);
   }
 
-  const rawScale = useTransform(progress, [start, end], [1, reduced || isLast ? 1 : RECEDE_SCALE], { clamp: true });
+  const rawScale = useTransform(
+    progress,
+    [start, hold, end],
+    reduced || isLast ? [1, 1, 1] : [1, 1, RECEDE_SCALE],
+    { clamp: true },
+  );
   const rawY = useTransform(progress, yPoints, reduced ? yPoints.map(() => 0) : yVals, { clamp: true });
-  /* Step 2 — scroll inertia: the target values/breakpoints above are
-     untouched (same trigger points, same home position, same scroll
-     distance); this just smooths the *rendered* number trailing behind
-     them each frame, instead of snapping 1:1 to scroll. Damping stays
-     just above 2·√(stiffness·mass) (~1.15x critical) so it still never
-     overshoots past the target — a lag, not a bounce. Settle time scales
-     with √(mass/stiffness): stiffness 300 (original) settled in ~1-2
-     frames; 120 (previous pass) landed around 300-400ms; this is a
-     further ~2.4x drop in stiffness (~6x off the original 300),
-     targeting a ~600-800ms settle (time constant √(mass/stiffness) ≈
-     141ms, ×5 to reach ~99% ≈ 707ms).
-     Always called (Rules of Hooks — reduced can change at runtime), but
-     it's a no-op under reduced-motion: rawScale/rawY are already flat
-     constants there, and a spring only produces motion when its input
-     changes, so nothing animates either way. */
-  const springConfig = { stiffness: 50, damping: 16, mass: 1 };
+
+  /* The spring is the whole point now, not a garnish. It is smoothing a
+     full-frame travel rather than a 48px nudge, so its trailing is what the
+     eye reads as momentum.
+
+     Settle is bounded by the dwell — the card has to stop moving inside the
+     still phase or it is still travelling when the next handoff starts, which
+     was the original fault. Stiffness 70 settles in ~598ms; HOLD 0.4 gives a
+     dwell of ~320px, about 533ms of scrolling at a leisurely pace, so the
+     card is ~98% of the way there as the dwell ends and finishes inside it.
+     Damping 20 holds the ratio at 1.20: trailing, never overshooting.
+
+     This is the far end of the usable range. Going softer without widening
+     HOLD again walks back into cards that never look settled, which is the
+     fault this whole sequence started with.
+
+     Always called (Rules of Hooks — reduced can change at runtime) but inert
+     under reduced-motion: the inputs are flat constants there, and a spring
+     only moves when its input does. */
+  const springConfig = { stiffness: 70, damping: 20, mass: 1 };
   const scale = useSpring(rawScale, springConfig);
   const y = useSpring(rawY, springConfig);
-  /* Same threshold as the scale-down's own end point — unchanged — but a
-     hard step instead of an eased fade: full opacity for the entire time
-     the card is shrinking, then it disappears outright the instant it's
-     fully covered, rather than gradually dimming into that state. */
-  const opacity = useTransform(progress, (p) => (reduced || isLast || p < end ? 1 : 0));
-  return { scale, y, opacity };
+  /* No opacity handling at all, deliberately.
+
+     There used to be a hard 1 -> 0 step at `end`. Under the old sticky
+     version that was invisible: the covering card was placed straight from
+     scroll, so by `end` it genuinely was in front. Now the covering card is
+     springed and therefore *lags* — at `end` it is still rising, so the card
+     underneath switched itself off while still in plain sight. That snap is
+     the jerk on the way down.
+
+     Nothing has to replace it. .lead-panel is opaque (background: var(--card))
+     and a receding card is scaled to 0.86 about its own top edge and pushed
+     down RECEDE_Y, which insets it on all four sides of the card above — so
+     it is completely occluded the moment that card settles, and visible
+     exactly while it should still be visible. */
+  return { scale, y };
 }
 
-function StackCard({ i, total, progress, card }) {
+function StackCard({ i, total, progress, card, enter, cardH }) {
   const {
-    testId, index, company, role, title, quiet, subtitle, desc,
-    confidentialNote, metrics, tags, image, cursorLabel, link, linkLabel, linkSrOnly,
+    testId, role, title, quiet, subtitle, desc,
+    confidentialNote, tags, image, link,
   } = card;
-  const { scale, y, opacity } = useCardDepth(progress, i, total);
+  const { scale, y } = useCardDepth(progress, i, total, enter, cardH);
+  const navigate = useNavigate();
 
+  /* The whole card opens the case study. There's no visible button: hovering
+     anywhere on the card grows the custom cursor into a "Read case study"
+     label (data-cursor on the article), and a click anywhere goes there.
+
+     Done as a click handler rather than a "stretched link" (an ::after
+     overlay covering the card) so text in the card can still be selected.
+     The handler is a pointer convenience only. The real link is the title:
+     the card's one tab stop, and what keyboard and screen-reader users get.
+     It reads as plain heading text, so nothing visible changes for mouse
+     users, and the focus ring shows on the whole card. */
+  const openFromCard = (e) => {
+    if (e.button !== 0 || e.target.closest("a")) return; // the link handles itself
+    if (window.getSelection()?.toString()) return; // selecting text, not clicking
+    if (e.metaKey || e.ctrlKey || e.shiftKey) {
+      window.open(link, "_blank", "noopener");
+      return;
+    }
+    navigate(link);
+  };
+
+  /* Plain div, not Reveal. Reveal applies its own scroll-triggered opacity and
+     rise, which is a second transform on the same element fighting the one
+     below it — harmless while the cards were sticky and barely moved, wrong
+     now that this transform owns the card's whole travel. */
   return (
-    <Reveal className="stack-item" style={{ "--i": i }}>
+    <div className="stack-item" style={{ "--i": i }}>
       <motion.article
         className={`lead-panel${image ? "" : " no-image"}`}
         data-testid={testId}
-        style={{ scale, y, opacity, originX: 0.5, originY: 0 }}
+        style={{ scale, y, originX: 0.5, originY: 0 }}
+        onClick={openFromCard}
+        data-cursor="Read case study"
       >
-        <div className="lead-top">
-          <span className="lead-index">{index} · {company}</span>
-          {/* Was a static "Full case study" status pill, with the actual
-              read-case link duplicated below under the tags. Consolidated
-              into one clickable CTA here — same pill look (.status-pill),
-              now an actual Link — so there's a single, unambiguous way to
-              open the case study instead of two. */}
-          <Link to={link} className="status-pill" data-testid={card.linkTestId}>
-            {linkLabel}{linkSrOnly && <span className="sr-only"> — {linkSrOnly}</span>} <ArrowUpRight size={14} />
-          </Link>
-        </div>
         <div className="lead-columns">
           <div className="lead-col-text">
-            <p className="lead-role" style={{ marginTop: ".75rem" }}>{role}</p>
-            <h3 {...(cursorLabel && image ? { "data-cursor": cursorLabel, "data-cursor-img": IMG(image.src) } : {})}>
-              {title} {quiet && <span className="quiet">{quiet}</span>}
+            <div className="lead-tags tag-row">
+              {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
+            </div>
+            <p className="lead-role">{role}</p>
+            <h3>
+              <Link to={link} className="lead-title-link" data-testid={card.linkTestId}>
+                {title} {quiet && <span className="quiet">{quiet}</span>}
+              </Link>
             </h3>
             {subtitle && <p className="lead-subtitle">{subtitle}</p>}
             <p className="lead-desc">{desc}</p>
             {confidentialNote && <p className="nda-note">{confidentialNote}</p>}
-            {metrics?.length > 0 && (
-              <div className="lead-metrics">
-                {metrics.map((m, mi) => (
-                  <div key={mi}>
-                    <div className="m-value">{m.value}</div>
-                    <div className="m-label">{m.label}</div>
-                    {m.method && <div className="m-method">{m.method}</div>}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="lead-tags tag-row">
-              {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
-            </div>
           </div>
           {image && (
-            <div className="lead-media" data-cursor={cursorLabel}>
-              <Wipe src={IMG(image.src)} alt={image.alt} testId={`project-image-${card.key}`} />
+            <div className="lead-media">
+              {/* fit="contain", overriding Wipe's cover default, so no image is ever
+                  cropped. All three covers are 4:3 now, matching the frame,
+                  so in practice each one fills it edge to edge. onward-cover
+                  is onward-1.png (6:5, still used on the case study page)
+                  trimmed top and bottom, through the gradient margin only. */}
+              <Wipe
+                src={IMG(image.src)}
+                alt={image.alt}
+                fit="contain"
+                testId={`project-image-${card.key}`}
+              />
             </div>
           )}
         </div>
       </motion.article>
-    </Reveal>
+    </div>
   );
 }
 
@@ -574,9 +614,42 @@ export default function App() {
      useCardDepth for how each card reads its own slice of it. Doesn't
      touch the stack's own sticky top-offsets/CSS. */
   const stackRef = useRef(null);
+  const stackFrameRef = useRef(null);
+  /* The frame is sized by the cards' content, so both numbers the motion
+     needs are measured: the frame's height (also written to --stack-frame-h,
+     which centres the frame on screen) and how far its pinned top sits above
+     the viewport's bottom edge (the distance an incoming card travels). */
+  const [stackFrameH, setStackFrameH] = useState(0);
+  const [stackEnter, setStackEnter] = useState(0);
+  /* useLayoutEffect, not useEffect: this has to land before first paint. The
+     cards' resting positions are derived from this height, so measuring it
+     after paint means every card renders once at a fallback distance and then
+     springs to the real one — a visible settle on load. */
+  useLayoutEffect(() => {
+    const el = stackFrameRef.current;
+    if (!el) return;
+    const measure = () => {
+      const h = el.getBoundingClientRect().height;
+      stackRef.current?.style.setProperty("--stack-frame-h", `${h}px`);
+      setStackFrameH(h);
+      // Read after --stack-frame-h is set, since the sticky top depends on it.
+      setStackEnter(window.innerHeight - parseFloat(getComputedStyle(el).top));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  /* "end end" rather than "end start": the spacer is taller than the frame by
+     exactly the scroll this section should consume, so progress runs 0->1
+     across that surplus. */
   const { scrollYProgress: stackProgress } = useScroll({
     target: stackRef,
-    offset: ["start start", "end start"],
+    offset: ["start start", "end end"],
   });
   const STACK_TOTAL = workCards.length;
 
@@ -934,10 +1007,20 @@ export default function App() {
               </div>
             </div>
 
-            <div className="stack" ref={stackRef}>
-              {workCards.map((card, i) => (
-                <StackCard key={card.key} i={i} total={STACK_TOTAL} progress={stackProgress} card={card} />
-              ))}
+            <div className="stack" ref={stackRef} style={{ "--n": STACK_TOTAL }}>
+              <div className="stack-frame" ref={stackFrameRef}>
+                {workCards.map((card, i) => (
+                  <StackCard
+                    key={card.key}
+                    i={i}
+                    total={STACK_TOTAL}
+                    progress={stackProgress}
+                    card={card}
+                    enter={stackEnter}
+                    cardH={stackFrameH}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </section>

@@ -60,7 +60,9 @@ Kept deliberately small: `framer-motion` (all animation), `lenis` (smooth scroll
 
 ### Styling
 
-Tailwind (`tailwind.config.js`) + hand-written CSS alongside components (`App.css`, `index.css`, `devices.css`, `beforeafter.css`, `preloader.css`, `readmode.css`). `design_guidelines.json` at the repo root documents the design system: typography scale (Outfit/Manrope/JetBrains Mono), the three color themes (paper/carbon/petrol) with hex values, and visual enhancers (noise overlay, scroll progress hairline, etc.) — consult it before changing global visual style rather than reverse-engineering values from CSS.
+Tailwind (`tailwind.config.js`) + hand-written CSS alongside components (`App.css`, `index.css`, `devices.css`, `beforeafter.css`, `preloader.css`, `readmode.css`). `design-system.html` at the repo root documents the design system: the nine-step type scale (each specimen set at its real pixel size), all three color themes (paper/carbon/petrol) with every token and hex, the four breakpoint tiers, and the layout/motion tokens — consult it before changing global visual style rather than reverse-engineering values from CSS.
+
+`App.css` is still the source of truth; `design-system.html` is written from it, so when you change a token, update the guide in the same commit. It replaced `design_guidelines.json`, which had drifted badly — it still named Outfit and Manrope as the type faces long after Bricolage Grotesque replaced both, and its hex values were wrong. One document, not two that can disagree.
 
 #### Type scale — root is 12px, not the browser default 16px
 

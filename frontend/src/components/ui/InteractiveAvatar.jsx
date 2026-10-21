@@ -1,18 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence, useSpring, useMotionValue, useTransform, useReducedMotion } from "framer-motion";
+import { motion, useSpring, useMotionValue, useTransform, useReducedMotion } from "framer-motion";
 
-// Popup lands just outside the avatar's own box (never over the face/body),
-// picked randomly each click from a ring of anchor points around it.
-const BUBBLE_SLOTS = [
-  { top: -9, left: 12 },
-  { top: -9, left: 88 },
-  { top: 30, left: -9 },
-  { top: 30, left: 109 },
-  { top: 68, left: -9 },
-  { top: 68, left: 109 },
-  { top: 100, left: 22 },
-  { top: 100, left: 78 }
-];
 
 /**
  * InteractiveAvatar — Loose, Flowing Hair with Face-Framing Waves
@@ -40,10 +28,7 @@ export default function InteractiveAvatar({
   const reduced = useReducedMotion();
 
   const [isBlinking, setIsBlinking] = useState(false);
-  const [isWinking, setIsWinking] = useState(false);
   const [isHappy, setIsHappy] = useState(false);
-  const [speechBubble, setSpeechBubble] = useState("");
-  const [bubblePos, setBubblePos] = useState(BUBBLE_SLOTS[0]);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -159,24 +144,7 @@ export default function InteractiveAvatar({
     return () => clearTimeout(timer);
   }, []);
 
-  const handleClick = () => {
-    setIsWinking(true);
-    setIsHappy(true);
-    const lines = [
-      "Hi there! 👋",
-      "Welcome to my portfolio! ✨",
-      "Designing with clarity & craft 💡",
-      "Let's build something great 🚀"
-    ];
-    setBubblePos(BUBBLE_SLOTS[Math.floor(Math.random() * BUBBLE_SLOTS.length)]);
-    setSpeechBubble(lines[Math.floor(Math.random() * lines.length)]);
-    setTimeout(() => {
-      setIsWinking(false);
-      setTimeout(() => setSpeechBubble(""), 2600);
-    }, 600);
-  };
-
-  const eyesClosed = isBlinking || isWinking;
+  const eyesClosed = isBlinking;
 
   return (
     <div
@@ -193,41 +161,6 @@ export default function InteractiveAvatar({
       }}
       data-testid="interactive-avatar"
     >
-      {/* Speech bubble — pops up just outside the avatar's box (never over
-          the face/body) at a random anchor point around it each click. */}
-      <AnimatePresence>
-        {speechBubble && (
-          <motion.div
-            key={speechBubble}
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 420, damping: 32 }}
-            className="avatar-speech-bubble"
-            style={{
-              position: "absolute",
-              top: `${bubblePos.top}%`,
-              left: `${bubblePos.left}%`,
-              transform: "translate(-50%, -50%)",
-              background: "var(--card, #FFFFFF)",
-              color: "var(--ink, #14130F)",
-              padding: "7px 14px",
-              borderRadius: "16px",
-              fontFamily: "var(--font-mono, monospace)",
-              fontSize: "0.76rem",
-              fontWeight: 600,
-              boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-              border: "1px solid var(--line, #E5E7EB)",
-              zIndex: 30,
-              whiteSpace: "nowrap",
-              pointerEvents: "none"
-            }}
-          >
-            {speechBubble}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <motion.svg
         viewBox="0 0 440 520"
         fill="none"
@@ -319,39 +252,25 @@ export default function InteractiveAvatar({
              transform so they move as a single rigid figure and never drift
              apart from each other; only the details nested inside (hair-lock
              sway, eye tracking, jhumka swing) move independently. ---------- */}
-        {/* Interactive handlers live here, not on the wrapping <div> — an
-            SVG <g> has no paint of its own, so it only receives hover/click
+        {/* Hover handlers live here, not on the wrapping <div> — an
+            SVG <g> has no paint of its own, so it only receives hover
             when the pointer actually lands on a child shape (visiblePainted
             default). Putting them on the outer div instead made the whole
             rectangular bounding box hoverable, including transparent
             padding around the figure, which read as "hover works outside
             her" — this fixes it to the drawn silhouette only. */}
         <motion.g
-          onClick={handleClick}
           onMouseEnter={() => setIsHappy(true)}
           onMouseLeave={() => setIsHappy(false)}
-          onFocus={() => setIsHappy(true)}
-          onBlur={() => setIsHappy(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleClick();
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          aria-label="Say hello"
-          data-cursor="Click me"
           style={
             reduced
-              ? { cursor: "pointer" }
+              ? undefined
               : {
                   rotateY: figureRotateY,
                   rotateX: figureRotateX,
                   x: figureX,
                   y: figureY,
-                  transformOrigin: "220px 270px",
-                  cursor: "pointer"
+                  transformOrigin: "220px 270px"
                 }
           }
         >

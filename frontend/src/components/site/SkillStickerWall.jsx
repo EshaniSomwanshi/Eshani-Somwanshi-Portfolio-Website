@@ -40,7 +40,7 @@ export const PHYSICS = {
   /* One-time pause after the section scrolls into view before the first cube
      drops, so the wall doesn't burst into motion the instant it appears.
      Unrelated to maxThrowSpeed above, which governs post-throw settle time. */
-  entryDelay: 1500,      // ms
+  entryDelay: 1000,      // ms
   /* Coarse pointers get no drag-and-throw (Matter's touch handlers would eat
      page scrolling), so a tap instead shoves the nearby cubes apart — the
      wall stays playable on a phone without hijacking the scroll.
