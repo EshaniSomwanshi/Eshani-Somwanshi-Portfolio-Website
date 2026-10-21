@@ -66,7 +66,7 @@ const navItems = [
   ["about", "About"],
 ];
 
-const RESUME_URL = "https://drive.google.com/file/d/1nMU-IFwWzMEcfJsD9FHLgwEyCda2ZLoo/preview";
+const RESUME_URL = "https://drive.google.com/file/d/1sOELFFUzc0WJkwo07tlgnQlvxnxW0CGZ/preview";
 
 /* ========================================================================
    Cursor — dot + ring, with a contextual label (and optional preview image)
