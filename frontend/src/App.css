@@ -70,9 +70,9 @@
      If you want quieter body text, set --font-body to 'Instrument Sans'. */
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
-  /* Only the ESHANI backdrop behind the hero avatar. Bebas Neue ships in a
-     single weight (400), so don't set font-weight on it — the browser would
-     fake a bold. */
+  /* Only the hero: the ESHANI backdrop and the PRODUCT DESIGNER line above
+     the avatar. Bebas Neue ships in a single weight (400), so don't set
+     font-weight on it — the browser would fake a bold. */
   --font-wordmark: 'Bebas Neue', 'Bricolage Grotesque', system-ui, sans-serif;
   --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -1580,7 +1580,7 @@ figcaption {
 
 .backdrop-name {
   font-family: var(--font-wordmark);
-  font-size: clamp(5.888rem, 16.78vw, 21.2rem);
+  font-size: clamp(5.2992rem, 15.1vw, 19.08rem);
   font-weight: 400;
   line-height: 0.85;
   letter-spacing: 0.03em;
@@ -1600,9 +1600,11 @@ figcaption {
   gap: 0.4rem;
 }
 .backdrop-sub-line {
-  font-family: var(--font-mono);
+  font-family: var(--font-wordmark);
   font-size: clamp(0.9333rem, 1.2vw, 1.2667rem);
   letter-spacing: 0.25em;
+  /* Same trailing-spacing fix as .backdrop-name; keep equal to letter-spacing. */
+  margin-right: -0.25em;
   text-transform: uppercase;
   color: var(--muted);
   opacity: 0.7;
