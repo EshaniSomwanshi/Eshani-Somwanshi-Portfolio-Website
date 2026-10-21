@@ -247,7 +247,7 @@ const workCards = [
     subtitle: "Streamlining complex diagnostics into a unified, actionable experience.",
     desc: "Streamlining complex diagnostics into one unified, actionable experience for clinicians: a regulated B2B health-tech MVP followed end to end, from heuristic evaluation and stakeholder research through journey mapping, iterative prototyping, and high-fidelity delivery of a diagnostic tool clinicians could trust.",
     tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
-    image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
+    image: { src: "onward-cover.jpg", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
     link: "/work/eye-ai",
     linkTestId: "read-case-eye-ai",
   },
@@ -450,13 +450,11 @@ function StackCard({ i, total, progress, card, enter, cardH }) {
           </div>
           {image && (
             <div className="lead-media">
-              {/* fit="contain", overriding Wipe's cover default. The frame is 4:3
-                  for every card, but only travelogue-cover is a 4:3 image —
-                  myocircle is 2.06:1 and onward is 1.2:1, so cover was cropping
-                  35% off myocircle's sides and 10% off onward's top and bottom.
-                  contain shows each image whole and lets the frame letterbox
-                  instead. Re-export those two at 4:3 and they fill it with no
-                  bands and nothing lost. */}
+              {/* fit="contain", overriding Wipe's cover default, so no image is ever
+                  cropped. All three covers are 4:3 now, matching the frame,
+                  so in practice each one fills it edge to edge. onward-cover
+                  is onward-1.png (6:5, still used on the case study page)
+                  trimmed top and bottom, through the gradient margin only. */}
               <Wipe
                 src={IMG(image.src)}
                 alt={image.alt}

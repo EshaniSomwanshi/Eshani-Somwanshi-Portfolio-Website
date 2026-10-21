@@ -1828,14 +1828,9 @@ figcaption {
 }
 
 /* ---------- media inside the lead panel ---------- */
-/* One 4:3 enclosure for all three cards, so the frame is consistent from
-   card to card rather than taking whichever ratio the first image happened
-   to have (it was pinned to 1100x535, myocircle's shape).
-
-   Only travelogue-cover.png is actually 4:3 (1600x1200). myocircle is
-   2.06:1 and onward is 1.2:1, so with object-fit: contain those two letter-
-   box inside the frame rather than filling it — nothing is cropped, which
-   is the deliberate trade. Re-export those two at 4:3 and they fill it. */
+/* One 4:3 enclosure for all three cards, and all three cover images are
+   4:3 (myocircle-cover, onward-cover, travelogue-cover), so each fills the
+   frame with nothing letterboxed or cropped. */
 .lead-media {
   border: 1px solid var(--line);
   border-radius: 4px;
