@@ -738,35 +738,6 @@ figcaption {
   transition: transform .6s var(--ease-state);
 }
 .lead-panel:hover::after { transform: scaleX(1); }
-.lead-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 2rem;
-  flex-wrap: wrap;
-  align-items: baseline;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--line);
-}
-.lead-index {
-  font-family: var(--font-mono);
-  font-size: 0.96rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.status-pill {
-  font-family: var(--font-mono);
-  font-size: 0.96rem;
-  background: var(--pill);
-  color: var(--secondary);
-  padding: .45em .85em;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  border-radius: var(--radius-btn);
-}
-/* Scoped to this card only — the same status-pill class is reused
-   elsewhere ("Under NDA") and must keep its original look there. */
-.lead-panel .status-pill,
 .lead-panel .read-case {
   display: inline-flex;
   align-items: center;
@@ -780,15 +751,14 @@ figcaption {
 }
 .lead-panel .read-case { padding-bottom: .5em; width: fit-content; }
 .lead-panel .read-case::after { display: none; }
-.lead-panel .status-pill:hover,
 .lead-panel .read-case:hover,
 .lead-panel .read-case:focus-visible {
   background: var(--accent-strong);
   color: var(--card);
 }
 /* The whole card is clickable (StackCard's onClick), so hovering anywhere on
-   it shows the pill's hover state and tints the card's border — the cue that
-   the click goes somewhere. Hover-capable pointers only, so a tap on a phone
+   it tints the card's border and (via data-cursor) turns the custom cursor
+   into a "Read case study" label — the cue that the click goes somewhere. Hover-capable pointers only, so a tap on a phone
    doesn't leave the card stuck looking hovered. Colour only: the card's
    transform belongs to the scroll spring and must not be touched here. */
 @media (hover: hover) {
@@ -797,10 +767,15 @@ figcaption {
     transition: border-color var(--dur-fast) var(--ease-state);
   }
   .lead-panel:hover { border-color: var(--accent-strong); }
-  .lead-panel:hover .status-pill {
-    background: var(--accent-strong);
-    color: var(--card);
-  }
+}
+/* The title is the card's real link (keyboard / screen reader); it looks
+   like plain heading text. Its focus ring goes on the whole card instead,
+   since the whole card is what it opens. */
+.lead-title-link { color: inherit; text-decoration: none; }
+.lead-title-link:focus-visible { outline: none; }
+.lead-panel:has(.lead-title-link:focus-visible) {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 4px;
 }
 .lead-panel h3 {
   font-family: var(--font-display);
@@ -822,11 +797,9 @@ figcaption {
   margin-bottom: 0.5333rem;
 }
 /* Type-scale steps for this card's smaller/utility text — all scoped to
-   .lead-panel since .lead-role/.lead-index/.tag/.read-case are reused by
+   .lead-panel since .lead-role/.tag/.read-case are reused by
    other cards elsewhere on the page. "small" step (10.67px). */
 .lead-panel .lead-role,
-.lead-panel .lead-index,
-.lead-panel .status-pill,
 .lead-panel .read-case,
 .lead-panel .tag {
   font-size: .889rem;
@@ -1322,10 +1295,14 @@ figcaption {
 }
 .cursor-ring[data-state="link"] { width: 56px; height: 56px; }
 /* Media hover, no preview image: filled circle with just the label (original look). */
+/* --accent-strong, not --accent: the label is small text, and in paper the
+   bg on --accent was 3.52:1. On --accent-strong it's 5.01 (paper), 9.5
+   (carbon), 13.07 (petrol). Wraps onto two lines so multi-word labels
+   ("Read case study") fit inside the circle. */
 .cursor-ring[data-state="media"] {
   width: 84px; height: 84px;
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
 }
 /* Media hover, with a preview image: grows into a rounded thumbnail card. */
 .cursor-ring[data-state="media"][data-has-img="true"] {
@@ -1350,6 +1327,12 @@ figcaption {
   white-space: nowrap;
 }
 .cursor-ring[data-state="media"] .cursor-label { opacity: 1; }
+.cursor-ring[data-state="media"]:not([data-has-img="true"]) .cursor-label {
+  white-space: normal;
+  text-align: center;
+  max-width: 68px;
+  line-height: 1.3;
+}
 @media (pointer: coarse) { .cursor-dot, .cursor-ring { display: none; } }
 
 /* ---------- case study page ---------- */

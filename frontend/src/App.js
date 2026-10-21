@@ -239,7 +239,6 @@ const workCards = [
     ],
     tags: ["AI companion", "Healthcare SaaS", "Design system"],
     image: { src: "myocircle-cover.png", alt: "MyoCircle mobile app across two phones, an AI-companion health app with achievement badges and a gamified exercise flow." },
-    cursorLabel: "MyoCircle",
     link: "/work/optrahealth",
     linkTestId: "read-case-optra",
   },
@@ -259,7 +258,6 @@ const workCards = [
     ],
     tags: ["Healthcare", "Research", "Prototyping", "Reporting"],
     image: { src: "onward-1.png", alt: "Eye AI product site: onboarding clinicians to the diagnostic platform" },
-    cursorLabel: "EYE AI",
     link: "/work/eye-ai",
     linkTestId: "read-case-eye-ai",
   },
@@ -278,7 +276,6 @@ const workCards = [
     ],
     tags: ["Personal project", "Mobile UX", "Research-led"],
     image: { src: "travelogue-cover.png", alt: "Travelogue home feed and a group trip hub shown side by side on two phones." },
-    cursorLabel: "Travelogue",
     link: "/work/travelogue",
     linkTestId: "read-case-travelogue",
   },
@@ -407,19 +404,22 @@ function useCardDepth(progress, i, total, vh) {
 
 function StackCard({ i, total, progress, card, vh }) {
   const {
-    testId, index, company, role, title, quiet, subtitle, desc,
-    confidentialNote, metrics, tags, image, cursorLabel, link,
+    testId, role, title, quiet, subtitle, desc,
+    confidentialNote, metrics, tags, image, link,
   } = card;
   const { scale, y } = useCardDepth(progress, i, total, vh);
   const navigate = useNavigate();
 
-  /* The whole card opens the case study, not just the pill. Done as a click
-     handler on the article rather than a "stretched link" (an ::after on the
-     pill covering the card): that overlay would sit on top of the title and
-     image, so the custom cursor's [data-cursor] lookups would never hit them
-     and text in the card couldn't be selected. The pill stays the one real
-     link — the only tab stop, and what keyboard and screen-reader users get —
-     so this handler is a pointer convenience on top of it, not a replacement. */
+  /* The whole card opens the case study. There's no visible button: hovering
+     anywhere on the card grows the custom cursor into a "Read case study"
+     label (data-cursor on the article), and a click anywhere goes there.
+
+     Done as a click handler rather than a "stretched link" (an ::after
+     overlay covering the card) so text in the card can still be selected.
+     The handler is a pointer convenience only. The real link is the title:
+     the card's one tab stop, and what keyboard and screen-reader users get.
+     It reads as plain heading text, so nothing visible changes for mouse
+     users, and the focus ring shows on the whole card. */
   const openFromCard = (e) => {
     if (e.button !== 0 || e.target.closest("a")) return; // the link handles itself
     if (window.getSelection()?.toString()) return; // selecting text, not clicking
@@ -441,25 +441,15 @@ function StackCard({ i, total, progress, card, vh }) {
         data-testid={testId}
         style={{ scale, y, originX: 0.5, originY: 0 }}
         onClick={openFromCard}
+        data-cursor="Read case study"
       >
-        <div className="lead-top">
-          <span className="lead-index">{index} · {company}</span>
-          {/* Was a static "Full case study" status pill, with the actual
-              read-case link duplicated below under the tags. Consolidated
-              into one clickable CTA here — same pill look (.status-pill),
-              now an actual Link — so there's a single, unambiguous way to
-              open the case study instead of two. Same visible label on every
-              card, so the sr-only title is what tells them apart in a
-              screen reader's links list (A11Y_AUDIT #11). */}
-          <Link to={link} className="status-pill" data-testid={card.linkTestId}>
-            Read Case Study<span className="sr-only"> — {title}</span> <ArrowUpRight size={14} />
-          </Link>
-        </div>
         <div className="lead-columns">
           <div className="lead-col-text">
-            <p className="lead-role" style={{ marginTop: ".75rem" }}>{role}</p>
-            <h3 {...(cursorLabel && image ? { "data-cursor": cursorLabel, "data-cursor-img": IMG(image.src) } : {})}>
-              {title} {quiet && <span className="quiet">{quiet}</span>}
+            <p className="lead-role">{role}</p>
+            <h3>
+              <Link to={link} className="lead-title-link" data-testid={card.linkTestId}>
+                {title} {quiet && <span className="quiet">{quiet}</span>}
+              </Link>
             </h3>
             {subtitle && <p className="lead-subtitle">{subtitle}</p>}
             <p className="lead-desc">{desc}</p>
@@ -480,7 +470,7 @@ function StackCard({ i, total, progress, card, vh }) {
             </div>
           </div>
           {image && (
-            <div className="lead-media" data-cursor={cursorLabel}>
+            <div className="lead-media">
               {/* fit="contain", overriding Wipe's cover default. The frame is 4:3
                   for every card, but only travelogue-cover is a 4:3 image —
                   myocircle is 2.06:1 and onward is 1.2:1, so cover was cropping
