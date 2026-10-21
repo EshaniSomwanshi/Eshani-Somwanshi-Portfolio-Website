@@ -1295,14 +1295,15 @@ figcaption {
 }
 .cursor-ring[data-state="link"] { width: 56px; height: 56px; }
 /* Media hover, no preview image: filled circle with just the label (original look). */
-/* --accent-strong, not --accent: the label is small text, and in paper the
-   bg on --accent was 3.52:1. On --accent-strong it's 5.01 (paper), 9.5
-   (carbon), 13.07 (petrol). Wraps onto two lines so multi-word labels
-   ("Read case study") fit inside the circle. */
+/* A rounded rectangle sized to its label, in --accent at 80% (the fill
+   only, so the label itself stays fully opaque). Width/height are auto, so
+   the grow from the 34px ring snaps rather than animating. */
 .cursor-ring[data-state="media"] {
-  width: 84px; height: 84px;
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
+  width: auto; height: auto;
+  padding: .6667rem 1rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 80%, transparent);
+  border-color: transparent;
 }
 /* Media hover, with a preview image: grows into a rounded thumbnail card. */
 .cursor-ring[data-state="media"][data-has-img="true"] {
@@ -1327,12 +1328,6 @@ figcaption {
   white-space: nowrap;
 }
 .cursor-ring[data-state="media"] .cursor-label { opacity: 1; }
-.cursor-ring[data-state="media"]:not([data-has-img="true"]) .cursor-label {
-  white-space: normal;
-  text-align: center;
-  max-width: 68px;
-  line-height: 1.3;
-}
 @media (pointer: coarse) { .cursor-dot, .cursor-ring { display: none; } }
 
 /* ---------- case study page ---------- */
