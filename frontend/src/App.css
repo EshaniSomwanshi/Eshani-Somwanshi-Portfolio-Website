@@ -1591,10 +1591,10 @@ figcaption {
   font-weight: 400;
   line-height: 0.85;
   letter-spacing: 0.03em;
-  /* Cancels the letter-spacing CSS adds after the last letter, which made the
-     visible word sit half of it (~4px) left of centre. Keep equal to
-     letter-spacing. */
-  margin-right: -0.03em;
+  /* -0.03em cancels the letter-spacing CSS adds after the last letter (keep
+     equal to letter-spacing). The extra -0.021em offsets Syne's uneven side
+     bearings on "E" and "I", which left the word ~1.5px left of centre. */
+  margin-right: -0.051em;
   color: var(--accent);
   opacity: 0.22;
   transition: opacity 0.3s ease;
