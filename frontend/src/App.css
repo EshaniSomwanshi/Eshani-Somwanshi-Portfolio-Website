@@ -1592,12 +1592,11 @@ figcaption {
   font-size: clamp(5.66rem, 16.13vw, 20.38rem);
   font-weight: 700;
   line-height: 0.85;
-  letter-spacing: 0.03em;
-  /* Centring. The word's visible letters sit left of its box centre (the
-     trailing letter-spacing plus Syne's side bearings); this margin is solved
-     for that: 2 x (ink centre - box centre), in em. Re-solve it if
-     letter-spacing or weight change. */
-  margin-right: -0.048em;
+  letter-spacing: 0;
+  /* Centring. Syne's side bearings leave the visible letters left of the
+     box centre; this margin is solved for that: 2 x (ink centre - box
+     centre), in em. Re-solve it if letter-spacing or weight change. */
+  margin-right: -0.018em;
   color: var(--accent);
   opacity: 0.22;
   transition: opacity 0.3s ease;
