@@ -1984,6 +1984,19 @@ figcaption {
    JetBrains Mono text on the home page switches at once. Case-study pages
    keep JetBrains Mono. */
 .portfolio-shell { --font-mono: var(--font-chrome); }
+
+/* ---------- Home page: Bricolage Grotesque -> Newsreader + Syne ----------
+   One block so it can be reverted as a unit. Inside .portfolio-shell (home
+   only) every --font-display use (headings, card titles, marquee, mobile menu,
+   preloader letters) resolves to Newsreader, and --font-body (running copy,
+   form fields) to Syne. font-family is restated on the shell because body's
+   own font-family resolved --font-body outside it. Case-study pages keep
+   Bricolage. */
+.portfolio-shell {
+  --font-display: var(--font-editorial);
+  --font-body: var(--font-chrome);
+  font-family: var(--font-body);
+}
 .nav-links,
 .theme-dot,
 .avail-badge,
