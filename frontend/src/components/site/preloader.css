@@ -57,15 +57,24 @@
 
 .intro-sub {
   font-family: var(--font-mono);
-  font-size: 1rem; /* type scale "p", 12px (was 0.96rem) */
+  /* Type scale, one step per breakpoint tier: phone p (12px), tablet h6
+     (13.5px), laptop h5 (15.19px), desktop h4 (17.09px). Desktop is the
+     base rule; the tiers below step down, matching the site's queries. */
+  font-size: 1.424rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--inv-muted);
 }
 
+@media (max-width: 1280px) {
+  .intro-sub { font-size: 1.266rem; }
+}
+@media (max-width: 1024px) {
+  .intro-sub { font-size: 1.125rem; }
+}
 @media (max-width: 576px) {
   .intro-letter { letter-spacing: -0.03em; }
-  .intro-sub { font-size: .889rem; letter-spacing: 0.18em; } /* type scale "small", 10.67px (was 0.8267rem) */
+  .intro-sub { font-size: 1rem; letter-spacing: 0.18em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
