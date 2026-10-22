@@ -74,6 +74,8 @@
      the avatar. Bebas Neue ships in a single weight (400), so don't set
      font-weight on it — the browser would fake a bold. */
   --font-wordmark: 'Bebas Neue', 'Bricolage Grotesque', system-ui, sans-serif;
+  /* Home-page headings only (see the override block at the end of this file). */
+  --font-editorial: 'Newsreader', Georgia, serif;
   --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
@@ -1928,4 +1930,24 @@ figcaption {
   .back-to-top,
   .back-to-top-label { transition-duration: .01ms; }
   .back-to-top { transform: none; }
+}
+
+/* ---------- Newsreader headings (home page) ----------
+   One block so it can be reverted as a unit. Section labels are scoped to the
+   home sections because .section-label is reused on case-study pages. The
+   italic accents switch from Instrument Serif to Newsreader italic so each
+   heading stays in one family. */
+.hero-main-title,
+#work .section-label,
+#offer .section-label,
+.sticker-overlay .section-label,
+#tools .section-label,
+#about .section-label,
+.section-head h2,
+.offer-head h3,
+.contact h2,
+.hero-serif-accent,
+.section-head h2 em,
+.contact h2 em {
+  font-family: var(--font-editorial);
 }
