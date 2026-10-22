@@ -63,24 +63,19 @@
   --grain-blend: multiply;
   --grain-opacity: .05;
 
-  /* Three families, not four. Outfit and Manrope were two geometric sans with
-     near-identical proportions — the cost of two, the variety of one, and both
-     are the Framer/Webflow defaults. Bricolage Grotesque is variable with an
-     optical-size axis, so it carries display and body on its own.
-     If you want quieter body text, set --font-body to 'Instrument Sans'. */
-  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
-  --font-serif: 'Instrument Serif', Georgia, serif;
-  /* Was the hero ESHANI + PRODUCT DESIGNER lines; both are Syne now, so this
-     is currently unused. Bebas Neue ships in a single weight (400), so don't set
-     font-weight on it — the browser would fake a bold. */
-  --font-wordmark: 'Bebas Neue', 'Bricolage Grotesque', system-ui, sans-serif;
-  /* Home-page headings only (see the override block at the end of this file). */
+  /* Two families, site-wide (2026-10-21): Newsreader for headings and large
+     text, Syne for body copy and every small/label text. They replaced
+     Bricolage Grotesque (display + body), Instrument Serif (italic accents)
+     and JetBrains Mono (labels). The older token names are kept as roles so
+     existing rules didn't need touching:
+       --font-display, --font-serif -> Newsreader
+       --font-body, --font-mono     -> Syne */
   --font-editorial: 'Newsreader', Georgia, serif;
-  /* Header nav, theme switch, hero badge + location pill (override block at
-     the end of this file). */
   --font-chrome: 'Syne', system-ui, sans-serif;
-  --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: var(--font-editorial);
+  --font-serif: var(--font-editorial);
+  --font-body: var(--font-chrome);
+  --font-mono: var(--font-chrome);
 
   /* Fluid rather than a step at 576. The header used to snap from 78px to
      64px on crossing the phone breakpoint, taking every sticky offset and
@@ -1977,26 +1972,8 @@ figcaption {
 .contact h2 { font-weight: 400; }
 
 /* ---------- Syne UI chrome ----------
-   One block so it can be reverted as a unit. Was JetBrains Mono.
-
-   Home page: every var(--font-mono) inside .portfolio-shell (App's root,
-   which case-study pages don't use) resolves to Syne instead, so all
-   JetBrains Mono text on the home page switches at once. Case-study pages
-   keep JetBrains Mono. */
-.portfolio-shell { --font-mono: var(--font-chrome); }
-
-/* ---------- Home page: Bricolage Grotesque -> Newsreader + Syne ----------
-   One block so it can be reverted as a unit. Inside .portfolio-shell (home
-   only) every --font-display use (headings, card titles, marquee, mobile menu,
-   preloader letters) resolves to Newsreader, and --font-body (running copy,
-   form fields) to Syne. font-family is restated on the shell because body's
-   own font-family resolved --font-body outside it. Case-study pages keep
-   Bricolage. */
-.portfolio-shell {
-  --font-display: var(--font-editorial);
-  --font-body: var(--font-chrome);
-  font-family: var(--font-body);
-}
+   Was JetBrains Mono. Now redundant with the root tokens (--font-mono is
+   Syne site-wide) but kept as the explicit record of these four. */
 .nav-links,
 .theme-dot,
 .avail-badge,

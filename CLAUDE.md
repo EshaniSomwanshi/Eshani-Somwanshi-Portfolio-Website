@@ -64,6 +64,8 @@ Tailwind (`tailwind.config.js`) + hand-written CSS alongside components (`App.cs
 
 `App.css` is still the source of truth; `design-system.html` is written from it, so when you change a token, update the guide in the same commit. It replaced `design_guidelines.json`, which had drifted badly — it still named Outfit and Manrope as the type faces long after Bricolage Grotesque replaced both, and its hex values were wrong. One document, not two that can disagree.
 
+**Typefaces (2026-10-21):** two families site-wide — **Newsreader** for headings and large text, **Syne** for body copy and every label/small text. They're wired through the existing role tokens in `App.css` (`--font-display`/`--font-serif` → Newsreader, `--font-body`/`--font-mono` → Syne), so new rules should keep using those role tokens rather than naming a family.
+
 #### Type scale — root is 12px, not the browser default 16px
 
 `App.css` sets `html { font-size: 75%; }`, making **`1rem` equal 12px everywhere on this site** (75% of the user's own browser default, so it still respects a changed default font-size setting rather than hard-coding 12px). This means [typescale.com](https://typescale.com)'s own rem output — base 12, 1.125 (major second) ratio — can be pasted in **verbatim**, with no recalculation:
