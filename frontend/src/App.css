@@ -1980,3 +1980,15 @@ figcaption {
 .hero-location-pill {
   font-family: var(--font-chrome);
 }
+
+/* ---------- Case-study headings at Medium ----------
+   Matches the home page's section labels (500). Covers the page title and the
+   numbered content labels ("01 · Overview"), in both the section and chapter
+   layouts. The Syne heading under each label and the left-hand TOC are
+   untouched. */
+.cs-title,
+.cs-section .section-label,
+.cs-chapter .section-label,
+.cs-chapter h2 {
+  font-weight: 500;
+}
