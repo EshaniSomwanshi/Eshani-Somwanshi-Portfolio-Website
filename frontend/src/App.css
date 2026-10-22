@@ -1585,16 +1585,22 @@ figcaption {
 
 .backdrop-name {
   font-family: var(--font-chrome);
-  /* Syne is far wider than Bebas Neue: x0.6503 keeps the word as wide as it
-     was in Bebas (was clamp(5.2992rem, 15.1vw, 19.08rem)). */
-  font-size: clamp(3.446rem, 9.82vw, 12.41rem);
-  font-weight: 400;
+  /* Syne made to match the Bebas Neue look: x1.068 the Bebas size so the
+     capitals are as tall (Syne's cap height is 0.674em vs Bebas 0.72em),
+     weight 700 for Bebas's heft, and squeezed with scaleX so the word is as
+     wide as it was in Bebas. Bebas size was clamp(5.2992rem, 15.1vw, 19.08rem). */
+  font-size: clamp(5.66rem, 16.13vw, 20.38rem);
+  font-weight: 700;
+  display: inline-block;
+  transform: scaleX(0.4832);
   line-height: 0.85;
   letter-spacing: 0.03em;
-  /* -0.03em cancels the letter-spacing CSS adds after the last letter (keep
-     equal to letter-spacing). The extra -0.021em offsets Syne's uneven side
-     bearings on "E" and "I", which left the word ~1.5px left of centre. */
-  margin-right: -0.051em;
+  /* Centring. The word's visible letters sit left of its box centre (the
+     trailing letter-spacing plus Syne's side bearings), and scaleX shrinks
+     that offset with the letters while the box stays centred. This margin is
+     solved for that: 2 x scaleX x (ink centre - box centre), in em.
+     Re-solve it if letter-spacing, weight or scaleX change. */
+  margin-right: -0.0232em;
   color: var(--accent);
   opacity: 0.22;
   transition: opacity 0.3s ease;
@@ -1608,12 +1614,15 @@ figcaption {
 }
 .backdrop-sub-line {
   font-family: var(--font-chrome);
-  /* x0.72 keeps the line as wide as it was in Bebas (was
-     clamp(0.98rem, 1.26vw, 1.33rem)). */
-  font-size: clamp(0.7056rem, 0.907vw, 0.9576rem);
+  /* Same Bebas-matching recipe as .backdrop-name: x1.068 for cap height,
+     weight 700, scaleX to the Bebas width. Bebas size was
+     clamp(0.98rem, 1.26vw, 1.33rem). */
+  font-size: clamp(1.0466rem, 1.3457vw, 1.4204rem);
+  font-weight: 700;
+  transform: scaleX(0.5631);
   letter-spacing: 0.25em;
-  /* Same trailing-spacing fix as .backdrop-name; keep equal to letter-spacing. */
-  margin-right: -0.25em;
+  /* Centring, solved the same way as .backdrop-name's margin-right. */
+  margin-right: -0.1335em;
   text-transform: uppercase;
   color: var(--muted);
   opacity: 0.7;
