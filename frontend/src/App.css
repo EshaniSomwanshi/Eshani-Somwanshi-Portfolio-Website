@@ -352,7 +352,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 }
 .wordmark {
   font-family: var(--font-mono);
-  font-size: 1.0667rem;
+  font-size: 1rem; /* p step, 12px */
   letter-spacing: .06em;
   font-weight: 500;
   white-space: nowrap;
@@ -383,7 +383,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   display: flex;
   gap: clamp(20px, 2.5vw, 2.8rem);
   font-family: var(--font-mono);
-  font-size: 1.04rem;
+  font-size: 1rem; /* p step, 12px */
 }
 .nav-links a {
   position: relative;
