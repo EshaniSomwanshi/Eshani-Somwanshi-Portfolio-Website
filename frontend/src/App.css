@@ -70,8 +70,8 @@
      If you want quieter body text, set --font-body to 'Instrument Sans'. */
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
-  /* Only the hero: the ESHANI backdrop and the PRODUCT DESIGNER line above
-     the avatar. Bebas Neue ships in a single weight (400), so don't set
+  /* Was the hero ESHANI + PRODUCT DESIGNER lines; both are Syne now, so this
+     is currently unused. Bebas Neue ships in a single weight (400), so don't set
      font-weight on it — the browser would fake a bold. */
   --font-wordmark: 'Bebas Neue', 'Bricolage Grotesque', system-ui, sans-serif;
   /* Home-page headings only (see the override block at the end of this file). */
@@ -1584,8 +1584,10 @@ figcaption {
 }
 
 .backdrop-name {
-  font-family: var(--font-editorial);
-  font-size: clamp(5.2992rem, 15.1vw, 19.08rem);
+  font-family: var(--font-chrome);
+  /* Syne is far wider than Bebas Neue: x0.6503 keeps the word as wide as it
+     was in Bebas (was clamp(5.2992rem, 15.1vw, 19.08rem)). */
+  font-size: clamp(3.446rem, 9.82vw, 12.41rem);
   font-weight: 400;
   line-height: 0.85;
   letter-spacing: 0.03em;
@@ -1605,8 +1607,10 @@ figcaption {
   gap: 0.4rem;
 }
 .backdrop-sub-line {
-  font-family: var(--font-editorial);
-  font-size: clamp(0.98rem, 1.26vw, 1.33rem);
+  font-family: var(--font-chrome);
+  /* x0.72 keeps the line as wide as it was in Bebas (was
+     clamp(0.98rem, 1.26vw, 1.33rem)). */
+  font-size: clamp(0.7056rem, 0.907vw, 0.9576rem);
   letter-spacing: 0.25em;
   /* Same trailing-spacing fix as .backdrop-name; keep equal to letter-spacing. */
   margin-right: -0.25em;
