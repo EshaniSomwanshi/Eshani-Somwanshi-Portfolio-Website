@@ -1951,3 +1951,15 @@ figcaption {
 .contact h2 em {
   font-family: var(--font-editorial);
 }
+/* Medium for the headings themselves; the italic accents keep their own 400. */
+.hero-main-title,
+#work .section-label,
+#offer .section-label,
+.sticker-overlay .section-label,
+#tools .section-label,
+#about .section-label,
+.section-head h2,
+.offer-head h3,
+.contact h2 {
+  font-weight: 500;
+}
