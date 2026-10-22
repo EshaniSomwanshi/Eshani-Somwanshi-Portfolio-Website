@@ -1959,7 +1959,8 @@ figcaption {
 #tools .section-label,
 #about .section-label,
 .section-head h2,
-.offer-head h3,
-.contact h2 {
+.offer-head h3 {
   font-weight: 500;
 }
+/* Lighter than the rest: light-on-dark at ~59px read heavier than 500. */
+.contact h2 { font-weight: 400; }
