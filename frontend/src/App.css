@@ -76,6 +76,9 @@
   --font-wordmark: 'Bebas Neue', 'Bricolage Grotesque', system-ui, sans-serif;
   /* Home-page headings only (see the override block at the end of this file). */
   --font-editorial: 'Newsreader', Georgia, serif;
+  /* Header nav, theme switch, hero badge + location pill (override block at
+     the end of this file). */
+  --font-chrome: 'Syne', system-ui, sans-serif;
   --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
@@ -1964,3 +1967,12 @@ figcaption {
 }
 /* Lighter than the rest: light-on-dark at ~59px read heavier than 500. */
 .contact h2 { font-weight: 400; }
+
+/* ---------- Syne UI chrome ----------
+   One block so it can be reverted as a unit. Was JetBrains Mono. */
+.nav-links,
+.theme-dot,
+.avail-badge,
+.hero-location-pill {
+  font-family: var(--font-chrome);
+}
