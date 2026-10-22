@@ -190,6 +190,15 @@
   font-weight: 500;
   pointer-events: none;
 }
+/* The one exception to the site's 12px minimum (CLAUDE.md): tiles scale
+   with the wall's width, and below ~1080px the longest name ("Illustrator",
+   88px at 12px) is wider than its tile (85px at 1025, ~64px on a phone).
+   Measured: fits from 1100 up. Not one of the site's tiers on purpose; it's
+   where the tile outgrows the label. The Grid view lists every name at
+   full size. */
+@media (max-width: 1080px) {
+  .sticker-label { font-size: .7rem; }
+}
 
 /* --------------------------------------------------------------------------
    Static fallback — before the engine starts, under prefers-reduced-motion,

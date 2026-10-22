@@ -80,7 +80,7 @@ Tailwind (`tailwind.config.js`) + hand-written CSS alongside components (`App.cs
 | small | .889rem | 10.67px |
 | smaller | .79rem | 9.48px |
 
-**Minimum text size is the `p` step (1rem, 12px) at every width, phone included** (set 2026-10-21): `small` and `smaller` are retired, and every size that was below 1rem was raised to 1rem. Hierarchy starts at `p` and goes up.
+**Minimum text size is the `p` step (1rem, 12px) at every width, phone included** (set 2026-10-21): `small` and `smaller` are retired, and every size that was below 1rem was raised to 1rem. Hierarchy starts at `p` and goes up. One deliberate exception: the sticker-wall tool names (`.sticker-label`) drop to .7rem (8.4px) at ≤1080px so they fit their tiles; the Grid view shows the names at full size.
 
 When touching typography on this site, map elements to the nearest step above rather than picking an arbitrary size — not every step needs to appear in a given component; skip levels that don't correspond to a real distinct role.
 
