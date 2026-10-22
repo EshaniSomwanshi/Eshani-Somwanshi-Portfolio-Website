@@ -36,9 +36,9 @@
   font-family: var(--font-chrome); /* Syne; was --font-display */
   font-weight: 600;
   /* Display size, above the type scale's h1, so it uses the same 1.125 ratio
-     extended upward: 12 x 1.125^12 (48.2px) on phones up to 12 x 1.125^21
+     extended upward: 12 x 1.125^12 (49.3px) on phones up to 12 x 1.125^21
      (142.4px) on laptops. Was clamp(4rem, 13vw, 12rem). */
-  font-size: clamp(4.0136rem, 13vw, 11.863rem);
+  font-size: clamp(4.1099rem, 13vw, 11.863rem);
   line-height: 0.9;
   letter-spacing: -0.045em;
   will-change: transform;
