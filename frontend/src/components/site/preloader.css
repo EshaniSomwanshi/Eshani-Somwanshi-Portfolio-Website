@@ -35,7 +35,10 @@
   display: inline-block;
   font-family: var(--font-chrome); /* Syne; was --font-display */
   font-weight: 600;
-  font-size: clamp(4rem, 13vw, 12rem);
+  /* Display size, above the type scale's h1, so it uses the same 1.125 ratio
+     extended upward: 12 x 1.125^12 (48.2px) on phones up to 12 x 1.125^21
+     (142.4px) on laptops. Was clamp(4rem, 13vw, 12rem). */
+  font-size: clamp(4.0136rem, 13vw, 11.863rem);
   line-height: 0.9;
   letter-spacing: -0.045em;
   will-change: transform;
@@ -54,7 +57,7 @@
 
 .intro-sub {
   font-family: var(--font-mono);
-  font-size: 0.96rem;
+  font-size: 1rem; /* type scale "p", 12px (was 0.96rem) */
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--inv-muted);
@@ -62,7 +65,7 @@
 
 @media (max-width: 576px) {
   .intro-letter { letter-spacing: -0.03em; }
-  .intro-sub { font-size: 0.8267rem; letter-spacing: 0.18em; }
+  .intro-sub { font-size: .889rem; letter-spacing: 0.18em; } /* type scale "small", 10.67px (was 0.8267rem) */
 }
 
 @media (prefers-reduced-motion: reduce) {
