@@ -1376,7 +1376,12 @@ figcaption {
 .cs-hero { padding-top: clamp(4.6667rem, 8vw, 9.3333rem); padding-bottom: clamp(3.3333rem, 5vw, 5.3333rem); }
 .cs-title {
   font-family: var(--font-display);
-  font-size: clamp(3.0667rem, 5.4vw, 6.1333rem);
+  /* Display size, so it continues the type scale's 1.125 ratio above h1
+     (12 x 1.125^n), one step per breakpoint tier, each the step nearest the
+     old fluid size: desktop 1.125^15 = 70.22px (this rule), laptop 1.125^14
+     = 62.42px, tablet 1.125^11 = 43.84px, phone 1.125^10 = 38.97px.
+     Was clamp(3.0667rem, 5.4vw, 6.1333rem) = 36.8 -> 73.6px. */
+  font-size: 5.8518rem;
   font-weight: 600;
   letter-spacing: -.038em;
   line-height: 1.01;
@@ -1997,3 +2002,8 @@ figcaption {
 .cs-next-link {
   font-weight: 500;
 }
+
+/* .cs-title steps (see the base rule). */
+@media (max-width: 1280px) { .cs-title { font-size: 5.2016rem; } }
+@media (max-width: 1024px) { .cs-title { font-size: 3.6532rem; } }
+@media (max-width: 576px)  { .cs-title { font-size: 3.2473rem; } }
