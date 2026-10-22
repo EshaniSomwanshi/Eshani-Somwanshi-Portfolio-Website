@@ -1385,7 +1385,10 @@ figcaption {
   font-weight: 600;
   letter-spacing: -.038em;
   line-height: 1.01;
-  max-width: 18ch;
+  /* No width cap: each entry in titleLines (caseStudies.js) is its own line,
+     and an 18ch cap was wrapping those again (3 rows for a 2-line title).
+     Narrow screens still wrap naturally. */
+  max-width: none;
   margin-top: 1.8667rem;
 }
 .cs-title .line { display: block; overflow: hidden; padding-bottom: .09em; }
