@@ -1969,7 +1969,13 @@ figcaption {
 .contact h2 { font-weight: 400; }
 
 /* ---------- Syne UI chrome ----------
-   One block so it can be reverted as a unit. Was JetBrains Mono. */
+   One block so it can be reverted as a unit. Was JetBrains Mono.
+
+   Home page: every var(--font-mono) inside .portfolio-shell (App's root,
+   which case-study pages don't use) resolves to Syne instead, so all
+   JetBrains Mono text on the home page switches at once. Case-study pages
+   keep JetBrains Mono. */
+.portfolio-shell { --font-mono: var(--font-chrome); }
 .nav-links,
 .theme-dot,
 .avail-badge,
