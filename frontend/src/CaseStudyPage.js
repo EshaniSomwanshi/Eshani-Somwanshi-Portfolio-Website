@@ -79,7 +79,7 @@ function CaseStudySection({ index, section, company }) {
   return (
     <section
       id={section.id}
-      className="cs-section container"
+      className="cs-section"
       data-testid={`cs-section-${section.id}`}
     >
       <Reveal>
