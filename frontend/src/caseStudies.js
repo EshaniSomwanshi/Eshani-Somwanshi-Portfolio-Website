@@ -239,7 +239,7 @@ export const caseStudies = [
     company: "Travelogue · personal case study",
     period: "Personal project · 2025",
     role: "Product Designer",
-    titleLines: ["One home", "for every trip."],
+    titleLines: ["One home for every trip."],
     tags: ["Social Experience Design", "Information Architecture", "Visual Storytelling"],
     /* NOTE: info content/travelogue-content.md's Research section says "11
        participants (aged 18-35)"; this metric (below) and the existing
