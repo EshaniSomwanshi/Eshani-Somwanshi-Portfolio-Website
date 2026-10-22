@@ -15,7 +15,7 @@
 .readmode-note {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 0.9333rem;
+  font-size: 1rem;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
@@ -34,7 +34,7 @@
   background: transparent;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 0.96rem;
+  font-size: 1rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.8267rem 1.4rem;
@@ -48,7 +48,7 @@
 }
 .readmode-btn + .readmode-btn { border-left: 1px solid var(--line); }
 .readmode-btn span {
-  font-size: 0.8rem;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   opacity: 0.6;
   text-transform: none;

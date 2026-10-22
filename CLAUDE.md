@@ -80,6 +80,8 @@ Tailwind (`tailwind.config.js`) + hand-written CSS alongside components (`App.cs
 | small | .889rem | 10.67px |
 | smaller | .79rem | 9.48px |
 
+**Minimum text size is the `p` step (1rem, 12px) at every width, phone included** (set 2026-10-21): `small` and `smaller` are retired, and every size that was below 1rem was raised to 1rem. Hierarchy starts at `p` and goes up.
+
 When touching typography on this site, map elements to the nearest step above rather than picking an arbitrary size — not every step needs to appear in a given component; skip levels that don't correspond to a real distinct role.
 
 Every rem value that existed anywhere in the codebase *before* this root change (2026-09-06) was mechanically rescaled by 16/12 at the same time, specifically to keep every existing size/spacing pixel-identical — so this was not a visual regression, just a base-unit change. Don't rescale things again; only *new* rem values you write should use the type-scale table above directly.

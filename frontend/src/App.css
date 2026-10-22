@@ -271,7 +271,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 /* ---------- shared type ---------- */
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 0.96rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: .14em;
   color: var(--secondary);
@@ -415,7 +415,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   border-radius: 4px;
   padding: .5em 1.05em;
   color: var(--ink) !important;
-  font-size: 0.96rem;
+  font-size: 1rem;
   background-image: linear-gradient(var(--ink), var(--ink));
   background-repeat: no-repeat;
   background-size: 100% 0%;
@@ -467,7 +467,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   min-height: 32px;
   border-radius: 999px;
   font-family: var(--font-mono);
-  font-size: 0.8533rem;
+  font-size: 1rem;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--muted);
@@ -550,7 +550,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
   border-color: var(--inv-line-strong);
   background: var(--inv-bg);
 }
-.theme-switch-mobile .theme-dot { color: var(--inv-muted); min-height: 44px; padding: 0.8rem 1.0667rem; font-size: 0.9333rem; }
+.theme-switch-mobile .theme-dot { color: var(--inv-muted); min-height: 44px; padding: 0.8rem 1.0667rem; font-size: 1rem; }
 .theme-switch-mobile .theme-dot[aria-pressed="true"] { color: var(--inv-ink); background: transparent; box-shadow: inset 0 -1px 0 var(--accent); }
 .theme-switch-mobile .theme-swatch { width: 15px; height: 15px; border-color: var(--inv-line-strong); }
 
@@ -651,7 +651,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .tag-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .tag {
   font-family: var(--font-mono);
-  font-size: 0.9067rem;
+  font-size: 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-btn);
   padding: .35em .75em;
@@ -674,7 +674,7 @@ button { font: inherit; background: none; border: none; cursor: pointer; color: 
 .m-method {
   margin-top: 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.8267rem;
+  font-size: 1rem;
   letter-spacing: .04em;
   line-height: 1.45;
   color: var(--muted);
@@ -690,7 +690,7 @@ figcaption {
   display: block;
   margin-top: 0.8rem;
   font-family: var(--font-mono);
-  font-size: 0.96rem;
+  font-size: 1rem;
   color: var(--muted);
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -803,11 +803,11 @@ figcaption {
 }
 /* Type-scale steps for this card's smaller/utility text — all scoped to
    .lead-panel since .lead-role/.tag/.read-case are reused by
-   other cards elsewhere on the page. "small" step (10.67px). */
+   other cards elsewhere on the page. "p" step (12px), the site minimum. */
 .lead-panel .lead-role,
 .lead-panel .read-case,
 .lead-panel .tag {
-  font-size: .889rem;
+  font-size: 1rem;
 }
 /* Text on the left, image on the right — the row's height is set by the
    text column (its natural content height); the image column has no
@@ -839,7 +839,7 @@ figcaption {
   align-items: center;
   gap: 0.6rem;
   font-family: var(--font-mono);
-  font-size: 0.9867rem;
+  font-size: 1rem;
   letter-spacing: .05em;
   text-transform: uppercase;
   color: var(--accent-strong);
@@ -990,7 +990,7 @@ figcaption {
   justify-content: center;
   gap: 0.6667rem;
   font-family: var(--font-mono);
-  font-size: .889rem;
+  font-size: 1rem;
   line-height: 1;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -1030,7 +1030,7 @@ figcaption {
   background: transparent;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: .889rem;
+  font-size: 1rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   padding: 0.8267rem 1.4rem;
@@ -1104,7 +1104,7 @@ figcaption {
   padding: 0.9333rem 1.2rem;
   background: var(--card);
   border-top: 1px solid var(--line);
-  font-size: 0.9067rem;
+  font-size: 1rem;
 }
 .about-copy p { font-size: 1.36rem; margin-bottom: 1.4667rem; max-width: 62ch; }
 .about-copy p.muted { color: var(--muted); }
@@ -1116,7 +1116,7 @@ figcaption {
   border-top: 1px solid var(--line);
   padding-top: 1.8667rem;
 }
-.about-facts dt { font-family: var(--font-mono); font-size: 0.96rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.about-facts dt { font-family: var(--font-mono); font-size: 1rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .about-facts dd { margin: 0.4rem 0 0; font-size: 1.2533rem; }
 
 /* ---------- contact ---------- */
@@ -1182,7 +1182,7 @@ figcaption {
 .form-field label {
   display: block;
   font-family: var(--font-mono);
-  font-size: 0.9067rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--inv-muted);
@@ -1215,7 +1215,7 @@ figcaption {
 .form-error {
   margin: 0.5333rem 0 0;
   font-family: var(--font-mono);
-  font-size: 0.9867rem;
+  font-size: 1rem;
   color: var(--accent-on-inv);
 }
 /* The global :focus-visible ring uses --accent, which fails 3:1 contrast
@@ -1330,7 +1330,7 @@ figcaption {
 }
 .cursor-label {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 1rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--bg);
@@ -1361,7 +1361,7 @@ figcaption {
   align-items: center;
   gap: 0.6667rem;
   font-family: var(--font-mono);
-  font-size: 0.9867rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--muted);
@@ -1771,7 +1771,7 @@ figcaption {
 
 .hero-location-pill {
   font-family: var(--font-mono);
-  font-size: 0.9867rem;
+  font-size: 1rem;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
@@ -1921,7 +1921,7 @@ figcaption {
   overflow: hidden;
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-size: .889rem;
+  font-size: 1rem;
   font-weight: 500;
   line-height: 1;
   transition:

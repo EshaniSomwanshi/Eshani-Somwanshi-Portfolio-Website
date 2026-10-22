@@ -30,7 +30,7 @@
 
 .cs-toc-heading {
   font-family: var(--font-mono);
-  font-size: .889rem;
+  font-size: 1rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -143,7 +143,7 @@
   background: var(--surface);
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: .79rem;
+  font-size: 1rem;
   letter-spacing: .04em;
   text-align: center;
   padding: 1rem;
@@ -171,6 +171,6 @@
 }
 .cs-video-placeholder span.label {
   font-family: var(--font-mono);
-  font-size: .889rem;
+  font-size: 1rem;
   letter-spacing: .04em;
 }
