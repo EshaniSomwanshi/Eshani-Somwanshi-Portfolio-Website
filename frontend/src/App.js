@@ -226,7 +226,6 @@ const workCards = [
     index: "01",
     company: "OptraHealth",
     statusLabel: "Full case study",
-    role: "Product Designer · Dec 2024 – Mar 2025 · San Jose, CA",
     title: "Pediatric Therapy App",
     quiet: "(Zoe, an AI companion inside a health-tech platform)",
     subtitle: "Companion-guided app connecting patients, parents, and providers.",
@@ -242,7 +241,6 @@ const workCards = [
     index: "02",
     company: "Onward Technologies · EYE AI",
     statusLabel: "Full case study",
-    role: "UX Designer · Jul 2024 – Aug 2024 · Chicago, IL",
     title: "Retinal Diagnostic Platform",
     subtitle: "Streamlining complex diagnostics into a unified, actionable experience.",
     desc: "Streamlining complex diagnostics into one unified, actionable experience for clinicians: a regulated B2B health-tech MVP followed end to end, from heuristic evaluation and stakeholder research through journey mapping, iterative prototyping, and high-fidelity delivery of a diagnostic tool clinicians could trust.",
@@ -257,7 +255,6 @@ const workCards = [
     index: "03",
     company: "Travelogue",
     statusLabel: "Full case study",
-    role: "Product Designer · Personal case study · 2025",
     title: "Travelogue",
     desc: "A self-initiated, research-led concept that consolidates trip planning into one home: upcoming trips, itineraries, documents, and the people coming along, shaped directly by traveler interviews about offline access, group coordination, and expense tracking.",
     tags: ["Personal project", "Mobile UX", "Research-led"],
@@ -394,7 +391,7 @@ function useCardDepth(progress, i, total, enter, cardH) {
 
 function StackCard({ i, total, progress, card, enter, cardH }) {
   const {
-    testId, role, title, quiet, subtitle, desc,
+    testId, title, quiet, subtitle, desc,
     confidentialNote, tags, image, link,
   } = card;
   const { scale, y } = useCardDepth(progress, i, total, enter, cardH);
@@ -438,7 +435,6 @@ function StackCard({ i, total, progress, card, enter, cardH }) {
             <div className="lead-tags tag-row">
               {tags.map((t) => <span className="tag" key={t}>{t}</span>)}
             </div>
-            <p className="lead-role">{role}</p>
             <h3>
               <Link to={link} className="lead-title-link" data-testid={card.linkTestId}>
                 {title} {quiet && <span className="quiet">{quiet}</span>}
