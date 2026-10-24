@@ -1350,7 +1350,17 @@ figcaption {
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   border-bottom: 1px solid var(--line);
 }
-.cs-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 2rem; height: 64px; }
+/* Grid, not flex space-between: equal side columns put the breadcrumb on the
+   true centre of the page regardless of how wide the back link and theme
+   switch are (space-between left it ~18px off). */
+.cs-header-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; height: 64px; }
+.cs-header-inner > :first-child { justify-self: start; }
+.cs-header-inner > :last-child { justify-self: end; }
+/* Phone: no room for back link + breadcrumb + theme switch on one row. */
+@media (max-width: 576px) {
+  .cs-header .cs-breadcrumb { display: none; }
+  .cs-header-inner { grid-template-columns: 1fr auto; }
+}
 .cs-back {
   display: inline-flex;
   align-items: center;
@@ -1513,7 +1523,6 @@ figcaption {
   .about-photo { max-width: 520px; }
   .contact-grid { grid-template-columns: 1fr; align-items: start; }
   .cs-metrics-row { grid-template-columns: repeat(2, 1fr); row-gap: 2.6667rem; }
-  .cs-header .wordmark { display: none; }
 }
 
 @media (max-width: 576px) {
