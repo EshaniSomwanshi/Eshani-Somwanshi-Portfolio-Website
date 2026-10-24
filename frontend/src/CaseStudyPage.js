@@ -204,7 +204,7 @@ export default function CaseStudyPage() {
             transition={{ duration: 0.62, ease: EASE }}
             data-testid="case-eyebrow"
           >
-            {study.company} · {study.period}
+            {study.company}
           </motion.p>
 
           <h1 className="cs-title" data-testid="case-title">
@@ -227,7 +227,6 @@ export default function CaseStudyPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.62, delay: 0.45, ease: EASE }}
           >
-            <span className="lead-role" style={{ margin: 0 }}>{study.role}</span>
             <div className="tag-row">
               {study.tags.map((t) => <span className="tag" key={t}>{t}</span>)}
             </div>
