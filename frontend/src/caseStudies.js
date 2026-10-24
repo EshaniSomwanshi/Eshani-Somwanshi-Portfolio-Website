@@ -17,6 +17,7 @@ export const caseStudies = [
   },
   {
     slug: "eye-ai",
+    crumb: "Eye AI", // name in the case-study navbar breadcrumb
     company: "Onward Technologies · EYE AI",
     period: "Jul 2024 – Aug 2024 · Chicago, IL",
     role: "UX/UI Designer",
@@ -128,6 +129,7 @@ export const caseStudies = [
   },
   {
     slug: "optrahealth",
+    crumb: "MyoCircle", // name in the case-study navbar breadcrumb
     company: "OptraHealth",
     period: "Dec 2024 – Mar 2025 · San Jose, CA",
     role: "Product + UI/UX Designer",
@@ -236,6 +238,7 @@ export const caseStudies = [
   },
   {
     slug: "travelogue",
+    crumb: "Travelogue", // name in the case-study navbar breadcrumb
     company: "Travelogue · personal case study",
     period: "Personal project · 2025",
     role: "Product Designer",

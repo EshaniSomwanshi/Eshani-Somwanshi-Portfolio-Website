@@ -1373,6 +1373,36 @@ figcaption {
 }
 .cs-back:hover { color: var(--ink); gap: 1.0667rem; }
 
+/* Case-study navbar breadcrumb: Home / Work / <project>. Matches the home
+   navbar (Syne, 12px, muted links). Links get the same invisible hit-area
+   pseudo-element as .cs-back to reach the 24px minimum target size. */
+.cs-breadcrumb ol {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6667rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--muted);
+}
+/* Separator is decoration: the empty alt text after the slash keeps screen
+   readers from announcing it. */
+.cs-breadcrumb li + li::before {
+  content: "/" / "";
+  margin-right: 0.6667rem;
+}
+.cs-breadcrumb a {
+  position: relative;
+  color: var(--muted);
+  transition: color var(--dur-fast) var(--ease-state);
+}
+.cs-breadcrumb a::after { content: ""; position: absolute; inset: -8px -6px; }
+.cs-breadcrumb a:hover { color: var(--ink); }
+.cs-breadcrumb [aria-current="page"] { color: var(--ink); }
+
 .cs-hero { padding-top: clamp(4.6667rem, 8vw, 9.3333rem); padding-bottom: clamp(3.3333rem, 5vw, 5.3333rem); }
 .cs-title {
   font-family: var(--font-display);

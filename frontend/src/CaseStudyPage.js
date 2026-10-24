@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion, useReducedMotion, useScroll } from "framer-motion";
-import { ArrowLeft, ArrowUpRight, Play } from "lucide-react";
+import { ArrowUpRight, Play } from "lucide-react";
 import RotateCard from "./components/devices/RotateCard";
 import BeforeAfter from "./components/site/BeforeAfter";
 import CaseStudyTOC from "./components/site/CaseStudyTOC";
@@ -17,6 +17,7 @@ import {
   useTheme,
 } from "./primitives";
 import { caseStudies } from "./caseStudies";
+import { CASE_STUDY } from "./constants/testIds";
 import "./App.css";
 import "./components/site/casestudytoc.css";
 
@@ -167,14 +168,18 @@ export default function CaseStudyPage() {
 
       <header className="cs-header">
         <div className="container cs-header-inner">
-          {/* Was to="/" — landed on the very top of the homepage instead of
-              the "Selected work" section this button names. App.js has a
-              one-time mount effect that scrolls to #work when it sees this
-              hash on load. */}
-          <Link to="/#work" className="cs-back" data-testid="case-back-link">
-            <ArrowLeft size={15} /> Selected work
-          </Link>
-          <span className="wordmark"><b>ES/</b>ESHANI SOMWANSHI</span>
+          {/* Breadcrumb in place of the old "← Selected work" link + wordmark.
+              "Work" goes to /#work: App.js has a one-time mount effect that
+              scrolls to #work when it sees this hash on load. */}
+          <nav className="cs-breadcrumb" aria-label="Breadcrumb" data-testid={CASE_STUDY.breadcrumb}>
+            <ol>
+              <li><Link to="/" data-testid={CASE_STUDY.breadcrumbHome}>Home</Link></li>
+              <li><Link to="/#work" data-testid={CASE_STUDY.breadcrumbWork}>Work</Link></li>
+              <li aria-current="page" data-testid={CASE_STUDY.breadcrumbCurrent}>
+                {study.crumb || study.company}
+              </li>
+            </ol>
+          </nav>
           <ThemeSwitch theme={theme} setTheme={setTheme} />
         </div>
         <motion.div
