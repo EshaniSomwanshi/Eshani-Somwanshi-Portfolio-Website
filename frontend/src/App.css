@@ -2073,3 +2073,20 @@ figcaption {
 .exploration-stage {
   width: min(560px, 80vw, calc(82svh * 895 / 1117));
 }
+/* Two avatars side by side (image vs vector rebuild), stacked on phones. */
+.exploration-compare {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.4rem;
+  padding: 6rem var(--edge) 3rem;
+}
+.exploration-compare .exploration-stage {
+  width: min(520px, 42vw, calc(76svh * 895 / 1117));
+  margin: 0;
+  text-align: center;
+}
+.exploration-compare figcaption { margin-top: 0.8rem; color: var(--muted); }
+@media (max-width: 576px) {
+  .exploration-compare .exploration-stage { width: 86vw; }
+}

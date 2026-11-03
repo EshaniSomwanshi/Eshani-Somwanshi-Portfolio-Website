@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import ExplorationAvatar from "./components/exploration/ExplorationAvatar";
+import ExplorationVectorAvatar from "./components/exploration/ExplorationVectorAvatar";
 import { EXPLORATION } from "./constants/testIds";
 import "./App.css";
 
@@ -32,8 +33,16 @@ export default function ExplorationPage() {
       <Link to="/" className="cs-back exploration-back" data-testid={EXPLORATION.backLink}>
         <ArrowLeft size={15} /> Home
       </Link>
-      <div className="exploration-stage" data-testid={EXPLORATION.avatar}>
-        <ExplorationAvatar size={560} theme="paper" />
+      {/* Side by side while the vector rebuild is in progress. */}
+      <div className="exploration-compare">
+        <figure className="exploration-stage" data-testid={EXPLORATION.avatar}>
+          <ExplorationAvatar size={560} theme="paper" />
+          <figcaption>Image</figcaption>
+        </figure>
+        <figure className="exploration-stage">
+          <ExplorationVectorAvatar size={560} />
+          <figcaption>Vector rebuild (in progress)</figcaption>
+        </figure>
       </div>
     </main>
   );
