@@ -7,9 +7,15 @@ import Lenis from "lenis";
 import "@/index.css";
 import App from "@/App";
 import CaseStudyPage from "@/CaseStudyPage";
-import ExplorationPage from "@/ExplorationPage";
 import { ReadModeProvider } from "@/components/site/ReadMode";
 import { LenisContext } from "@/lib/smoothScroll";
+import { EXPLORATION_BUILD, EXPLORATION_ENABLED } from "@/lib/exploration";
+
+/* Lazy, and only referenced when EXPLORATION_BUILD is true, so a production
+   build drops the page entirely (see lib/exploration.js). */
+const ExplorationPage = EXPLORATION_BUILD
+  ? React.lazy(() => import("@/ExplorationPage"))
+  : null;
 
 /* Smooth inertia scrolling, applied once at the root so it covers every
    route. No `wrapper`/`content` options are passed, so Lenis attaches
@@ -76,7 +82,12 @@ root.render(
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/work/:slug" element={<CaseStudyPage />} />
-            <Route path="/exploration" element={<ExplorationPage />} />
+            {EXPLORATION_ENABLED && ExplorationPage && (
+              <Route
+                path="/exploration"
+                element={<React.Suspense fallback={null}><ExplorationPage /></React.Suspense>}
+              />
+            )}
             <Route path="*" element={<App />} />
           </Routes>
         </ReadModeProvider>

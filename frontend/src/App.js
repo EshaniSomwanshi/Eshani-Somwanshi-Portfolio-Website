@@ -14,6 +14,7 @@ import { ArrowDown, ArrowUpRight, Layers, LayoutGrid, Menu, Minus, Plus, Send } 
 import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
 import { EXPLORATION } from "./constants/testIds";
+import { EXPLORATION_ENABLED } from "./lib/exploration";
 import {
   BackToTop,
   EASE,
@@ -859,10 +860,13 @@ export default function App() {
                 {label}
               </a>
             ))}
-            {/* Own page, so a router Link rather than an in-page scroll. */}
-            <Link to="/exploration" data-testid={EXPLORATION.navLink}>
-              Exploration
-            </Link>
+            {/* Own page, so a router Link rather than an in-page scroll.
+                Never on the live site: see lib/exploration.js. */}
+            {EXPLORATION_ENABLED && (
+              <Link to="/exploration" data-testid={EXPLORATION.navLink}>
+                Exploration
+              </Link>
+            )}
             <a
               href="#contact"
               className="nav-cta"
@@ -916,7 +920,11 @@ export default function App() {
         </button>
         <ul>
           {/* Same order as the desktop nav: sections, Exploration, Contact. */}
-          {[...navItems, ["exploration", "Exploration"], ["contact", "Contact"]].map(([id, label]) => (
+          {[
+            ...navItems,
+            ...(EXPLORATION_ENABLED ? [["exploration", "Exploration"]] : []),
+            ["contact", "Contact"],
+          ].map(([id, label]) => (
             <li key={id}>
               {id === "exploration" ? (
                 <Link to="/exploration" data-testid={EXPLORATION.mobileNavLink} tabIndex={menu ? 0 : -1}>
