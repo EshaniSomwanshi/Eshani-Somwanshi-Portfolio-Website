@@ -1,6 +1,4 @@
-"""(Run: python trace_avatar.py avatarShapes.js — needs numpy, opencv-python, pillow.)
-
-Trace the reference portrait into layered vector shapes for the avatar rig.
+"""Trace the reference portrait into layered vector shapes for the avatar rig.
 
 Every region (hair, skin, kurta, eyes, brows, mouth, jewelry) is traced
 separately and split into tonal bands; each band becomes a vector path filled
@@ -11,7 +9,7 @@ import numpy as np, cv2
 from PIL import Image
 
 SRC = '/Users/eshnya/DEPX/EshaniWebsite/eshani-somwanshi-portfolio-website/frontend/src/components/exploration/assets/avatar-3d.webp'
-OUT = sys.argv[1]
+OUT = sys.argv[1] if len(sys.argv) > 1 else "x.js"
 
 im = np.array(Image.open(SRC).convert('RGBA'))
 rgb = im[:, :, :3]
@@ -103,6 +101,7 @@ def zones(region, src, k, eps=1.2, min_area=40, kclean=5):
     order = np.argsort(centers[:, 0])
     for ci in order:
         m = clean(labimg == ci, kclean)
+        m = (cv2.dilate(m.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0) & region
         d = trace(m, eps, min_area)
         if d: out.append({'d': d, 'fill': hexcol(src[labimg == ci])})
     return out
@@ -110,9 +109,10 @@ def zones(region, src, k, eps=1.2, min_area=40, kclean=5):
 shapes = {}
 
 # ---------- regions ----------
-skin_raw = A & (((H <= 22) & (S > 70) & (V > 85)) | ((H <= 15) & (S > 140) & (V > 35)))
+face_zone = (xx > 250) & (xx < 660) & (yy > 230) & (yy < 780)
+skin_raw = A & (((H <= 22) & (S > 70) & (V > 85)) | ((H <= 15) & (S > 140) & (V > 35)) | (face_zone & (H <= 20) & (S > 130) & (V > 50)))
 skin = fill_holes(clean(largest(clean(skin_raw, 5)), 21))
-kurta = fill_holes(largest(clean(A & (S < 50) & (V > 150) & (yy > 760), 5)))
+kurta = fill_holes(clean(largest(clean(A & (S < 70) & (V > 110) & (yy > 760) & ~skin_raw, 5)), 15))
 
 # feature boxes (measured on the gridded zooms)
 EYE_L = (292, 340, 414, 424); EYE_R = (500, 340, 620, 424)
@@ -135,7 +135,6 @@ hair = A & ~skin & ~kurta
 hair = fill_holes(largest(clean(hair, 5)))  # fills behind earrings too
 
 # ---------- hair: dark base + sheen bands ----------
-shapes['hair'] = bands(hair, [34, 46, 60, 76, 94, 114, 136], eps=1.2, min_area=25)
 
 # ---------- kurta ----------
 shapes['kurta'] = bands(kurta, [150, 165, 178, 190, 200, 210, 220, 230], eps=1.2, min_area=20)
@@ -144,14 +143,32 @@ shapes['kurta'] = bands(kurta, [150, 165, 178, 190, 200, 210, 220, 230], eps=1.2
 # Paint the features out of a copy of the image first, so the skin bands
 # trace only skin shading (eyes/brows/mouth/bindi would otherwise carve
 # odd blocks into the tones).
-feat_mask = np.zeros_like(A)
-for b in (EYE_L, EYE_R, BROW_L, BROW_R, MOUTH, (430, 298, 482, 336)):
-    feat_mask |= box(*b) & ~skin_raw
-feat_mask = cv2.dilate(feat_mask.astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
+# Features are hand-coded in the component (measured), so here they only need
+# painting out of the skin. Polygons follow the measured outlines.
+POLYS = {
+    'eyeL': [(292, 386), (300, 372), (318, 360), (345, 352), (372, 352), (396, 362), (412, 382), (412, 402), (396, 414), (362, 420), (330, 414), (306, 402)],
+    'eyeR': [(504, 382), (514, 364), (536, 352), (562, 351), (588, 356), (606, 368), (618, 384), (608, 402), (580, 416), (548, 420), (522, 414), (506, 402)],
+    'browL': [(288, 312), (292, 300), (320, 289), (350, 287), (385, 290), (414, 298), (416, 310), (406, 314), (370, 305), (330, 304), (296, 315)],
+    'browR': [(618, 312), (614, 300), (586, 289), (556, 287), (521, 290), (496, 298), (494, 310), (504, 314), (540, 305), (580, 304), (614, 315)],
+    'mouth': [(364, 534), (380, 528), (420, 524), (450, 523), (490, 524), (530, 525), (552, 528), (546, 540), (528, 566), (500, 588), (470, 598), (440, 599), (410, 590), (386, 568), (372, 548)],
+}
+feat_mask = np.zeros(A.shape, np.uint8)
+for pts in POLYS.values():
+    cv2.fillPoly(feat_mask, [np.array(pts, np.int32)], 1)
+cv2.circle(feat_mask, (456, 311), 16, 1, -1)
+feat_mask |= cv2.dilate(earring.astype(np.uint8), np.ones((5, 5), np.uint8))
+feat_mask = cv2.dilate(feat_mask, np.ones((7, 7), np.uint8)) > 0
 clean_rgb = cv2.inpaint(rgb, feat_mask.astype(np.uint8) * 255, 9, cv2.INPAINT_TELEA)
 clean_rgb = cv2.GaussianBlur(clean_rgb, (0, 0), 3.2)
 Lskin = cv2.cvtColor(clean_rgb, cv2.COLOR_RGB2GRAY).astype(int)
 shapes['skin'] = zones(skin, clean_rgb, 28, eps=1.4, min_area=40, kclean=5)
+
+# Hair, with the jhumkas painted out so the swinging earrings don't reveal
+# a ghost earring in the hair underneath.
+ear_mask = cv2.dilate(earring.astype(np.uint8), np.ones((7, 7), np.uint8)) * 255
+hair_rgb = cv2.inpaint(rgb, ear_mask, 7, cv2.INPAINT_TELEA)
+Lhair = cv2.cvtColor(cv2.GaussianBlur(hair_rgb, (0, 0), 1.6), cv2.COLOR_RGB2GRAY).astype(int)
+shapes['hair'] = bands(hair, [30, 40, 52, 66, 82, 100, 120, 142], eps=1.0, min_area=10, k=1, Limg=Lhair, src=hair_rgb)
 
 # ---------- necklace: silver chain + sapphire pendant in the chest box ----------
 chest = box(*CHEST) & skin_raw.copy()
@@ -160,43 +177,7 @@ blue = box(*CHEST) & A & (H >= 95) & (H <= 135) & (S > 80)
 shapes['chain'] = [{'d': trace(clean(silver, 1), 0.8, 4), 'fill': hexcol(rgb[silver]) or '#cfd4dc'}]
 shapes['pendant'] = bands(clean(blue, 1) , [80, 130], eps=0.8, min_area=4, k=1)
 
-# ---------- brows ----------
-for name, b in (('browL', BROW_L), ('browR', BROW_R)):
-    m = box(*b) & skin & (V < 115)
-    m = largest(clean(m, 3))
-    shapes[name] = [{'d': trace(m, 0.9, 20), 'fill': hexcol(rgb[m])}]
-
-# ---------- eyes: opening (sclera+iris), lash band, lower lid ----------
 feat = {}
-for name, b in (('eyeL', EYE_L), ('eyeR', EYE_R)):
-    bx = box(*b)
-    nonskin = largest(clean(bx & A & ~skin_raw, 3))
-    nonskin = fill_holes(nonskin)
-    core = cv2.erode(nonskin.astype(np.uint8), np.ones((7, 7), np.uint8))
-    opening = cv2.dilate(core, np.ones((3, 3), np.uint8)) > 0
-    lash = nonskin & ~opening & (V < 95)
-    lash = clean(lash, 2)
-    sclera = opening & (S < 60) & (V > 150)
-    ys, xs = np.nonzero(opening)
-    feat[name] = {'box': b, 'cx': float(xs.mean()), 'cy': float(ys.mean())}
-    shapes[name + 'Open'] = [{'d': trace(opening, 0.8, 20), 'fill': hexcol(rgb[sclera]) if sclera.sum() else '#f2eeee'}]
-    shapes[name + 'Lash'] = [{'d': trace(lash, 0.8, 12), 'fill': '#120b08'}]
-
-# ---------- mouth: lips, teeth, interior ----------
-mb = box(*MOUTH)
-teeth = mb & A & (S < 60) & (V > 165)
-lips = mb & A & ((H <= 9) | (H >= 168)) & (S > 105) & (V > 90)
-inner = mb & A & (V < 90)
-near = cv2.dilate((lips | teeth).astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
-mouth = fill_holes(largest(clean(lips | teeth | (inner & near), 3)))
-shapes['mouth'] = zones(mouth, cv2.GaussianBlur(rgb, (0, 0), 0.8), 5, eps=0.8, min_area=10, kclean=2)
-ys, xs = np.nonzero(mouth)
-feat['mouth'] = {'cx': float(xs.mean()), 'cy': float(ys.mean())}
-
-# ---------- bindi ----------
-bb = box(430, 300, 480, 340) & A & ~skin_raw | (box(430, 300, 480, 340) & A & (H > 15) & (H < 35) & (S > 90))
-ys, xs = np.nonzero(bb)
-feat['bindi'] = {'cx': float(xs.mean()), 'cy': float(ys.mean()), 'r': float(max(np.ptp(xs), np.ptp(ys)) / 2)}
 
 # ---------- earrings (each its own group; pivot at the top of the stud) ----------
 for name, b in (('earL', EAR_L), ('earR', EAR_R)):
