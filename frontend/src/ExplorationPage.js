@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import InteractiveAvatar from "./components/ui/InteractiveAvatar";
+import ExplorationAvatar from "./components/exploration/ExplorationAvatar";
 import { EXPLORATION } from "./constants/testIds";
 import "./App.css";
 
@@ -33,7 +33,7 @@ export default function ExplorationPage() {
         <ArrowLeft size={15} /> Home
       </Link>
       <div className="exploration-stage" data-testid={EXPLORATION.avatar}>
-        <InteractiveAvatar size={560} theme="paper" />
+        <ExplorationAvatar size={560} theme="paper" />
       </div>
     </main>
   );
