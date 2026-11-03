@@ -2069,7 +2069,7 @@ figcaption {
   transform: translateY(-50%);
 }
 /* Sized so the whole figure fits the screen: no wider than 560px or 80% of
-   the width, and no taller than ~80% of the height (440:520 is its shape). */
+   the width, and no taller than ~82% of the height (895:1117 is the image). */
 .exploration-stage {
-  width: min(560px, 80vw, calc(80svh * 440 / 520));
+  width: min(560px, 80vw, calc(82svh * 895 / 1117));
 }
