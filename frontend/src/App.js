@@ -13,6 +13,7 @@ import {
 import { ArrowDown, ArrowUpRight, Layers, LayoutGrid, Menu, Minus, Plus, Send } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { useLenis } from "./lib/smoothScroll";
+import { EXPLORATION } from "./constants/testIds";
 import {
   BackToTop,
   EASE,
@@ -858,6 +859,10 @@ export default function App() {
                 {label}
               </a>
             ))}
+            {/* Own page, so a router Link rather than an in-page scroll. */}
+            <Link to="/exploration" data-testid={EXPLORATION.navLink}>
+              Exploration
+            </Link>
             <a
               href="#contact"
               className="nav-cta"
@@ -910,17 +915,25 @@ export default function App() {
           Close
         </button>
         <ul>
-          {[...navItems, ["contact", "Contact"]].map(([id, label]) => (
+          {/* Same order as the desktop nav: sections, Exploration, Contact. */}
+          {[...navItems, ["exploration", "Exploration"], ["contact", "Contact"]].map(([id, label]) => (
             <li key={id}>
-              <a
-                href={`#${id}`}
-                data-testid={`mobile-nav-${id}`}
-                tabIndex={menu ? 0 : -1}
-                onClick={(e) => { e.preventDefault(); go(id); }}
-              >
-                {label}
-                <ArrowUpRight size={20} />
-              </a>
+              {id === "exploration" ? (
+                <Link to="/exploration" data-testid={EXPLORATION.mobileNavLink} tabIndex={menu ? 0 : -1}>
+                  {label}
+                  <ArrowUpRight size={20} />
+                </Link>
+              ) : (
+                <a
+                  href={`#${id}`}
+                  data-testid={`mobile-nav-${id}`}
+                  tabIndex={menu ? 0 : -1}
+                  onClick={(e) => { e.preventDefault(); go(id); }}
+                >
+                  {label}
+                  <ArrowUpRight size={20} />
+                </a>
+              )}
             </li>
           ))}
           <li>

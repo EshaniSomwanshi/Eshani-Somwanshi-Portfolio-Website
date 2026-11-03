@@ -7,6 +7,7 @@ import Lenis from "lenis";
 import "@/index.css";
 import App from "@/App";
 import CaseStudyPage from "@/CaseStudyPage";
+import ExplorationPage from "@/ExplorationPage";
 import { ReadModeProvider } from "@/components/site/ReadMode";
 import { LenisContext } from "@/lib/smoothScroll";
 
@@ -75,6 +76,7 @@ root.render(
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/work/:slug" element={<CaseStudyPage />} />
+            <Route path="/exploration" element={<ExplorationPage />} />
             <Route path="*" element={<App />} />
           </Routes>
         </ReadModeProvider>

@@ -14,3 +14,4 @@
 export * from './auth';
 export * from './home';
 export * from './caseStudy';
+export * from './exploration';

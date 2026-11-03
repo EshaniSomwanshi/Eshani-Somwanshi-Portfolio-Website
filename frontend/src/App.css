@@ -2049,3 +2049,27 @@ figcaption {
 @media (max-width: 1280px) { .cs-title { font-size: 5.2016rem; } }
 @media (max-width: 1024px) { .cs-title { font-size: 3.6532rem; } }
 @media (max-width: 576px)  { .cs-title { font-size: 3.2473rem; } }
+
+/* ---------- Exploration page (/exploration) ----------
+   Full-screen paper background with the avatar centred. The page pins
+   data-theme="paper" while open (ExplorationPage.js), so --bg here is always
+   the paper value, #F2EEE7. */
+.exploration-page {
+  position: relative;
+  min-height: 100svh;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.exploration-back {
+  position: absolute;
+  top: calc(var(--nav-h) / 2);
+  left: var(--edge);
+  transform: translateY(-50%);
+}
+/* Sized so the whole figure fits the screen: no wider than 560px or 80% of
+   the width, and no taller than ~80% of the height (440:520 is its shape). */
+.exploration-stage {
+  width: min(560px, 80vw, calc(80svh * 440 / 520));
+}
