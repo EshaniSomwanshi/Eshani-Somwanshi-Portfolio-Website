@@ -27,7 +27,11 @@ import { EYES } from "./avatar2dEyes";
    by the mouse's horizontal position across the screen (far left = eyes
    fully left), with only a little vertical travel; both eyes move together
    on a quick, crisp spring. */
-const EYE_SWEEP_X = 24; // px, iris centre travel each way (eye is ~107 wide)
+/* Per-eye travel (px), measured: both irises sit nearer the nose than the
+   middle of their opening, so each eye gets a long reach to its OUTER corner
+   (until the iris meets it) and a short one to its INNER corner (it would
+   otherwise sink into it). [toward screen-left, toward screen-right] */
+const EYE_TRAVEL = { L: [-28, 8], R: [-8, 26] };
 const EYE_SWEEP_Y = 5;
 
 /* Default mouth: a closed smile drawn in the drawing's style (corners and
@@ -142,7 +146,11 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
   const eyeX = useMotionValue(0);
   const eyeY = useMotionValue(0);
   const eyeSpring = { stiffness: 320, damping: 24, mass: 0.4 };
-  const irisX = useSpring(eyeX, eyeSpring);
+  const sweep = useSpring(eyeX, eyeSpring);
+  // v in -1..1 -> px: negative side scales the "toward screen-left" limit
+  const travel = (side) => (v) => (v < 0 ? -v * EYE_TRAVEL[side][0] : v * EYE_TRAVEL[side][1]);
+  const irisXL = useTransform(sweep, travel("L"));
+  const irisXR = useTransform(sweep, travel("R"));
   const irisY = useSpring(eyeY, eyeSpring);
   const [blink, setBlink] = useState(false);
   const [happy, setHappy] = useState(false);
@@ -179,12 +187,15 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
     const mx = (a.left + a.right + b.left + b.right) / 4;
     const my = (a.top + a.bottom + b.top + b.bottom) / 4;
     const clamp = (v) => Math.max(-1, Math.min(1, v));
-    // normalise to the screen edge on each side, so the far edge = full sweep
-    const nx = clamp((clientX - mx) / Math.max(1, clientX < mx ? mx : window.innerWidth - mx));
+    // Same reach both ways: full sweep at the distance to the nearer screen
+    // edge (the avatar is off-centre, so normalising to each edge made the
+    // leftward sweep need a much longer mouse move).
+    const reach = Math.max(1, Math.min(mx, window.innerWidth - mx));
+    const nx = clamp((clientX - mx) / reach);
     const ny = clamp((clientY - my) / (window.innerHeight * 0.5));
     // ease out: reaches the corners decisively, settles softly near centre
     const ease = (v) => Math.sign(v) * Math.pow(Math.abs(v), 0.7);
-    eyeX.set(ease(nx) * EYE_SWEEP_X);
+    eyeX.set(ease(nx)); // -1..1, mapped per eye below
     eyeY.set(ny * EYE_SWEEP_Y);
   }, [eyeX, eyeY]);
 
@@ -347,8 +358,8 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
               <Shapes list={LAYERS.browR} />
             </motion.g>
 
-            <Eye side="L" irisX={irisX} irisY={irisY} closed={blink} eyeRef={eyeLRef} />
-            <Eye side="R" irisX={irisX} irisY={irisY} closed={blink} eyeRef={eyeRRef} />
+            <Eye side="L" irisX={irisXL} irisY={irisY} closed={blink} eyeRef={eyeLRef} />
+            <Eye side="R" irisX={irisXR} irisY={irisY} closed={blink} eyeRef={eyeRRef} />
 
             {happy ? (
               <motion.g
