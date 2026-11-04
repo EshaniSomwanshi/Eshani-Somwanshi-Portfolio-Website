@@ -126,6 +126,11 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
   // slide, plus a slight tilt toward the cursor.
   const headX = useTransform(sx, [-1, 1], [-18, 18]);
   const headTilt = useTransform(sx, [-1, 1], [-2, 2]);
+  // Neck bends with the head: skewed about its base so its top travels with
+  // the head (headX at the jaw) while the base stays on the shoulders.
+  const neckLen = META.neckBase[1] - META.neckTop;
+  const neckDeg = (Math.atan(18 / neckLen) * 180) / Math.PI;
+  const neckSkew = useTransform(sx, [-1, 1], [neckDeg, -neckDeg]);
 
   const updatePupils = useCallback((clientX, clientY) => {
     const calc = (el) => {
@@ -245,11 +250,17 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
             </motion.g>
           </motion.g>
 
-          {/* BODY: neck, chest, kurta, necklace (steady) */}
+          {/* BODY: chest, kurta, necklace (steady) */}
           <Shapes list={LAYERS.body} />
           <Shapes list={LAYERS.bodyLines} />
           <Shapes list={LAYERS.pendant} />
-          <Shapes list={LAYERS.neckUnder} />
+
+          {/* NECK: bends with the head, base fixed on the shoulders */}
+          <motion.g style={reduced ? {} : { skewX: neckSkew, transformOrigin: `${META.neckBase[0]}px ${META.neckBase[1]}px` }}>
+            <Shapes list={LAYERS.neck} />
+            <Shapes list={LAYERS.neckLines} />
+            <Shapes list={LAYERS.neckUnder} />
+          </motion.g>
 
           {/* HEAD, front half: face and features */}
           <motion.g style={reduced ? {} : { x: headX, rotate: headTilt, transformOrigin: `${hx}px ${hy}px` }}>
