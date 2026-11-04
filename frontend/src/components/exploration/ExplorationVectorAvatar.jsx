@@ -23,7 +23,12 @@ import { META, LAYERS } from "./avatar2dLayers";
 import { HAIR } from "./avatar2dHair";
 import { EYES } from "./avatar2dEyes";
 
-const PUPIL_TRAVEL = 7; // px the irises can move inside the eye
+/* Bharatanatyam-style eyes: the irises sweep almost corner to corner, led
+   by the mouse's horizontal position across the screen (far left = eyes
+   fully left), with only a little vertical travel; both eyes move together
+   on a quick, crisp spring. */
+const EYE_SWEEP_X = 24; // px, iris centre travel each way (eye is ~107 wide)
+const EYE_SWEEP_Y = 5;
 
 /* Default mouth: a closed smile drawn in the drawing's style (corners and
    lip colours measured from it). Hover swaps in the drawing's own open,
@@ -101,7 +106,7 @@ const CLOSED = {
   R: "M506 484 C534 506 588 500 608 470",
 };
 
-function Eye({ side, pupil, closed, eyeRef }) {
+function Eye({ side, irisX, irisY, closed, eyeRef }) {
   const { open, lash } = EYES[side];
   const { cx, cy } = IRIS[side];
   return (
@@ -109,13 +114,13 @@ function Eye({ side, pupil, closed, eyeRef }) {
       <clipPath id={`x2-eye-${side}`}><path d={open} /></clipPath>
       <path d={open} fill="url(#x2-sclera)" />
       <g clipPath={`url(#x2-eye-${side})`}>
-        <g transform={`translate(${pupil.x} ${pupil.y})`}>
+        <motion.g style={{ x: irisX, y: irisY }}>
           <circle cx={cx} cy={cy} r={IRIS_R} fill="url(#x2-iris)" />
           <circle cx={cx} cy={cy} r={IRIS_R} fill="none" stroke="#170A02" strokeWidth="3.6" />
           <circle cx={cx} cy={cy} r={IRIS_R * 0.49} fill="#0B0501" />
           <circle cx={cx - 9} cy={cy - 12} r={IRIS_R * 0.26} fill="#ffffff" opacity="0.95" />
           <circle cx={cx + 11} cy={cy + 11} r={IRIS_R * 0.12} fill="#ffffff" opacity="0.6" />
-        </g>
+        </motion.g>
         <path d={open} fill="url(#x2-lidShadow)" />
       </g>
       <path d={lash} fill="#16171d" fillRule="evenodd" />
@@ -134,8 +139,11 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
   const wrapRef = useRef(null);
   const eyeLRef = useRef(null);
   const eyeRRef = useRef(null);
-  const [pupilL, setPupilL] = useState({ x: 0, y: 0 });
-  const [pupilR, setPupilR] = useState({ x: 0, y: 0 });
+  const eyeX = useMotionValue(0);
+  const eyeY = useMotionValue(0);
+  const eyeSpring = { stiffness: 320, damping: 24, mass: 0.4 };
+  const irisX = useSpring(eyeX, eyeSpring);
+  const irisY = useSpring(eyeY, eyeSpring);
   const [blink, setBlink] = useState(false);
   const [happy, setHappy] = useState(false);
 
@@ -164,18 +172,21 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
   const neckSkew = useTransform(sx, [-1, 1], [neckDeg, -neckDeg]);
 
   const updatePupils = useCallback((clientX, clientY) => {
-    const calc = (el) => {
-      if (!el) return { x: 0, y: 0 };
-      const r = el.getBoundingClientRect();
-      const dx = clientX - (r.left + r.width / 2);
-      const dy = clientY - (r.top + r.height / 2);
-      const a = Math.atan2(dy, dx);
-      const rad = Math.min(PUPIL_TRAVEL, Math.hypot(dx, dy) / 30);
-      return { x: Math.cos(a) * rad, y: Math.sin(a) * rad * 0.6 };
-    };
-    setPupilL(calc(eyeLRef.current));
-    setPupilR(calc(eyeRRef.current));
-  }, []);
+    const a = eyeLRef.current?.getBoundingClientRect();
+    const b = eyeRRef.current?.getBoundingClientRect();
+    if (!a || !b) return;
+    // midpoint between the eyes
+    const mx = (a.left + a.right + b.left + b.right) / 4;
+    const my = (a.top + a.bottom + b.top + b.bottom) / 4;
+    const clamp = (v) => Math.max(-1, Math.min(1, v));
+    // normalise to the screen edge on each side, so the far edge = full sweep
+    const nx = clamp((clientX - mx) / Math.max(1, clientX < mx ? mx : window.innerWidth - mx));
+    const ny = clamp((clientY - my) / (window.innerHeight * 0.5));
+    // ease out: reaches the corners decisively, settles softly near centre
+    const ease = (v) => Math.sign(v) * Math.pow(Math.abs(v), 0.7);
+    eyeX.set(ease(nx) * EYE_SWEEP_X);
+    eyeY.set(ny * EYE_SWEEP_Y);
+  }, [eyeX, eyeY]);
 
   useEffect(() => {
     if (!interactive || reduced) return;
@@ -336,8 +347,8 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
               <Shapes list={LAYERS.browR} />
             </motion.g>
 
-            <Eye side="L" pupil={pupilL} closed={blink} eyeRef={eyeLRef} />
-            <Eye side="R" pupil={pupilR} closed={blink} eyeRef={eyeRRef} />
+            <Eye side="L" irisX={irisX} irisY={irisY} closed={blink} eyeRef={eyeLRef} />
+            <Eye side="R" irisX={irisX} irisY={irisY} closed={blink} eyeRef={eyeRRef} />
 
             {happy ? (
               <motion.g
