@@ -37,11 +37,11 @@ export default function ExplorationPage() {
       <div className="exploration-compare">
         <figure className="exploration-stage" data-testid={EXPLORATION.avatar}>
           <ExplorationAvatar size={560} theme="paper" />
-          <figcaption>Image</figcaption>
+          <figcaption>3D image</figcaption>
         </figure>
         <figure className="exploration-stage">
           <ExplorationVectorAvatar size={560} />
-          <figcaption>Vector rebuild (in progress)</figcaption>
+          <figcaption>Vector, from the 2D drawing</figcaption>
         </figure>
       </div>
     </main>
