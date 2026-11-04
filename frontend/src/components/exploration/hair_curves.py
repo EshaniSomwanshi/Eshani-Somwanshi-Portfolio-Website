@@ -22,9 +22,6 @@ silhouette = fill_holes(largest(morph(A & ~kurta, cv2.MORPH_CLOSE, 9)))
 # Round off stray flyaways: an opening removes needle-thin wisps and sharp
 # hooked tips sticking out of the outline while keeping every real lock.
 silhouette = largest(morph(silhouette, cv2.MORPH_OPEN, 15))
-# The drawing's outer edge is anti-aliased against the old background and
-# reads as a light rim; keep the shading layers a few px inside the outline.
-inner = cv2.erode((hair & silhouette).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))) > 0
 
 gray = cv2.GaussianBlur(cv2.cvtColor(base_rgb, cv2.COLOR_RGB2GRAY), (0, 0), 1.6).astype(int)
 
@@ -38,6 +35,22 @@ def clean_shape(mask, sigma, min_area, eps, open_k=5):
         if st[i, cv2.CC_STAT_AREA] >= min_area: keep |= lab == i
     return trace(keep, eps, min_area)
 
+def smooth_outline(mask):
+    """Outline smoothing: light everywhere, much stronger over the top-left of
+    the hair (viewer's left), where the drawn edge is lumpy. The two are
+    blended through a feathered weight so there is no visible change-over."""
+    f = mask.astype(np.float32)
+    light = cv2.GaussianBlur(f, (0, 0), 3.0)
+    strong = cv2.GaussianBlur(f, (0, 0), 18.0)
+    zone = np.zeros_like(f); zone[60:470, 60:420] = 1.0      # top-left of the hair
+    w = cv2.GaussianBlur(zone, (0, 0), 35.0)
+    return (light * (1 - w) + strong * w) > 0.5
+
+# The drawing's outer edge is anti-aliased against the old background and
+# reads as a light rim; keep the shading layers a few px inside the outline.
+sil_smooth = smooth_outline(silhouette)
+inner = cv2.erode((hair & sil_smooth).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))) > 0
+
 def tone(lo, hi=None):
     m = inner & (gray > lo)
     if hi is not None: m &= gray <= hi
@@ -47,7 +60,7 @@ def colour(m):
     return '#%02x%02x%02x' % tuple(np.median(base_rgb[m], axis=0).astype(int))
 
 layers = {
-    'silhouette': {'d': clean_shape(silhouette, 3.0, 400, 2.0, 0), 'fill': colour(tone(17, 30))},
+    'silhouette': {'d': trace(sil_smooth, 2.2, 400), 'fill': colour(tone(17, 30))},
     'shadow': {'d': clean_shape(inner & (gray <= 16), 1.8, 160, 1.8, 0), 'fill': colour(inner & (gray <= 16))},
     'locks': {'d': clean_shape(tone(31), 2.0, 220, 2.0, 3), 'fill': colour(tone(31, 44))},
     'strands': {'d': clean_shape(tone(45), 1.6, 120, 1.6), 'fill': colour(tone(45, 62))},
