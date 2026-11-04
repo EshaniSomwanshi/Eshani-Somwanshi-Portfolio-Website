@@ -63,11 +63,6 @@ function Jhumka({ cx }) {
   );
 }
 
-// Closed-lid lash lines, measured on the drawing (left/right eye).
-const CLOSED = {
-  L: "M300 470 C326 500 380 506 408 484",
-  R: "M506 484 C534 506 588 500 608 470",
-};
 
 /* Hair, redrawn as smooth layered curves (avatar2dHair.js, from
    hair_curves.py): base silhouette, shadow gaps, locks, strands, sheen.
@@ -93,22 +88,55 @@ function Shapes({ list, filter }) {
   );
 }
 
+/* Eyes: hand-drawn solid vectors, same layer stack as the original avatar
+   (white, lid shadow, iris + rim, pupil, two highlights, upper lash with
+   flick, lower lid line, blink lid). Shapes measured from the drawing; the
+   iris uses the original avatar's brown. Right eye = left eye mirrored about
+   x = 910 (the eyes' measured centre line). */
+const EYE_L = {
+  open: "M300 482 C312 456 338 442 362 441 C386 441 402 456 408 492 C392 500 376 503 360 503 C334 502 312 496 300 482 Z",
+  lash: "M293 486 C303 452 333 433 362 432 C391 432 409 452 414 495 C406 473 390 450 362 449 C337 449 313 461 300 484 Z",
+  flick: "M300 482 C291 477 284 469 279 459 C288 465 295 470 305 474 Z M297 470 C289 465 284 458 281 450 C288 455 293 460 300 463 Z",
+  lower: "M309 497 C330 508 386 509 405 497",
+  closed: "M298 480 C322 505 384 510 410 488",
+  iris: { cx: 365, cy: 471 },
+};
+const MIRROR = "translate(910 0) scale(-1 1)";
+const IRIS_R = 32;
+
 function Eye({ side, pupil, closed, eyeRef }) {
-  const open = LAYERS[`eye${side}Open`][0];
+  const e = EYE_L;
+  const { cx, cy } = e.iris;
+  // The right eye reuses the left geometry mirrored; its iris centre is
+  // measured separately (548), so offset to land exactly on it.
+  const irisShift = side === "R" ? 910 - 548 - cx : 0;
+  // pupil motion is in screen space; mirrored geometry needs x flipped
+  const px = side === "R" ? -pupil.x : pupil.x;
+  // highlights stay on the same screen side in both eyes (one light source),
+  // so on the mirrored right eye their offsets are flipped back
+  const hs = side === "R" ? -1 : 1;
   return (
-    <g ref={eyeRef}>
-      <clipPath id={`x2-eye-${side}`}><path d={open.d} /></clipPath>
-      <path d={open.d} fill={open.fill} />
+    <g ref={eyeRef} transform={side === "R" ? MIRROR : undefined}>
+      <clipPath id={`x2-eye-${side}`}><path d={e.open} /></clipPath>
+      <path d={e.open} fill="url(#x2-sclera)" />
       <g clipPath={`url(#x2-eye-${side})`}>
-        <g transform={`translate(${pupil.x} ${pupil.y})`}>
-          <Shapes list={LAYERS[`eye${side}Iris`]} />
+        <g transform={`translate(${px + irisShift} ${pupil.y})`}>
+          <circle cx={cx} cy={cy} r={IRIS_R} fill="url(#x2-iris)" />
+          <circle cx={cx} cy={cy} r={IRIS_R} fill="none" stroke="#170A02" strokeWidth="3.6" />
+          <circle cx={cx} cy={cy} r={IRIS_R * 0.49} fill="#0B0501" />
+          <circle cx={cx - 9 * hs} cy={cy - 12} r={IRIS_R * 0.26} fill="#ffffff" opacity="0.95" />
+          <circle cx={cx + 11 * hs} cy={cy + 11} r={IRIS_R * 0.12} fill="#ffffff" opacity="0.6" />
         </g>
+        <path d={e.open} fill="url(#x2-lidShadow)" />
       </g>
-      <Shapes list={LAYERS[`eye${side}Lash`]} />
+      <path d={e.lower} stroke="#9a5a42" strokeWidth="2.6" strokeLinecap="round" fill="none" opacity="0.55" />
+      <path d={e.lash} fill="#16171d" />
+      <path d={e.flick} fill="#16171d" />
       {closed && (
         <g>
-          <path d={open.d} fill={META.lid[side]} stroke={META.lid[side]} strokeWidth="6" />
-          <path d={CLOSED[side]} stroke="#141114" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <path d={e.open} fill={META.lid.L} stroke={META.lid.L} strokeWidth="10" strokeLinejoin="round" />
+          <path d={e.closed} stroke="#16171d" strokeWidth="6.5" strokeLinecap="round" fill="none" />
+          <path d={e.flick} fill="#16171d" transform="translate(0 6)" />
         </g>
       )}
     </g>
@@ -243,6 +271,20 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
         style={{ display: "block", width: "100%", height: "auto", overflow: "visible", filter: "drop-shadow(0 22px 40px rgba(24,16,10,0.16))" }}
       >
         <defs>
+          {/* eyes — iris colours from the original avatar */}
+          <radialGradient id="x2-iris" cx="38%" cy="34%" r="66%">
+            <stop offset="0%" stopColor="#8A4C22" />
+            <stop offset="58%" stopColor="#4A2409" />
+            <stop offset="100%" stopColor="#1C0E04" />
+          </radialGradient>
+          <linearGradient id="x2-lidShadow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2A1608" stopOpacity="0.28" />
+            <stop offset="45%" stopColor="#2A1608" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="x2-sclera" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FDFCFA" />
+            <stop offset="100%" stopColor="#EFE9E6" />
+          </linearGradient>
           {/* hair */}
           <linearGradient id="x2-hairBase" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="1060">
             <stop offset="0" stopColor="#1d1e23" /><stop offset="1" stopColor="#0f1013" />

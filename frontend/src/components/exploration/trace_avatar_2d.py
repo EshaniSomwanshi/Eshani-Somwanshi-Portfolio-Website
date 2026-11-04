@@ -127,7 +127,17 @@ paint = np.zeros(A.shape, bool)
 for m in list(brows.values()) + [dil(fill_holes(morph(e, cv2.MORPH_CLOSE, 9)), 2) for e in ears.values()]:
     paint |= dil(m, 5)
 paint |= dil(mouth, 9)
+# eyes are hand-drawn in the component now: paint the drawn ones out of the face
+for k_ in ('L', 'R'):
+    paint |= dil(eyes[k_]['region'], 4)
 base_rgb = cv2.inpaint(rgb, paint.astype(np.uint8) * 255, 9, cv2.INPAINT_TELEA)
+# the painted-out eye areas get a gentle blur so they settle into flat skin
+# tones (no smudges) when the face is traced
+eye_zone = np.zeros(A.shape, bool)
+for k_ in ('L', 'R'):
+    eye_zone |= dil(eyes[k_]['region'], 14)
+soft_eyes = cv2.GaussianBlur(base_rgb, (0, 0), 6)
+base_rgb[eye_zone] = soft_eyes[eye_zone]
 
 # ---------------- flat palette + clean tracing ----------------
 def quantize(img, mask, k, strong=True):
