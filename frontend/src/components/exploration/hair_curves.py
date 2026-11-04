@@ -18,14 +18,19 @@ exec(src.split("# ---------------- flat palette + clean tracing")[0])   # masks 
 
 kurta = fill_holes(largest(morph(A & (S < 45) & (V > 150) & (yy > 820) & ~skin_c, cv2.MORPH_CLOSE, 9)))
 hair = A & ~skin & ~kurta
+silhouette = fill_holes(largest(morph(A & ~kurta, cv2.MORPH_CLOSE, 9)))
+# Round off stray flyaways: an opening removes needle-thin wisps and sharp
+# hooked tips sticking out of the outline while keeping every real lock.
+silhouette = largest(morph(silhouette, cv2.MORPH_OPEN, 15))
 # The drawing's outer edge is anti-aliased against the old background and
 # reads as a light rim; keep the shading layers a few px inside the outline.
-inner = cv2.erode(hair.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))) > 0
-silhouette = fill_holes(largest(morph(A & ~kurta, cv2.MORPH_CLOSE, 9)))
+inner = cv2.erode((hair & silhouette).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))) > 0
 
 gray = cv2.GaussianBlur(cv2.cvtColor(base_rgb, cv2.COLOR_RGB2GRAY), (0, 0), 1.6).astype(int)
 
-def clean_shape(mask, sigma, min_area, eps):
+def clean_shape(mask, sigma, min_area, eps, open_k=5):
+    # inner layers too: drop hair-thin slivers so every lock ends in a smooth tip
+    if open_k: mask = morph(mask, cv2.MORPH_OPEN, open_k)
     m = cv2.GaussianBlur(mask.astype(np.float32), (0, 0), sigma) > 0.5
     n, lab, st, _ = cv2.connectedComponentsWithStats(m.astype(np.uint8), 8)
     keep = np.zeros_like(m)
@@ -42,9 +47,9 @@ def colour(m):
     return '#%02x%02x%02x' % tuple(np.median(base_rgb[m], axis=0).astype(int))
 
 layers = {
-    'silhouette': {'d': clean_shape(silhouette, 3.0, 400, 2.0), 'fill': colour(tone(17, 30))},
-    'shadow': {'d': clean_shape(inner & (gray <= 16), 1.8, 160, 1.8), 'fill': colour(inner & (gray <= 16))},
-    'locks': {'d': clean_shape(tone(31), 2.0, 220, 2.0), 'fill': colour(tone(31, 44))},
+    'silhouette': {'d': clean_shape(silhouette, 3.0, 400, 2.0, 0), 'fill': colour(tone(17, 30))},
+    'shadow': {'d': clean_shape(inner & (gray <= 16), 1.8, 160, 1.8, 0), 'fill': colour(inner & (gray <= 16))},
+    'locks': {'d': clean_shape(tone(31), 2.0, 220, 2.0, 3), 'fill': colour(tone(31, 44))},
     'strands': {'d': clean_shape(tone(45), 1.6, 120, 1.6), 'fill': colour(tone(45, 62))},
     'sheen': {'d': clean_shape(tone(63), 1.3, 60, 1.3), 'fill': colour(tone(63))},
 }
