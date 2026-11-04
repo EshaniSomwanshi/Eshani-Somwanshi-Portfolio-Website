@@ -20,6 +20,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { META, LAYERS } from "./avatar2dLayers";
+import { HAIR } from "./avatar2dHair";
 
 const PUPIL_TRAVEL = 7; // px the irises can move inside the eye
 
@@ -67,6 +68,22 @@ const CLOSED = {
   L: "M300 470 C326 500 380 506 408 484",
   R: "M506 484 C534 506 588 500 608 470",
 };
+
+/* Hair, redrawn as smooth layered curves (avatar2dHair.js, from
+   hair_curves.py): base silhouette, shadow gaps, locks, strands, sheen.
+   Soft gradients inside each layer and a soft drop shadow under the locks
+   and strands make them read as overlapping, with depth. */
+function Hair() {
+  return (
+    <g>
+      <path d={HAIR.silhouette.d} fill="url(#x2-hairBase)" fillRule="evenodd" />
+      <path d={HAIR.shadow.d} fill="#08090b" fillRule="evenodd" />
+      <path d={HAIR.locks.d} fill="url(#x2-hairLocks)" fillRule="evenodd" filter="url(#x2-lockShadow)" />
+      <path d={HAIR.strands.d} fill="url(#x2-hairStrands)" fillRule="evenodd" filter="url(#x2-strandShadow)" />
+      <path d={HAIR.sheen.d} fill="url(#x2-hairSheen)" fillRule="evenodd" opacity="0.9" />
+    </g>
+  );
+}
 
 function Shapes({ list, filter }) {
   return (
@@ -226,6 +243,25 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
         style={{ display: "block", width: "100%", height: "auto", overflow: "visible", filter: "drop-shadow(0 22px 40px rgba(24,16,10,0.16))" }}
       >
         <defs>
+          {/* hair */}
+          <linearGradient id="x2-hairBase" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="1060">
+            <stop offset="0" stopColor="#1d1e23" /><stop offset="1" stopColor="#0f1013" />
+          </linearGradient>
+          <linearGradient id="x2-hairLocks" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="1060">
+            <stop offset="0" stopColor="#323338" /><stop offset="1" stopColor="#222327" />
+          </linearGradient>
+          <linearGradient id="x2-hairStrands" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="1060">
+            <stop offset="0" stopColor="#4c4d53" /><stop offset="1" stopColor="#36373c" />
+          </linearGradient>
+          <linearGradient id="x2-hairSheen" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="1060">
+            <stop offset="0" stopColor="#7b7c84" /><stop offset="1" stopColor="#5a5b62" />
+          </linearGradient>
+          <filter id="x2-lockShadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="3" stdDeviation="2.5" floodColor="#000" floodOpacity="0.5" />
+          </filter>
+          <filter id="x2-strandShadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="2" stdDeviation="1.6" floodColor="#000" floodOpacity="0.45" />
+          </filter>
           <linearGradient id="x2-silver" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#f4f4f6" />
             <stop offset=".55" stopColor="#c9cad2" />
@@ -245,8 +281,7 @@ export default function ExplorationVectorAvatar({ size = 560, interactive = true
               animate={reduced ? undefined : { rotate: [-0.8, 0.8, -0.8] }}
               transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Shapes list={LAYERS.hairBack} />
-              <Shapes list={LAYERS.hair} />
+              <Hair />
             </motion.g>
           </motion.g>
 
