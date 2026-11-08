@@ -1117,10 +1117,10 @@ export default function App() {
              now, so its button points up. */}
         <section className="section" id="design">
           <div className="container hero-content-bottom">
-            <h1 className="hero-main-title" data-testid="design-heading">
+            <h2 className="hero-main-title" data-testid="design-heading">
               <SplitText text="Designing clarity into" delay={0.05} />{" "}
               <SplitText text="complex systems." className="hero-serif-accent" delay={0.185} />
-            </h1>
+            </h2>
 
             <p className="hero-lede-text">
               I work across healthcare, AI, and enterprise products, using research,
